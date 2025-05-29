@@ -1,15 +1,25 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import type { Category, Subcategory } from '@/types';
 import { useAppContext } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { PlusCircle, Edit, Trash2, ListTree, HelpCircle } from 'lucide-react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
@@ -22,7 +32,7 @@ const NO_ICON_VALUE = "__no-icon__";
 
 const categorySchema = z.object({
   name: z.string().min(2, 'Category name must be at least 2 characters.'),
-  icon: z.string().optional(), // This will store actual icon name, '', or NO_ICON_VALUE from form
+  icon: z.string().optional(),
 });
 type CategoryFormData = z.infer<typeof categorySchema>;
 
@@ -32,7 +42,6 @@ const subcategorySchema = z.object({
 });
 type SubcategoryFormData = z.infer<typeof subcategorySchema>;
 
-// Available icons (subset of Lucide for simplicity, can be expanded)
 const availableIcons = ['Mic', 'Videotape', 'Zap', 'Cuboid', 'Speaker', 'Camera', 'Projector', 'Lightbulb', 'Drum', 'Cable', 'Settings', 'Layers', 'ListTree'];
 
 
@@ -45,7 +54,10 @@ export function CategoryManager() {
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [isSubcategoryDialogOpen, setIsSubcategoryDialogOpen] = useState(false);
 
-  const categoryForm = useForm<CategoryFormData>({ 
+  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
+  const [subcategoryToDelete, setSubcategoryToDelete] = useState<Subcategory | null>(null);
+
+  const categoryForm = useForm<CategoryFormData>({
     resolver: zodResolver(categorySchema),
     defaultValues: {
       name: '',
@@ -80,15 +92,17 @@ export function CategoryManager() {
     setIsCategoryDialogOpen(false);
   };
 
-  const handleDeleteCategory = (categoryId: string) => {
-    // Confirmation dialog is good practice, using window.confirm for brevity here
-    // Consider replacing with ShadCN AlertDialog for better UX
-    if (confirm('Are you sure you want to delete this category and all its subcategories? This action cannot be undone.')) {
-      const categoryName = categories.find(c => c.id === categoryId)?.name || "Category";
-      deleteCategory(categoryId);
-      toast({ title: 'Category Deleted', description: `"${categoryName}" and its subcategories deleted.` });
+  const openCategoryDeleteDialog = useCallback((category: Category) => {
+    setCategoryToDelete(category);
+  }, []);
+
+  const confirmDeleteCategory = useCallback(() => {
+    if (categoryToDelete) {
+      deleteCategory(categoryToDelete.id);
+      toast({ title: 'Category Deleted', description: `"${categoryToDelete.name}" and its subcategories deleted.` });
+      setCategoryToDelete(null);
     }
-  };
+  }, [categoryToDelete, deleteCategory, toast]);
 
   const handleAddSubcategory = (parentCategoryId?: string) => {
     setEditingSubcategory(null);
@@ -113,13 +127,17 @@ export function CategoryManager() {
     setIsSubcategoryDialogOpen(false);
   };
 
-  const handleDeleteSubcategory = (subcategoryId: string) => {
-     if (confirm('Are you sure you want to delete this subcategory? This action cannot be undone.')) {
-      const subcategoryName = subcategories.find(s => s.id === subcategoryId)?.name || "Subcategory";
-      deleteSubcategory(subcategoryId);
-      toast({ title: 'Subcategory Deleted', description: `"${subcategoryName}" deleted.` });
+  const openSubcategoryDeleteDialog = useCallback((subcategory: Subcategory) => {
+    setSubcategoryToDelete(subcategory);
+  }, []);
+
+  const confirmDeleteSubcategory = useCallback(() => {
+    if (subcategoryToDelete) {
+      deleteSubcategory(subcategoryToDelete.id);
+      toast({ title: 'Subcategory Deleted', description: `"${subcategoryToDelete.name}" deleted.` });
+      setSubcategoryToDelete(null);
     }
-  };
+  }, [subcategoryToDelete, deleteSubcategory, toast]);
 
 
   return (
@@ -144,7 +162,7 @@ export function CategoryManager() {
                 <Button variant="ghost" size="icon" onClick={() => handleEditCategory(category)}>
                   <Edit className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="icon" onClick={() => handleDeleteCategory(category.id)}>
+                <Button variant="ghost" size="icon" onClick={() => openCategoryDeleteDialog(category)}>
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
               </div>
@@ -160,7 +178,7 @@ export function CategoryManager() {
                         <Button variant="ghost" size="sm" onClick={() => handleEditSubcategory(sub)}>
                           <Edit className="h-3 w-3" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDeleteSubcategory(sub.id)}>
+                        <Button variant="ghost" size="sm" onClick={() => openSubcategoryDeleteDialog(sub)}>
                           <Trash2 className="h-3 w-3 text-destructive" />
                         </Button>
                       </div>
@@ -293,7 +311,48 @@ export function CategoryManager() {
           </Form>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Category Confirmation Dialog */}
+      {categoryToDelete && (
+        <AlertDialog open={!!categoryToDelete} onOpenChange={(isOpen) => !isOpen && setCategoryToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirm Category Deletion</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete the category "{categoryToDelete.name}"? 
+                This will also delete all its subcategories. This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setCategoryToDelete(null)}>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmDeleteCategory} className="bg-destructive hover:bg-destructive/90">
+                Delete Category
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+
+      {/* Delete Subcategory Confirmation Dialog */}
+      {subcategoryToDelete && (
+        <AlertDialog open={!!subcategoryToDelete} onOpenChange={(isOpen) => !isOpen && setSubcategoryToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirm Subcategory Deletion</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete the subcategory "{subcategoryToDelete.name}"? 
+                This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setSubcategoryToDelete(null)}>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmDeleteSubcategory} className="bg-destructive hover:bg-destructive/90">
+                Delete Subcategory
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 }
-
