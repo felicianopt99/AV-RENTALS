@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import type { Rental } from '@/types';
 import { useAppContext } from '@/contexts/AppContext';
@@ -12,7 +13,11 @@ import { AlertTriangle } from 'lucide-react';
 
 export function RentalCalendarView() {
   const { rentals, equipment } = useAppContext();
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+
+  useEffect(() => {
+    setSelectedDate(new Date());
+  }, []);
 
   const rentalsForSelectedDate = selectedDate
     ? rentals.filter(rental => 
@@ -26,14 +31,14 @@ export function RentalCalendarView() {
     const end = endOfDay(new Date(rental.endDate));
     
     // Create a range of dates for the rental
-    let currentDate = new Date(start);
-    while (currentDate <= end) {
-      const dateString = format(currentDate, 'yyyy-MM-dd');
+    let currentDateLoop = new Date(start); // Use a different variable name for the loop
+    while (currentDateLoop <= end) {
+      const dateString = format(currentDateLoop, 'yyyy-MM-dd');
       if (!acc[dateString]) {
         acc[dateString] = { rented: true, equipmentIds: new Set() };
       }
       acc[dateString].equipmentIds.add(rental.equipmentId);
-      currentDate = new Date(currentDate.setDate(currentDate.getDate() + 1));
+      currentDateLoop = new Date(currentDateLoop.setDate(currentDateLoop.getDate() + 1));
     }
     return acc;
   }, {} as Record<string, { rented: boolean, equipmentIds: Set<string> }>);
@@ -57,14 +62,14 @@ export function RentalCalendarView() {
   const dailyRentalCounts: Record<string, Record<string, number>> = {}; // date -> equipmentId -> count
 
   rentals.forEach(rental => {
-    let currentDate = startOfDay(new Date(rental.startDate));
+    let currentDateLoop = startOfDay(new Date(rental.startDate)); // Use a different variable name
     const endDate = endOfDay(new Date(rental.endDate));
-    while (currentDate <= endDate) {
-      const dateStr = format(currentDate, 'yyyy-MM-dd');
+    while (currentDateLoop <= endDate) {
+      const dateStr = format(currentDateLoop, 'yyyy-MM-dd');
       if (!dailyRentalCounts[dateStr]) dailyRentalCounts[dateStr] = {};
       if (!dailyRentalCounts[dateStr][rental.equipmentId]) dailyRentalCounts[dateStr][rental.equipmentId] = 0;
       dailyRentalCounts[dateStr][rental.equipmentId] += rental.quantityRented;
-      currentDate = new Date(currentDate.setDate(currentDate.getDate() + 1));
+      currentDateLoop = new Date(currentDateLoop.setDate(currentDateLoop.getDate() + 1));
     }
   });
   
@@ -90,6 +95,14 @@ export function RentalCalendarView() {
     }
   };
 
+  if (!selectedDate) {
+    // Optionally, render a loading state or null until selectedDate is set
+    return (
+        <div className="flex justify-center items-center h-full">
+            <p>Loading calendar...</p>
+        </div>
+    );
+  }
 
   return (
     <div className="grid md:grid-cols-3 gap-6">
@@ -107,6 +120,7 @@ export function RentalCalendarView() {
               className="rounded-md border p-0"
               modifiers={{ ...modifiers, ...conflictModifiers }}
               modifiersStyles={{...modifiersStyles, ...conflictModifiersStyles}}
+              initialFocus // Add initialFocus if selectedDate can be undefined initially for DayPicker
             />
           </CardContent>
         </Card>
@@ -156,7 +170,9 @@ export function RentalCalendarView() {
                 </ul>
               </ScrollArea>
             ) : (
-              <p className="text-muted-foreground">No rentals scheduled for this date.</p>
+              <p className="text-muted-foreground">
+                {selectedDate ? "No rentals scheduled for this date." : "Select a date to see rentals."}
+              </p>
             )}
           </CardContent>
         </Card>
@@ -164,3 +180,4 @@ export function RentalCalendarView() {
     </div>
   );
 }
+
