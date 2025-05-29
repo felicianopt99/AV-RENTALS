@@ -28,10 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
-        {/* Next.js handles <Head> content automatically via metadata and `next/head`.
-            This explicit <head> tag is added to ensure proper structure and potentially
-            resolve subtle whitespace issues. Standard meta tags should still go in
-            the `metadata` export or via `next/head` in page components if needed. */}
+        {/* Minimal head, Next.js handles content via metadata */}
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased font-sans`}>
         <AppProvider>
