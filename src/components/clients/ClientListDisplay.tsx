@@ -1,7 +1,8 @@
+
 // src/components/clients/ClientListDisplay.tsx
 "use client";
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { Client } from '@/types';
@@ -31,9 +32,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { PlusCircle, Edit, Trash2, MoreHorizontal, Search, SearchSlash } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, MoreHorizontal, Search, SearchSlash, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 
 export function ClientListDisplay() {
@@ -56,15 +57,21 @@ export function ClientListDisplay() {
     }
   }, [clientToDelete, deleteClient, toast]);
 
-  const filteredClients = clients.filter(client =>
+  const filteredClients = useMemo(() => clients.filter(client =>
     client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (client.contactPerson && client.contactPerson.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (client.email && client.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (client.phone && client.phone.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  ), [clients, searchTerm]);
 
   if (!isDataLoaded) {
-    return <div className="flex justify-center items-center h-full"><p className="text-lg text-muted-foreground">Loading client data...</p></div>;
+    return (
+        <div className="flex flex-col h-[calc(100vh-150px)]"> {/* Adjust height as needed */}
+            <div className="flex-grow flex items-center justify-center">
+                <p className="text-lg text-muted-foreground">Loading client data...</p>
+            </div>
+        </div>
+    );
   }
 
   return (
@@ -81,6 +88,7 @@ export function ClientListDisplay() {
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle>Client List</CardTitle>
+          <CardDescription>View, search, and manage all your clients.</CardDescription>
           <div className="mt-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -96,12 +104,18 @@ export function ClientListDisplay() {
         <CardContent>
           {filteredClients.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground flex flex-col items-center">
-              <SearchSlash className="w-16 h-16 mb-4 text-primary/50" />
-              <p className="text-xl mb-1">No clients found.</p>
               {searchTerm ? (
-                <p className="text-sm">Try adjusting your search term.</p>
+                <>
+                  <SearchSlash className="w-16 h-16 mb-4 text-primary/50" />
+                  <p className="text-xl mb-1">No clients match your search.</p>
+                  <p className="text-sm">Try a different search term or clear the search.</p>
+                </>
               ) : (
-                <p className="text-sm">Add a new client to get started.</p>
+                <>
+                  <Users className="w-16 h-16 mb-4 text-primary/50" />
+                  <p className="text-xl mb-1">No clients yet.</p>
+                  <p className="text-sm">Click "Add New Client" to get started.</p>
+                </>
               )}
             </div>
           ) : (

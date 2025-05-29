@@ -18,11 +18,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { PlusCircle, Edit, Trash2, ListTree, HelpCircle } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, ListTree, HelpCircle, FolderPlus } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription as FormFieldDescription } from '@/components/ui/form'; // Renamed FormDescription to avoid conflict
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { CategoryIconMapper } from '@/components/icons/CategoryIconMapper';
@@ -151,6 +151,13 @@ export function CategoryManager() {
 
       <ScrollArea className="h-[calc(100vh-250px)]"> {/* Adjust height as needed */}
         <div className="space-y-4 pr-4">
+        {categories.length === 0 && (
+          <div className="text-center py-16 text-muted-foreground flex flex-col items-center">
+            <FolderPlus className="w-16 h-16 mb-4 text-primary/50" />
+            <p className="text-xl mb-1">No categories created yet.</p>
+            <p className="text-sm">Click "Add Category" to start organizing your equipment.</p>
+          </div>
+        )}
         {categories.map(category => (
           <Card key={category.id} className="shadow-md">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -196,7 +203,6 @@ export function CategoryManager() {
             </CardFooter>
           </Card>
         ))}
-        {categories.length === 0 && <p className="text-muted-foreground">No categories created yet. Click "Add Category" to start.</p>}
         </div>
       </ScrollArea>
 
@@ -225,7 +231,7 @@ export function CategoryManager() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Icon (Optional)</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value || NO_ICON_VALUE}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select an icon" />
@@ -248,7 +254,7 @@ export function CategoryManager() {
                         ))}
                       </SelectContent>
                     </Select>
-                    <FormDescription>Select a visual icon for the category.</FormDescription>
+                    <FormFieldDescription>Select a visual icon for the category.</FormFieldDescription>
                     <FormMessage />
                   </FormItem>
                 )}

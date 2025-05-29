@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Calendar } from '@/components/ui/calendar';
 import type { Rental } from '@/types';
 import { useAppContext } from '@/contexts/AppContext';
@@ -9,13 +10,16 @@ import { format, isWithinInterval, startOfDay, endOfDay, parseISO } from 'date-f
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Edit3 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export function RentalCalendarView() {
-  const { rentals, equipment } = useAppContext();
+  const { rentals, equipment, isDataLoaded } = useAppContext();
+  const router = useRouter();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
 
   useEffect(() => {
+    // Set initial date only on client after mount to avoid hydration mismatch
     setSelectedDate(new Date());
   }, []);
 
@@ -30,14 +34,13 @@ export function RentalCalendarView() {
     const start = startOfDay(new Date(rental.startDate));
     const end = endOfDay(new Date(rental.endDate));
     
-    // Create a range of dates for the rental
-    let currentDateLoop = new Date(start); // Use a different variable name for the loop
+    let currentDateLoop = new Date(start);
     while (currentDateLoop <= end) {
       const dateString = format(currentDateLoop, 'yyyy-MM-dd');
       if (!acc[dateString]) {
         acc[dateString] = { rented: true, equipmentIds: new Set() };
       }
-      acc[dateString].equipmentIds.add(rental.equipmentId);
+      (acc[dateString].equipmentIds as Set<string>).add(rental.equipmentId);
       currentDateLoop = new Date(currentDateLoop.setDate(currentDateLoop.getDate() + 1));
     }
     return acc;
@@ -46,25 +49,24 @@ export function RentalCalendarView() {
   const modifiers = {
     rented: Object.keys(rentalDateModifiers)
                   .filter(dateStr => rentalDateModifiers[dateStr].rented)
-                  .map(dateStr => parseISO(dateStr)), // Make sure to parse string back to Date
+                  .map(dateStr => parseISO(dateStr)),
   };
 
   const modifiersStyles = {
     rented: {
-      backgroundColor: 'hsl(var(--primary) / 0.3)', // Use primary color with opacity
+      backgroundColor: 'hsl(var(--primary) / 0.3)',
       color: 'hsl(var(--primary-foreground))',
       borderRadius: '2px',
     }
   };
   
-  // Conflict detection for display purposes
   const conflicts: { date: Date, equipmentId: string, count: number, equipmentName: string }[] = [];
-  const dailyRentalCounts: Record<string, Record<string, number>> = {}; // date -> equipmentId -> count
+  const dailyRentalCounts: Record<string, Record<string, number>> = {};
 
   rentals.forEach(rental => {
-    let currentDateLoop = startOfDay(new Date(rental.startDate)); // Use a different variable name
-    const endDate = endOfDay(new Date(rental.endDate));
-    while (currentDateLoop <= endDate) {
+    let currentDateLoop = startOfDay(new Date(rental.startDate));
+    const endDateLoop = endOfDay(new Date(rental.endDate));
+    while (currentDateLoop <= endDateLoop) {
       const dateStr = format(currentDateLoop, 'yyyy-MM-dd');
       if (!dailyRentalCounts[dateStr]) dailyRentalCounts[dateStr] = {};
       if (!dailyRentalCounts[dateStr][rental.equipmentId]) dailyRentalCounts[dateStr][rental.equipmentId] = 0;
@@ -95,11 +97,12 @@ export function RentalCalendarView() {
     }
   };
 
-  if (!selectedDate) {
-    // Optionally, render a loading state or null until selectedDate is set
+  if (!isDataLoaded || selectedDate === undefined) {
     return (
-        <div className="flex justify-center items-center h-full">
-            <p>Loading calendar...</p>
+        <div className="flex flex-col h-screen">
+            <div className="flex-grow flex items-center justify-center">
+                <p className="text-lg text-muted-foreground">Loading calendar data...</p>
+            </div>
         </div>
     );
   }
@@ -120,7 +123,7 @@ export function RentalCalendarView() {
               className="rounded-md border p-0"
               modifiers={{ ...modifiers, ...conflictModifiers }}
               modifiersStyles={{...modifiersStyles, ...conflictModifiersStyles}}
-              initialFocus // Add initialFocus if selectedDate can be undefined initially for DayPicker
+              initialFocus
             />
           </CardContent>
         </Card>
@@ -136,7 +139,7 @@ export function RentalCalendarView() {
                 <ul className="space-y-1 text-sm">
                   {conflicts.map((conflict, index) => (
                     <li key={index}>
-                      {format(conflict.date, "PPP")}: <strong>{conflict.equipmentName}</strong> overbooked (Rented: {conflict.count} / Available: {equipment.find(e => e.id === conflict.equipmentId)?.quantity || 'N/A'})
+                      {format(conflict.date, "PPP")}: <strong>{conflict.equipmentName}</strong> overbooked (Rented: {conflict.count} / Available: {equipment.find(e => e.id === conflict.equipmentId)?.quantity ?? 'N/A'})
                     </li>
                   ))}
                 </ul>
@@ -158,13 +161,26 @@ export function RentalCalendarView() {
               <ScrollArea className="h-[calc(100vh-350px)]"> {/* Adjust height as needed */}
                 <ul className="space-y-3">
                   {rentalsForSelectedDate.map(rental => (
-                    <li key={rental.id} className="p-3 border rounded-md bg-card-foreground/5">
-                      <p className="font-semibold">{rental.equipmentName} <Badge variant="secondary" className="ml-1">Qty: {rental.quantityRented}</Badge></p>
-                      <p className="text-xs text-muted-foreground">Client: {rental.clientName}</p>
-                      <p className="text-xs text-muted-foreground">Event: {rental.eventLocation}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Period: {format(new Date(rental.startDate), "PP")} - {format(new Date(rental.endDate), "PP")}
-                      </p>
+                    <li key={rental.id} className="p-3 border rounded-md bg-card-foreground/5 group hover:bg-card-foreground/10 transition-colors">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-semibold">{rental.equipmentName} <Badge variant="secondary" className="ml-1">Qty: {rental.quantityRented}</Badge></p>
+                          <p className="text-xs text-muted-foreground">Client: {rental.clientName}</p>
+                          <p className="text-xs text-muted-foreground">Event: {rental.eventLocation}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Period: {format(new Date(rental.startDate), "PP")} - {format(new Date(rental.endDate), "PP")}
+                          </p>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary"
+                          onClick={() => router.push(`/rentals/${rental.id}/edit`)}
+                          aria-label={`Edit rental for ${rental.equipmentName}`}
+                        >
+                          <Edit3 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </li>
                   ))}
                 </ul>
@@ -180,4 +196,3 @@ export function RentalCalendarView() {
     </div>
   );
 }
-
