@@ -25,9 +25,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { isFuture, isWithinInterval, addDays, startOfDay } from 'date-fns';
 
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Cell as RechartsCell } from 'recharts';
-import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
-
 const StatCard: React.FC<{ title: string; value: string | number; icon: React.ElementType; description?: string }> = ({ title, value, icon: Icon, description }) => (
   <Card className="shadow-lg hover:shadow-xl transition-shadow">
     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -40,22 +37,6 @@ const StatCard: React.FC<{ title: string; value: string | number; icon: React.El
     </CardContent>
   </Card>
 );
-
-// Custom Tooltip for Bar Chart
-const CustomBarTooltipContent: React.FC<any> = ({ active, payload }) => {
-  if (active && payload && payload.length) {
-    const data = payload[0].payload; // Access the original data object for the bar
-    return (
-      <div className="rounded-lg border bg-background p-2 shadow-sm">
-        <div className="grid grid-cols-[auto,1fr] items-center gap-x-2">
-          <span className="text-sm text-muted-foreground">{data.name}:</span>
-          <span className="text-sm font-bold text-foreground">{data.count} item(s)</span>
-        </div>
-      </div>
-    );
-  }
-  return null;
-};
 
 
 export default function DashboardPage() {
@@ -128,34 +109,6 @@ export default function DashboardPage() {
     };
   }, [equipment, clients, rentals, isDataLoaded]);
 
-  const CHART_COLORS = useMemo(() => [
-    "hsl(var(--chart-1))",
-    "hsl(var(--chart-2))",
-    "hsl(var(--chart-3))",
-    "hsl(var(--chart-4))",
-    "hsl(var(--chart-5))",
-  ], []);
-
-  const equipmentByCategoryChartData = useMemo(() => {
-    if (!isDataLoaded || !categories.length || !equipment.length) return [];
-    return categories.map((category, index) => ({
-      name: category.name,
-      count: equipment.filter(item => item.categoryId === category.id).length,
-      fill: CHART_COLORS[index % CHART_COLORS.length],
-    })).filter(data => data.count > 0);
-  }, [equipment, categories, isDataLoaded, CHART_COLORS]);
-
-  const chartConfig = useMemo(() => {
-    const config: ChartConfig = {
-      count: { label: "Items" }, // Generic label for the 'count' dataKey
-    };
-    // Optionally, add individual category configs if needed by more complex tooltips/legends
-    // equipmentByCategoryChartData.forEach(entry => {
-    //   config[entry.name] = { label: entry.name, color: entry.fill };
-    // });
-    return config;
-  }, []);
-
 
   if (!isDataLoaded) {
     return (
@@ -188,48 +141,6 @@ export default function DashboardPage() {
           </Link>
         </div>
         
-        {isDataLoaded && equipmentByCategoryChartData.length > 0 && (
-          <Card className="mb-8 shadow-xl">
-            <CardHeader>
-              <CardTitle>Equipment Distribution by Category</CardTitle>
-              <CardDescription>Number of equipment items in each main category.</CardDescription>
-            </CardHeader>
-            <CardContent className="pl-2 pr-6 pb-6">
-              <ChartContainer config={chartConfig} className="h-[300px] w-full">
-                <BarChart
-                  accessibilityLayer
-                  data={equipmentByCategoryChartData}
-                  layout="vertical"
-                  margin={{ top: 5, right: 10, left: 10, bottom: 5 }} 
-                >
-                  <CartesianGrid horizontal={false} strokeDasharray="3 3" />
-                  <XAxis type="number" dataKey="count" hide />
-                  <YAxis
-                    dataKey="name"
-                    type="category"
-                    tickLine={false}
-                    axisLine={false}
-                    stroke="hsl(var(--muted-foreground))"
-                    fontSize={12}
-                    tickMargin={5}
-                    width={100} // Adjust if category names are long
-                    interval={0} 
-                  />
-                  <RechartsTooltip 
-                    cursor={{ fill: "hsl(var(--muted)/0.5)" }}
-                    content={<CustomBarTooltipContent />}
-                  />
-                  <Bar dataKey="count" layout="vertical" radius={[0, 4, 4, 0]}>
-                    {equipmentByCategoryChartData.map((entry, index) => (
-                      <RechartsCell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ChartContainer>
-            </CardContent>
-          </Card>
-        )}
-
         <EquipmentFilters
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
