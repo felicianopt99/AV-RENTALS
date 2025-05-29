@@ -1,3 +1,4 @@
+
 "use client";
 import type React from 'react';
 import { 
@@ -15,6 +16,7 @@ import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
 import { Toaster } from '@/components/ui/toaster';
+import { ScrollToTopButton } from '@/components/ScrollToTopButton'; // Added import
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -39,11 +41,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <SidebarInset>
         {/* AppHeader can be part of individual pages or a general one here */}
         {/* <AppHeader /> */} 
-        <main className="flex-1 overflow-auto p-4 md:p-6">
+        <main className="flex-1 overflow-auto"> {/* Removed p-4 md:p-6 here, individual pages should handle padding if they have AppHeader */}
           {children}
         </main>
       </SidebarInset>
       <Toaster />
+      <ScrollToTopButton /> {/* Added ScrollToTopButton */}
     </SidebarProvider>
   );
 }

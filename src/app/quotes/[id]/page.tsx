@@ -50,7 +50,7 @@ export default function EditQuotePage() {
     return (
         <div className="flex flex-col h-screen">
             <AppHeader title="Edit Quote" />
-            <div className="flex-grow flex items-center justify-center">
+            <div className="flex-grow flex items-center justify-center p-4 md:p-6">
                 <p className="text-lg text-muted-foreground">Loading quote data...</p>
             </div>
         </div>
@@ -61,7 +61,7 @@ export default function EditQuotePage() {
     return (
         <div className="flex flex-col h-screen">
             <AppHeader title="Edit Quote" />
-            <div className="flex-grow flex items-center justify-center">
+            <div className="flex-grow flex items-center justify-center p-4 md:p-6">
                 <p className="text-lg text-destructive">Quote not found or could not be loaded.</p>
             </div>
         </div>
@@ -71,7 +71,7 @@ export default function EditQuotePage() {
   return (
     <div className="flex flex-col h-full">
       <AppHeader title={`Edit Quote: ${quote.name || quote.quoteNumber}`} />
-      <div className="p-4 md:p-6">
+      <div className="flex-1 overflow-y-auto p-4 md:p-6"> {/* Added padding here */}
         <Card className="max-w-4xl mx-auto shadow-xl">
           <CardHeader>
             <CardTitle>Edit Quote Details ({quote.quoteNumber})</CardTitle>

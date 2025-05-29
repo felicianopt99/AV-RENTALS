@@ -1,3 +1,4 @@
+
 // src/app/equipment/[id]/edit/page.tsx
 "use client";
 
@@ -38,7 +39,7 @@ export default function EditEquipmentPage() {
     return (
         <div className="flex flex-col h-screen">
             <AppHeader title="Edit Equipment" />
-            <div className="flex-grow flex items-center justify-center">
+            <div className="flex-grow flex items-center justify-center p-4 md:p-6">
                 <p className="text-lg text-muted-foreground">Loading equipment data...</p>
             </div>
         </div>
@@ -50,7 +51,7 @@ export default function EditEquipmentPage() {
     return (
         <div className="flex flex-col h-screen">
             <AppHeader title="Edit Equipment" />
-            <div className="flex-grow flex items-center justify-center">
+            <div className="flex-grow flex items-center justify-center p-4 md:p-6">
                 <p className="text-lg text-destructive">Equipment not found.</p>
             </div>
         </div>
@@ -60,7 +61,7 @@ export default function EditEquipmentPage() {
   return (
     <div className="flex flex-col h-full">
       <AppHeader title={`Edit Equipment: ${item.name}`} />
-      <div className="p-4 md:p-6">
+      <div className="flex-1 overflow-y-auto p-4 md:p-6"> {/* Added padding here */}
         <Card className="max-w-3xl mx-auto shadow-xl">
           <CardHeader>
             <CardTitle>Edit Equipment Details</CardTitle>

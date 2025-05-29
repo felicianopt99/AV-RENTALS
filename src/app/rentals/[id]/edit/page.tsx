@@ -70,7 +70,7 @@ export default function EditRentalPage() {
     return (
         <div className="flex flex-col h-screen">
             <AppHeader title="Edit Rental" />
-            <div className="flex-grow flex items-center justify-center">
+            <div className="flex-grow flex items-center justify-center p-4 md:p-6">
                 <p className="text-lg text-muted-foreground">Loading rental data...</p>
             </div>
         </div>
@@ -81,7 +81,7 @@ export default function EditRentalPage() {
     return (
         <div className="flex flex-col h-screen">
             <AppHeader title="Edit Rental" />
-            <div className="flex-grow flex items-center justify-center">
+            <div className="flex-grow flex items-center justify-center p-4 md:p-6">
                 <p className="text-lg text-destructive">Rental not found or could not be loaded.</p>
             </div>
         </div>
@@ -91,7 +91,7 @@ export default function EditRentalPage() {
   return (
     <div className="flex flex-col h-full">
       <AppHeader title={`Edit Rental: ${rental.equipmentName} for ${rental.clientName}`} />
-      <div className="p-4 md:p-6">
+      <div className="flex-1 overflow-y-auto p-4 md:p-6"> {/* Added padding here */}
         <Card className="max-w-3xl mx-auto shadow-xl">
           <CardHeader>
             <CardTitle>Edit Rental Details</CardTitle>

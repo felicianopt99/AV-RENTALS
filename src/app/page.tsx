@@ -114,8 +114,8 @@ export default function DashboardPage() {
   if (!isDataLoaded) {
     return (
         <div className="flex flex-col h-screen">
-            <AppHeader title="Equipment Dashboard" />
-            <div className="flex-grow flex items-center justify-center">
+            <AppHeader title="Equipment Dashboard" /> {/* AppHeader might be better inside the scrollable area if it's sticky */}
+            <div className="flex-grow flex items-center justify-center p-4 md:p-6">
                 <p className="text-lg text-muted-foreground">Loading dashboard data...</p>
             </div>
         </div>
@@ -125,7 +125,7 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col h-full">
       <AppHeader title="Equipment Dashboard" />
-      <div className="px-4 md:px-6 pt-4 pb-6">
+      <div className="flex-1 overflow-y-auto p-4 md:p-6"> {/* Added padding here for page content */}
         
         <div className="mb-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <StatCard title="Total Equipment" value={dashboardStats.totalEquipment} icon={Package} />
