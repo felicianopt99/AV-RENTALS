@@ -20,7 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card } from "@/components/ui/card"; // Added Card import
+import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { format, differenceInCalendarDays, addDays } from "date-fns";
 import { CalendarIcon, PlusCircle, Trash2, X } from "lucide-react";
@@ -32,6 +32,7 @@ import { useEffect, useCallback } from "react";
 import { Separator } from "../ui/separator";
 
 const QUOTE_STATUSES: QuoteStatus[] = ['Draft', 'Sent', 'Accepted', 'Declined', 'Archived'];
+const MANUAL_CLIENT_ENTRY_VALUE = "__manual_client__";
 
 const quoteItemSchema = z.object({
   id: z.string().optional(), // For existing items
@@ -89,6 +90,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
       clientEmail: initialData.clientEmail || '',
       clientPhone: initialData.clientPhone || '',
       clientAddress: initialData.clientAddress || '',
+      clientId: initialData.clientId || "", // Ensure clientId is an empty string if not present
       discountAmount: initialData.discountAmount || 0,
       discountType: initialData.discountType || 'fixed',
       taxRate: initialData.taxRate || 0,
@@ -132,6 +134,10 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
         form.setValue("clientPhone", selectedClient.phone || "");
         form.setValue("clientAddress", selectedClient.address || "");
       }
+    } else { // If clientId is empty (manual entry selected)
+        // Don't clear here, allow manual input if clientId is empty
+        // If clientID was previously set and now is cleared, then manual fields should enable.
+        // This logic is mostly for auto-filling from an existing client.
     }
   }, [watchClientId, clients, form]);
 
@@ -211,8 +217,11 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
 
     const { subTotal, taxAmount, totalAmount } = calculateTotals();
 
+    const finalClientId = data.clientId === MANUAL_CLIENT_ENTRY_VALUE ? undefined : data.clientId;
+
     const quoteData = {
       ...data,
+      clientId: finalClientId,
       items: processedItems,
       subTotal,
       taxAmount,
@@ -286,10 +295,21 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Select Existing Client (Optional)</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select 
+                onValueChange={(value) => {
+                  field.onChange(value === MANUAL_CLIENT_ENTRY_VALUE ? "" : value);
+                  if (value === MANUAL_CLIENT_ENTRY_VALUE || value === "") {
+                    form.setValue("clientName", "");
+                    form.setValue("clientEmail", "");
+                    form.setValue("clientPhone", "");
+                    form.setValue("clientAddress", "");
+                  }
+                }} 
+                value={field.value || MANUAL_CLIENT_ENTRY_VALUE}
+              >
                 <FormControl><SelectTrigger><SelectValue placeholder="Select existing client..." /></SelectTrigger></FormControl>
                 <SelectContent>
-                  <SelectItem value="">-- None (Enter Manually) --</SelectItem>
+                  <SelectItem value={MANUAL_CLIENT_ENTRY_VALUE}>-- None (Enter Manually) --</SelectItem>
                   {clients.map(client => (
                     <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
                   ))}
@@ -393,7 +413,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
                 <FormItem><FormLabel>Discount Amount</FormLabel><FormControl><Input type="number" step="0.01" {...field} /></FormControl><FormMessage /></FormItem>
             )} />
             <FormField control={form.control} name="taxRate" render={({ field }) => (
-                <FormItem><FormLabel>Tax Rate (%)</FormLabel><FormControl><Input type="number" step="0.001" placeholder="e.g. 0.05 for 5%" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>Tax Rate (%)</FormLabel><FormControl><Input type="number" step="0.001" placeholder="e.g. 0.05 for 5%" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} /></FormControl><FormMessage /></FormItem> // Added || 0 to prevent NaN
             )} />
         </div>
         <Card className="p-4 bg-muted/30">
@@ -431,3 +451,4 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
     </Form>
   );
 }
+

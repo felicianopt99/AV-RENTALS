@@ -25,6 +25,8 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 
+const NO_SUBCATEGORY_VALUE = "__no_subcategory__";
+
 const equipmentFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters.").max(100),
   description: z.string().min(10, "Description must be at least 10 characters.").max(500),
@@ -60,6 +62,7 @@ export function EquipmentForm({ initialData, onSubmitSuccess }: EquipmentFormPro
       quantity: initialData.quantity || 0,
       dailyRate: initialData.dailyRate || 0,
       imageUrl: initialData.imageUrl || '',
+      subcategoryId: initialData.subcategoryId || "", // Ensure empty string if undefined
     } : {
       name: "",
       description: "",
@@ -77,10 +80,12 @@ export function EquipmentForm({ initialData, onSubmitSuccess }: EquipmentFormPro
 
   useEffect(() => {
     if (selectedCategoryId) {
-      setAvailableSubcategories(allSubcategories.filter(sub => sub.parentId === selectedCategoryId));
+      const filteredSubs = allSubcategories.filter(sub => sub.parentId === selectedCategoryId);
+      setAvailableSubcategories(filteredSubs);
       const currentSubcategoryId = form.getValues("subcategoryId");
-      if (currentSubcategoryId && !allSubcategories.find(s => s.id === currentSubcategoryId && s.parentId === selectedCategoryId)) {
-        form.setValue("subcategoryId", "");
+      // If current subcategory is not in the new list of available ones, reset it
+      if (currentSubcategoryId && !filteredSubs.find(s => s.id === currentSubcategoryId)) {
+        form.setValue("subcategoryId", ""); // Reset to empty string for "No subcategory"
       }
     } else {
       setAvailableSubcategories([]);
@@ -91,12 +96,17 @@ export function EquipmentForm({ initialData, onSubmitSuccess }: EquipmentFormPro
 
   function onSubmit(data: EquipmentFormValues) {
     try {
+      const finalData = {
+        ...data,
+        subcategoryId: data.subcategoryId === NO_SUBCATEGORY_VALUE ? undefined : data.subcategoryId,
+      };
+
       if (initialData) {
-        updateEquipmentItem({ ...initialData, ...data });
-        toast({ title: "Equipment Updated", description: `${data.name} has been successfully updated.` });
+        updateEquipmentItem({ ...initialData, ...finalData });
+        toast({ title: "Equipment Updated", description: `${finalData.name} has been successfully updated.` });
       } else {
-        addEquipmentItem(data);
-        toast({ title: "Equipment Added", description: `${data.name} has been successfully added.` });
+        addEquipmentItem(finalData);
+        toast({ title: "Equipment Added", description: `${finalData.name} has been successfully added.` });
       }
       onSubmitSuccess ? onSubmitSuccess() : router.push("/");
     } catch (error) {
@@ -163,14 +173,22 @@ export function EquipmentForm({ initialData, onSubmitSuccess }: EquipmentFormPro
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Subcategory (Optional)</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value || ""} disabled={availableSubcategories.length === 0}>
+                <Select 
+                  onValueChange={(value) => field.onChange(value === NO_SUBCATEGORY_VALUE ? "" : value)} 
+                  value={field.value || NO_SUBCATEGORY_VALUE} 
+                  disabled={availableSubcategories.length === 0 && !selectedCategoryId}
+                >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder={availableSubcategories.length === 0 ? "No subcategories for selected category" : "Select a subcategory"} />
+                      <SelectValue placeholder={
+                        !selectedCategoryId ? "Select a category first" : 
+                        availableSubcategories.length === 0 ? "No subcategories for selected category" : 
+                        "Select a subcategory"
+                      } />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                     <SelectItem value="">No subcategory</SelectItem>
+                     <SelectItem value={NO_SUBCATEGORY_VALUE}>No subcategory</SelectItem>
                     {availableSubcategories.map(subcat => (
                       <SelectItem key={subcat.id} value={subcat.id}>{subcat.name}</SelectItem>
                     ))}
@@ -269,3 +287,4 @@ export function EquipmentForm({ initialData, onSubmitSuccess }: EquipmentFormPro
     </Form>
   );
 }
+
