@@ -21,68 +21,59 @@ export function EquipmentCard({ item, category, subcategory, onEdit, onDelete }:
   const { categories } = useAppContext();
   const itemCategory = category || categories.find(c => c.id === item.categoryId);
 
-  const getStatusVariant = (status: EquipmentItem['status']) => {
-    switch (status) {
-      case 'good':
-        return 'default'; // Consider a success variant if available or custom
-      case 'damaged':
-        return 'destructive';
-      case 'maintenance':
-        return 'secondary'; // Consider a warning variant
-      default:
-        return 'outline';
-    }
-  };
-  
   const getStatusColor = (status: EquipmentItem['status']) => {
     switch (status) {
       case 'good':
-        return 'bg-green-500/20 text-green-400 border-green-500/30'; 
+        return 'bg-green-500/20 text-green-400 border-green-500/30 hover:bg-green-500/30'; 
       case 'damaged':
-        return 'bg-red-500/20 text-red-400 border-red-500/30';
+        return 'bg-red-500/20 text-red-400 border-red-500/30 hover:bg-red-500/30';
       case 'maintenance':
-        return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+        return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30 hover:bg-yellow-500/30';
       default:
-        return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+        return 'bg-gray-500/20 text-gray-400 border-gray-500/30 hover:bg-gray-500/30';
     }
   }
 
-
   return (
-    <Card className="flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
-      <CardHeader className="p-4">
-        <div className="relative w-full h-48 rounded-md overflow-hidden mb-2">
+    <Card className="flex flex-col overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 ease-in-out transform hover:-translate-y-1 bg-card border border-border/50 rounded-lg">
+      <CardHeader className="p-0">
+        <div className="relative w-full aspect-[16/10] rounded-t-lg overflow-hidden">
           <Image 
-            src={item.imageUrl || `https://placehold.co/300x200.png`} 
+            src={item.imageUrl || `https://placehold.co/600x400.png`} 
             alt={item.name} 
-            layout="fill" 
-            objectFit="cover"
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="object-cover"
             data-ai-hint="equipment audiovisual"
           />
         </div>
-        <CardTitle className="text-lg">{item.name}</CardTitle>
-        {itemCategory && (
-          <div className="flex items-center text-sm text-muted-foreground mt-1">
-            <CategoryIconMapper iconName={itemCategory.icon} className="w-4 h-4 mr-1.5" />
-            <span>{itemCategory.name} {subcategory ? `> ${subcategory.name}` : ''}</span>
-          </div>
-        )}
       </CardHeader>
-      <CardContent className="p-4 flex-grow">
-        <CardDescription className="text-sm mb-2 h-16 overflow-y-auto">{item.description}</CardDescription>
-        <div className="space-y-1 text-xs text-muted-foreground">
-          <p>Location: {item.location}</p>
-          <p>Available: {item.quantity}</p>
+      <CardContent className="p-5 flex-grow flex flex-col">
+        <div className="mb-2">
+          <CardTitle className="text-xl font-semibold line-clamp-2">{item.name}</CardTitle>
+          {itemCategory && (
+            <div className="flex items-center text-xs text-muted-foreground mt-1.5">
+              <CategoryIconMapper iconName={itemCategory.icon} className="w-3.5 h-3.5 mr-1.5" />
+              <span className="truncate">{itemCategory.name} {subcategory ? `> ${subcategory.name}` : ''}</span>
+            </div>
+          )}
+        </div>
+        <CardDescription className="text-sm text-muted-foreground mb-3 flex-grow max-h-20 overflow-y-auto scrollbar-thin">
+          {item.description}
+        </CardDescription>
+        <div className="space-y-1.5 text-xs text-muted-foreground/80 mt-auto">
+          <p><span className="font-medium">Location:</span> {item.location}</p>
+          <p><span className="font-medium">Available:</span> {item.quantity}</p>
         </div>
       </CardContent>
-      <CardFooter className="p-4 flex justify-between items-center">
-         <Badge variant="outline" className={getStatusColor(item.status)}>{item.status.charAt(0).toUpperCase() + item.status.slice(1)}</Badge>
-        <div className="flex gap-2">
-          <Button variant="ghost" size="icon" onClick={() => onEdit(item)} aria-label="Edit item">
+      <CardFooter className="p-4 flex justify-between items-center border-t border-border/50">
+         <Badge variant="outline" className={`py-1 px-2.5 text-xs ${getStatusColor(item.status)}`}>{item.status.charAt(0).toUpperCase() + item.status.slice(1)}</Badge>
+        <div className="flex gap-1">
+          <Button variant="ghost" size="sm" onClick={() => onEdit(item)} aria-label="Edit item" className="text-muted-foreground hover:text-primary">
             <Pencil className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => onDelete(item.id)} aria-label="Delete item">
-            <Trash2 className="h-4 w-4 text-destructive" />
+          <Button variant="ghost" size="sm" onClick={() => onDelete(item.id)} aria-label="Delete item" className="text-muted-foreground hover:text-destructive">
+            <Trash2 className="h-4 w-4" />
           </Button>
         </div>
       </CardFooter>

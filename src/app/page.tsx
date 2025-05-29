@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useCallback } from 'react';
@@ -8,7 +7,7 @@ import { EquipmentCard } from '@/components/equipment/EquipmentCard';
 import { EquipmentFilters } from '@/components/equipment/EquipmentFilters';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, SearchSlash } from 'lucide-react';
 import Link from 'next/link';
 import {
   AlertDialog,
@@ -81,9 +80,11 @@ export default function DashboardPage() {
 
   if (!isDataLoaded) {
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-screen">
             <AppHeader title="Equipment Dashboard" />
-            <div className="p-6 text-center">Loading dashboard data...</div>
+            <div className="flex-grow flex items-center justify-center">
+                <p className="text-lg text-muted-foreground">Loading dashboard data...</p>
+            </div>
         </div>
     );
   }
@@ -91,47 +92,54 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col h-full">
       <AppHeader title="Equipment Dashboard" />
-      <div className="flex justify-end mb-4 px-6">
-        <Link href="/equipment/new" passHref>
-          <Button>
-            <PlusCircle className="mr-2 h-4 w-4" /> Add New Equipment
-          </Button>
-        </Link>
-      </div>
-      <EquipmentFilters
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        selectedCategory={selectedCategory}
-        setSelectedCategory={setSelectedCategory}
-        selectedStatus={selectedStatus}
-        setSelectedStatus={setSelectedStatus}
-        categories={categories}
-      />
-      
-      {groupedEquipment.length === 0 && (
-        <div className="text-center py-10 text-muted-foreground">
-          <p>No equipment found matching your criteria.</p>
-          <p>Try adjusting your filters or adding new equipment.</p>
+      <div className="px-4 md:px-6 pt-4 pb-6">
+        <div className="flex justify-end mb-6">
+          <Link href="/equipment/new" passHref>
+            <Button size="lg" className="shadow-md hover:shadow-lg transition-shadow">
+              <PlusCircle className="mr-2 h-5 w-5" /> Add New Equipment
+            </Button>
+          </Link>
         </div>
-      )}
-
-      {groupedEquipment.map(([categoryName, items]) => (
-        <section key={categoryName} className="mb-8 px-2 md:px-0">
-          <h2 className="text-2xl font-semibold mb-4 px-4 text-primary">{categoryName}</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {items.map(item => (
-              <EquipmentCard
-                key={item.id}
-                item={item}
-                category={categories.find(c => c.id === item.categoryId)}
-                subcategory={subcategories.find(s => s.id === item.subcategoryId)}
-                onEdit={handleEdit}
-                onDelete={openDeleteConfirmDialog}
-              />
-            ))}
+        <EquipmentFilters
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
+          selectedStatus={selectedStatus}
+          setSelectedStatus={setSelectedStatus}
+          categories={categories}
+        />
+      
+        {groupedEquipment.length === 0 && (
+          <div className="text-center py-16 text-muted-foreground flex flex-col items-center">
+            <SearchSlash className="w-16 h-16 mb-4 text-primary/50" />
+            <p className="text-xl mb-1">No equipment found.</p>
+            <p className="text-sm">Try adjusting your filters or adding new equipment.</p>
           </div>
-        </section>
-      ))}
+        )}
+        
+        <div className="space-y-12">
+          {groupedEquipment.map(([categoryName, items]) => (
+            <section key={categoryName} className="px-2 md:px-0">
+              <h2 className="text-3xl font-bold mb-6 pb-2 border-b border-border/70 text-primary">
+                {categoryName}
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-8">
+                {items.map(item => (
+                  <EquipmentCard
+                    key={item.id}
+                    item={item}
+                    category={categories.find(c => c.id === item.categoryId)}
+                    subcategory={subcategories.find(s => s.id === item.subcategoryId)}
+                    onEdit={handleEdit}
+                    onDelete={openDeleteConfirmDialog}
+                  />
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      </div>
 
       {/* Edit Item Dialog (Placeholder) */}
       {editingItem && (
