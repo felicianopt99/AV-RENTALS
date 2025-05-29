@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useCallback } from 'react';
@@ -18,7 +19,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 
@@ -30,8 +30,8 @@ export default function DashboardPage() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
   
-  // For future edit functionality
   const [editingItem, setEditingItem] = useState<EquipmentItem | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<EquipmentItem | null>(null);
 
 
   const filteredEquipment = useMemo(() => {
@@ -58,17 +58,25 @@ export default function DashboardPage() {
   }, [filteredEquipment, categories]);
 
   const handleEdit = useCallback((item: EquipmentItem) => {
-    // This would typically navigate to an edit page or open a modal
-    // For now, just log or set state
     setEditingItem(item); 
     toast({ title: "Edit Item", description: `Navigating to edit ${item.name}. (Not implemented yet)` });
     // router.push(`/equipment/${item.id}/edit`); // Example navigation
   }, [toast]);
 
-  const handleDelete = useCallback((itemId: string) => {
-    deleteEquipmentItem(itemId);
-    toast({ title: "Equipment Deleted", description: "The equipment item has been removed." });
-  }, [deleteEquipmentItem, toast]);
+  const openDeleteConfirmDialog = useCallback((itemId: string) => {
+    const item = equipment.find(e => e.id === itemId);
+    if (item) {
+      setItemToDelete(item);
+    }
+  }, [equipment]);
+
+  const confirmDelete = useCallback(() => {
+    if (itemToDelete) {
+      deleteEquipmentItem(itemToDelete.id);
+      toast({ title: "Equipment Deleted", description: `"${itemToDelete.name}" has been removed.` });
+      setItemToDelete(null);
+    }
+  }, [itemToDelete, deleteEquipmentItem, toast]);
 
 
   if (!isDataLoaded) {
@@ -118,39 +126,14 @@ export default function DashboardPage() {
                 category={categories.find(c => c.id === item.categoryId)}
                 subcategory={subcategories.find(s => s.id === item.subcategoryId)}
                 onEdit={handleEdit}
-                onDelete={(itemId) => {
-                  // Implement confirmation for delete
-                  const itemToDelete = equipment.find(e => e.id === itemId);
-                  if (itemToDelete) {
-                     // Using AlertDialog for confirmation
-                    // This structure is a bit verbose here, ideally move to a reusable confirmation dialog
-                    // For simplicity of this change, it's inlined.
-                    // A better way would be a global confirmation dialog context or state.
-                    (window as any).confirmDeleteItem = () => { // a bit hacky for demo
-                        handleDelete(itemId);
-                    };
-                     const alertTrigger = document.createElement('button');
-                     document.body.appendChild(alertTrigger); // Must be in DOM to trigger
-                     AlertDialogTrigger({onClick: () => {}, children: '', ref: (el) => {
-                         if (el) {
-                             el.click(); // Programmatically click the trigger
-                             el.remove(); // Clean up
-                         }
-                     }}, {} as any ); // This is a conceptual way; direct DOM manipulation is not ideal in React
-                     // Proper way: use AlertDialog's open prop with useState
-
-                    // For now, a simple confirm
-                    if (confirm(`Are you sure you want to delete ${itemToDelete.name}?`)) {
-                        handleDelete(itemId);
-                    }
-                  }
-                }}
+                onDelete={openDeleteConfirmDialog}
               />
             ))}
           </div>
         </section>
       ))}
-      {/* Placeholder for Edit Modal/Page - for now, edit button logs */}
+
+      {/* Edit Item Dialog (Placeholder) */}
       {editingItem && (
          <AlertDialog defaultOpen onOpenChange={(isOpen) => !isOpen && setEditingItem(null)}>
           <AlertDialogContent>
@@ -163,6 +146,26 @@ export default function DashboardPage() {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel onClick={() => setEditingItem(null)}>Close</AlertDialogCancel>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {itemToDelete && (
+        <AlertDialog open={!!itemToDelete} onOpenChange={(isOpen) => !isOpen && setItemToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete "{itemToDelete.name}"? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setItemToDelete(null)}>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">
+                Delete
+              </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
