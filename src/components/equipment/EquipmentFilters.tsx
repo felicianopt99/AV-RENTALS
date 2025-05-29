@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Input } from '@/components/ui/input';
@@ -58,7 +59,7 @@ export function EquipmentFilters({
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Categories</SelectItem>
+              {/* <SelectItem value="">All Categories</SelectItem>  Removed: placeholder handles "All" state */}
               {categories.map((cat) => (
                 <SelectItem key={cat.id} value={cat.id}>
                   {cat.name}
@@ -75,7 +76,7 @@ export function EquipmentFilters({
               <SelectValue placeholder="All Statuses" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Statuses</SelectItem>
+              {/* <SelectItem value="">All Statuses</SelectItem> Removed: placeholder handles "All" state */}
               {EQUIPMENT_STATUSES.map((status) => (
                 <SelectItem key={status.value} value={status.value}>
                   {status.label}
@@ -92,3 +93,4 @@ export function EquipmentFilters({
     </div>
   );
 }
+

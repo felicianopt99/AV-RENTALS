@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -7,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { PlusCircle, Edit, Trash2, ListTree } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, ListTree, HelpCircle } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import * as z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -17,9 +18,11 @@ import { useToast } from '@/hooks/use-toast';
 import { CategoryIconMapper } from '@/components/icons/CategoryIconMapper';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
+const NO_ICON_VALUE = "__no-icon__";
+
 const categorySchema = z.object({
   name: z.string().min(2, 'Category name must be at least 2 characters.'),
-  icon: z.string().optional(),
+  icon: z.string().optional(), // This will store actual icon name, '', or NO_ICON_VALUE from form
 });
 type CategoryFormData = z.infer<typeof categorySchema>;
 
@@ -42,33 +45,44 @@ export function CategoryManager() {
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [isSubcategoryDialogOpen, setIsSubcategoryDialogOpen] = useState(false);
 
-  const categoryForm = useForm<CategoryFormData>({ resolver: zodResolver(categorySchema) });
+  const categoryForm = useForm<CategoryFormData>({ 
+    resolver: zodResolver(categorySchema),
+    defaultValues: {
+      name: '',
+      icon: NO_ICON_VALUE,
+    }
+  });
   const subcategoryForm = useForm<SubcategoryFormData>({ resolver: zodResolver(subcategorySchema) });
 
   const handleAddCategory = () => {
     setEditingCategory(null);
-    categoryForm.reset({ name: '', icon: '' });
+    categoryForm.reset({ name: '', icon: NO_ICON_VALUE });
     setIsCategoryDialogOpen(true);
   };
 
   const handleEditCategory = (category: Category) => {
     setEditingCategory(category);
-    categoryForm.reset({ name: category.name, icon: category.icon || '' });
+    categoryForm.reset({ name: category.name, icon: category.icon || NO_ICON_VALUE });
     setIsCategoryDialogOpen(true);
   };
 
   const handleCategorySubmit = (data: CategoryFormData) => {
+    const finalIconValue = data.icon === NO_ICON_VALUE ? '' : data.icon;
+    const categoryData = { name: data.name, icon: finalIconValue };
+
     if (editingCategory) {
-      updateCategory({ ...editingCategory, ...data });
+      updateCategory({ ...editingCategory, ...categoryData });
       toast({ title: 'Category Updated', description: `Category "${data.name}" updated.` });
     } else {
-      addCategory(data);
+      addCategory(categoryData);
       toast({ title: 'Category Added', description: `Category "${data.name}" added.` });
     }
     setIsCategoryDialogOpen(false);
   };
 
   const handleDeleteCategory = (categoryId: string) => {
+    // Confirmation dialog is good practice, using window.confirm for brevity here
+    // Consider replacing with ShadCN AlertDialog for better UX
     if (confirm('Are you sure you want to delete this category and all its subcategories? This action cannot be undone.')) {
       const categoryName = categories.find(c => c.id === categoryId)?.name || "Category";
       deleteCategory(categoryId);
@@ -193,14 +207,19 @@ export function CategoryManager() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Icon (Optional)</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select an icon" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">No Icon</SelectItem>
+                        <SelectItem value={NO_ICON_VALUE}>
+                           <div className="flex items-center">
+                            <HelpCircle className="h-4 w-4 mr-2 text-muted-foreground" />
+                            No Icon
+                          </div>
+                        </SelectItem>
                         {availableIcons.map(iconName => (
                           <SelectItem key={iconName} value={iconName}>
                             <div className="flex items-center">
@@ -277,3 +296,4 @@ export function CategoryManager() {
     </div>
   );
 }
+
