@@ -117,9 +117,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setRentals(prev => prev.filter(r => r.id !== rentalId));
   };
 
-  if (!isDataLoaded) {
-    return null; // Or a loading spinner
-  }
+  // The AppProvider should always render its children.
+  // Consumers of the context will use isDataLoaded to determine their rendering logic.
+  // For example, showing a loading spinner if isDataLoaded is false.
+  // The initial check for isDataLoaded before returning children has been removed.
 
   return (
     <AppContext.Provider value={{
