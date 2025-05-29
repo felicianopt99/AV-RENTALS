@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, PlusSquare, LayoutList, CalendarDays, GanttChartSquare } from 'lucide-react';
+import { Home, PlusSquare, LayoutList, CalendarDays, GanttChartSquare, Users } from 'lucide-react';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 
@@ -10,6 +10,7 @@ const navItems = [
   { href: '/', label: 'Dashboard', icon: Home },
   { href: '/equipment/new', label: 'Add Equipment', icon: PlusSquare },
   { href: '/categories', label: 'Manage Categories', icon: LayoutList },
+  { href: '/clients', label: 'Manage Clients', icon: Users },
   { href: '/rentals/new', label: 'Create Rental', icon: GanttChartSquare },
   { href: '/rentals/calendar', label: 'Rental Calendar', icon: CalendarDays },
 ];
@@ -21,12 +22,13 @@ export function AppSidebarNav() {
     <SidebarMenu>
       {navItems.map((item) => {
         const Icon = item.icon;
+        const isActive = item.href === '/' ? pathname === item.href : pathname.startsWith(item.href);
         return (
           <SidebarMenuItem key={item.href}>
             <Link href={item.href} passHref legacyBehavior>
               <SidebarMenuButton
-                className={cn(pathname === item.href && "bg-sidebar-accent text-sidebar-accent-foreground")}
-                isActive={pathname === item.href}
+                className={cn(isActive && "bg-sidebar-accent text-sidebar-accent-foreground")}
+                isActive={isActive}
                 tooltip={item.label}
               >
                 <Icon className="h-5 w-5" />

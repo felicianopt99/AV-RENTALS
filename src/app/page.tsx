@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useCallback } from 'react';
@@ -7,7 +8,7 @@ import { EquipmentCard } from '@/components/equipment/EquipmentCard';
 import { EquipmentFilters } from '@/components/equipment/EquipmentFilters';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, SearchSlash } from 'lucide-react';
+import { PlusCircle, SearchSlash, Package, Users, CalendarClock, Wrench } from 'lucide-react';
 import Link from 'next/link';
 import {
   AlertDialog,
@@ -20,9 +21,24 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { isFuture, isWithinInterval, addDays, startOfDay } from 'date-fns';
+
+const StatCard: React.FC<{ title: string; value: string | number; icon: React.ElementType; description?: string }> = ({ title, value, icon: Icon, description }) => (
+  <Card className="shadow-lg hover:shadow-xl transition-shadow">
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardTitle className="text-sm font-medium">{title}</CardTitle>
+      <Icon className="h-4 w-4 text-muted-foreground" />
+    </CardHeader>
+    <CardContent>
+      <div className="text-2xl font-bold">{value}</div>
+      {description && <p className="text-xs text-muted-foreground">{description}</p>}
+    </CardContent>
+  </Card>
+);
 
 export default function DashboardPage() {
-  const { equipment, categories, subcategories, deleteEquipmentItem, isDataLoaded } = useAppContext();
+  const { equipment, categories, subcategories, clients, rentals, deleteEquipmentItem, isDataLoaded } = useAppContext();
   const { toast } = useToast();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -31,7 +47,6 @@ export default function DashboardPage() {
   
   const [editingItem, setEditingItem] = useState<EquipmentItem | null>(null);
   const [itemToDelete, setItemToDelete] = useState<EquipmentItem | null>(null);
-
 
   const filteredEquipment = useMemo(() => {
     return equipment
@@ -62,12 +77,9 @@ export default function DashboardPage() {
     // router.push(`/equipment/${item.id}/edit`); // Example navigation
   }, [toast]);
 
-  const openDeleteConfirmDialog = useCallback((itemId: string) => {
-    const item = equipment.find(e => e.id === itemId);
-    if (item) {
-      setItemToDelete(item);
-    }
-  }, [equipment]);
+  const openDeleteConfirmDialog = useCallback((item: EquipmentItem) => {
+    setItemToDelete(item);
+  }, []);
 
   const confirmDelete = useCallback(() => {
     if (itemToDelete) {
@@ -77,6 +89,24 @@ export default function DashboardPage() {
     }
   }, [itemToDelete, deleteEquipmentItem, toast]);
 
+  const dashboardStats = useMemo(() => {
+    if (!isDataLoaded) return { totalEquipment: 0, totalClients: 0, upcomingRentals: 0, maintenanceItems: 0 };
+    
+    const today = startOfDay(new Date());
+    const sevenDaysFromNow = addDays(today, 7);
+
+    const upcomingRentalsCount = rentals.filter(rental => {
+        const rentalStartDate = startOfDay(new Date(rental.startDate));
+        return isFuture(rentalStartDate) && isWithinInterval(rentalStartDate, { start: today, end: sevenDaysFromNow });
+    }).length;
+
+    return {
+      totalEquipment: equipment.length,
+      totalClients: clients.length,
+      upcomingRentals: upcomingRentalsCount,
+      maintenanceItems: equipment.filter(e => e.status === 'maintenance').length,
+    };
+  }, [equipment, clients, rentals, isDataLoaded]);
 
   if (!isDataLoaded) {
     return (
@@ -93,6 +123,14 @@ export default function DashboardPage() {
     <div className="flex flex-col h-full">
       <AppHeader title="Equipment Dashboard" />
       <div className="px-4 md:px-6 pt-4 pb-6">
+        
+        <div className="mb-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <StatCard title="Total Equipment" value={dashboardStats.totalEquipment} icon={Package} />
+          <StatCard title="Total Clients" value={dashboardStats.totalClients} icon={Users} />
+          <StatCard title="Upcoming Rentals" value={dashboardStats.upcomingRentals} icon={CalendarClock} description="In next 7 days" />
+          <StatCard title="Needs Maintenance" value={dashboardStats.maintenanceItems} icon={Wrench} />
+        </div>
+
         <div className="flex justify-end mb-6">
           <Link href="/equipment/new" passHref>
             <Button size="lg" className="shadow-md hover:shadow-lg transition-shadow">
@@ -132,7 +170,7 @@ export default function DashboardPage() {
                     category={categories.find(c => c.id === item.categoryId)}
                     subcategory={subcategories.find(s => s.id === item.subcategoryId)}
                     onEdit={handleEdit}
-                    onDelete={openDeleteConfirmDialog}
+                    onDelete={() => openDeleteConfirmDialog(item)}
                   />
                 ))}
               </div>
@@ -141,7 +179,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Edit Item Dialog (Placeholder) */}
       {editingItem && (
          <AlertDialog defaultOpen onOpenChange={(isOpen) => !isOpen && setEditingItem(null)}>
           <AlertDialogContent>
@@ -159,7 +196,6 @@ export default function DashboardPage() {
         </AlertDialog>
       )}
 
-      {/* Delete Confirmation Dialog */}
       {itemToDelete && (
         <AlertDialog open={!!itemToDelete} onOpenChange={(isOpen) => !isOpen && setItemToDelete(null)}>
           <AlertDialogContent>

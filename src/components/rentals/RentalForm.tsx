@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,7 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { CalendarIcon, AlertTriangle } from "lucide-react";
-import type { Rental, EquipmentItem } from "@/types";
+import type { Rental, EquipmentItem, Client } from "@/types";
 import { useAppContext } from "@/contexts/AppContext";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
@@ -27,11 +28,11 @@ import { useEffect, useState } from "react";
 
 const rentalFormSchema = z.object({
   equipmentId: z.string().min(1, "Please select an equipment."),
+  clientId: z.string().min(1, "Please select a client."),
   quantityRented: z.coerce.number().int().min(1, "Quantity must be at least 1."),
   startDate: z.date({ required_error: "Start date is required." }),
   endDate: z.date({ required_error: "End date is required." }),
   eventLocation: z.string().min(2, "Event location is required.").max(100),
-  clientName: z.string().min(2, "Client name is required.").max(100),
   internalResponsible: z.string().min(2, "Internal responsible is required.").max(100),
 }).refine(data => data.endDate >= data.startDate, {
   message: "End date cannot be before start date.",
@@ -46,7 +47,7 @@ interface RentalFormProps {
 }
 
 export function RentalForm({ initialData, onSubmitSuccess }: RentalFormProps) {
-  const { equipment, rentals, addRental, updateRental } = useAppContext();
+  const { equipment, clients, rentals, addRental, updateRental } = useAppContext();
   const router = useRouter();
   const { toast } = useToast();
   const [availabilityConflict, setAvailabilityConflict] = useState<string | null>(null);
@@ -59,11 +60,11 @@ export function RentalForm({ initialData, onSubmitSuccess }: RentalFormProps) {
       endDate: new Date(initialData.endDate),
     } : {
       equipmentId: "",
+      clientId: "",
       quantityRented: 1,
       startDate: undefined,
       endDate: undefined,
       eventLocation: "",
-      clientName: "",
       internalResponsible: "",
     },
   });
@@ -108,13 +109,24 @@ export function RentalForm({ initialData, onSubmitSuccess }: RentalFormProps) {
     }
 
     const selectedEq = equipment.find(e => e.id === data.equipmentId);
+    const selectedClient = clients.find(c => c.id === data.clientId);
+
     if (!selectedEq) {
         toast({ variant: "destructive", title: "Error", description: "Selected equipment not found." });
         return;
     }
+    if (!selectedClient) {
+        toast({ variant: "destructive", title: "Error", description: "Selected client not found." });
+        return;
+    }
 
     try {
-      const rentalData = { ...data, equipmentName: selectedEq.name };
+      const rentalData = { 
+        ...data, 
+        equipmentName: selectedEq.name,
+        clientName: selectedClient.name, // Store client name for convenience
+      };
+
       if (initialData) {
         updateRental({ ...initialData, ...rentalData });
         toast({ title: "Rental Updated", description: `Rental for ${selectedEq.name} has been updated.` });
@@ -122,7 +134,7 @@ export function RentalForm({ initialData, onSubmitSuccess }: RentalFormProps) {
         addRental(rentalData);
         toast({ title: "Rental Created", description: `Rental for ${selectedEq.name} has been created.` });
       }
-      onSubmitSuccess ? onSubmitSuccess() : router.push("/rentals/calendar"); // Or to a rentals list page
+      onSubmitSuccess ? onSubmitSuccess() : router.push("/rentals/calendar");
     } catch (error) {
       toast({ variant: "destructive", title: "Error", description: "Failed to save rental. Please try again." });
       console.error("Error saving rental:", error);
@@ -148,6 +160,31 @@ export function RentalForm({ initialData, onSubmitSuccess }: RentalFormProps) {
                   {equipment.map(eq => (
                     <SelectItem key={eq.id} value={eq.id}>
                       {eq.name} (Available: {eq.quantity})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="clientId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Client</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select client" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {clients.map(client => (
+                    <SelectItem key={client.id} value={client.id}>
+                      {client.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -205,7 +242,7 @@ export function RentalForm({ initialData, onSubmitSuccess }: RentalFormProps) {
                       mode="single"
                       selected={field.value}
                       onSelect={field.onChange}
-                      disabled={(date) => date < new Date(new Date().setHours(0,0,0,0)) } // Disable past dates
+                      disabled={(date) => date < new Date(new Date().setHours(0,0,0,0)) }
                       initialFocus
                     />
                   </PopoverContent>
@@ -259,19 +296,6 @@ export function RentalForm({ initialData, onSubmitSuccess }: RentalFormProps) {
               <FormLabel>Event Location</FormLabel>
               <FormControl>
                 <Input placeholder="e.g., Grand Ballroom, City Hall" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="clientName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Client Name/Company</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g., Acme Corp, John Smith" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

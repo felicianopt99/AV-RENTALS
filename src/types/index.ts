@@ -21,17 +21,28 @@ export interface EquipmentItem {
   quantity: number;
   status: EquipmentStatus;
   location: string; // Physical location
-  imageUrl?: string; 
+  imageUrl?: string;
+}
+
+export interface Client {
+  id: string;
+  name: string; // Company name or individual's full name
+  contactPerson?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  notes?: string;
 }
 
 export interface Rental {
   id: string;
   equipmentId: string;
   equipmentName: string; // For display convenience
+  clientId: string; // Link to the Client
+  clientName: string; // For display convenience, denormalized
   startDate: Date;
   endDate: Date;
   eventLocation: string;
-  clientName: string;
   internalResponsible: string;
   quantityRented: number;
 }

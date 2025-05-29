@@ -1,4 +1,4 @@
-import type { Category, Subcategory, EquipmentItem, Rental } from '@/types';
+import type { Category, Subcategory, EquipmentItem, Rental, Client } from '@/types';
 
 export const sampleCategories: Category[] = [
   { id: 'cat1', name: 'Audio', icon: 'Mic' },
@@ -77,19 +77,46 @@ export const sampleEquipment: EquipmentItem[] = [
   },
 ];
 
-// Using fixed ISO date strings for sample data to ensure consistency
-// For example, using a base date of 2024-07-15 for "today" in samples
+export const sampleClients: Client[] = [
+  {
+    id: 'client1',
+    name: 'Tech Solutions Inc.',
+    contactPerson: 'Alice Wonderland',
+    email: 'alice@techsolutions.example.com',
+    phone: '555-0101',
+    address: '123 Innovation Drive, Tech City',
+    notes: 'Prefers morning deliveries. Key contact for larger events.',
+  },
+  {
+    id: 'client2',
+    name: 'Creative Events Co.',
+    contactPerson: 'Bob The Builder',
+    email: 'bob@creativeevents.example.com',
+    phone: '555-0202',
+    address: '456 Artful Ave, Design District',
+    notes: 'Requires detailed setup diagrams.',
+  },
+  {
+    id: 'client3',
+    name: 'Local Community Fest',
+    contactPerson: 'Carol Danvers',
+    email: 'carol.fest@community.example.org',
+    phone: '555-0303',
+    address: '789 Community Park, Townsville',
+    notes: 'Annual festival, budget-conscious.',
+  },
+];
+
 export const sampleRentals: Rental[] = [
   {
     id: 'rental1',
     equipmentId: 'eq1',
     equipmentName: 'Shure SM58',
-    // Represents 2024-07-17T00:00:00.000Z
+    clientId: 'client1',
+    clientName: 'Tech Solutions Inc.',
     startDate: new Date('2024-07-17T00:00:00.000Z'),
-    // Represents 2024-07-19T00:00:00.000Z
     endDate: new Date('2024-07-19T00:00:00.000Z'),
     eventLocation: 'Conference Hall A',
-    clientName: 'Tech Corp',
     internalResponsible: 'John Doe',
     quantityRented: 2,
   },
@@ -97,13 +124,24 @@ export const sampleRentals: Rental[] = [
     id: 'rental2',
     equipmentId: 'eq3',
     equipmentName: 'Epson Pro EX7260',
-    // Represents 2024-07-20T00:00:00.000Z
+    clientId: 'client2',
+    clientName: 'Creative Events Co.',
     startDate: new Date('2024-07-20T00:00:00.000Z'),
-    // Represents 2024-07-22T00:00:00.000Z
     endDate: new Date('2024-07-22T00:00:00.000Z'),
     eventLocation: 'Hotel Ballroom',
-    clientName: 'Events Inc.',
     internalResponsible: 'Jane Smith',
     quantityRented: 1,
+  },
+  {
+    id: 'rental3',
+    equipmentId: 'eq2',
+    equipmentName: 'Yamaha DBR10',
+    clientId: 'client1',
+    clientName: 'Tech Solutions Inc.',
+    startDate: new Date(new Date().setDate(new Date().getDate() + 5)), // Upcoming
+    endDate: new Date(new Date().setDate(new Date().getDate() + 7)),
+    eventLocation: 'Outdoor Stage',
+    internalResponsible: 'John Doe',
+    quantityRented: 4,
   },
 ];
