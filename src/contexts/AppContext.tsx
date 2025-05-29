@@ -1,3 +1,4 @@
+
 "use client";
 
 import type React from 'react';
@@ -44,41 +45,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   useEffect(() => {
-    // Initialize with sample data if local storage is empty
     // This effect runs once on the client after mount.
+    // useLocalStorage hook initializes with initialValue, then loads from localStorage in its own effect.
+    // This effect then checks if localStorage was indeed empty to set sample data.
     if (typeof window !== 'undefined') {
-      if (localStorage.getItem('av_categories') === null) {
+      const categoriesExist = localStorage.getItem('av_categories');
+      const subcategoriesExist = localStorage.getItem('av_subcategories');
+      const equipmentExist = localStorage.getItem('av_equipment');
+      const rentalsExist = localStorage.getItem('av_rentals');
+
+      if (categoriesExist === null) {
         setCategories(sampleCategories);
       }
-      if (localStorage.getItem('av_subcategories') === null) {
+      if (subcategoriesExist === null) {
         setSubcategories(sampleSubcategories);
       }
-      if (localStorage.getItem('av_equipment') === null) {
-        setEquipment(sampleEquipment.map(e => ({...e, imageUrl: e.imageUrl || `https://placehold.co/300x200.png?text=${e.name.replace(/\s/g, "+")}` })));
+      if (equipmentExist === null) {
+        // Use 600x400 as a consistent placeholder size if not specified, without text query.
+        setEquipment(sampleEquipment.map(e => ({...e, imageUrl: e.imageUrl || `https://placehold.co/600x400.png` })));
       }
-      // For rentals, if localStorage is empty, use sampleRentals.
-      // sampleRentals now initializes Date objects from fixed strings, so they are consistent.
-      if (localStorage.getItem('av_rentals') === null) {
-         setRentals(sampleRentals);
+      if (rentalsExist === null) {
+         setRentals(sampleRentals); // sampleRentals provides Date objects
       }
-      // If rentals are loaded from localStorage by useLocalStorage, they will be initially set.
-      // The useEffect below will handle converting string dates from localStorage to Date objects.
       setIsDataLoaded(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run once on mount to initialize from localStorage or samples.
-           // Setters from useLocalStorage are stable.
 
   // Ensure dates in rentals state are Date objects, especially after loading from localStorage (where they'd be strings)
   useEffect(() => {
-    if (isDataLoaded) {
+    if (isDataLoaded) { // Only process if data loading step (including localStorage hydration) is complete
       setRentals(prevRentals =>
         prevRentals.map(r => {
-          // Ensure startDate and endDate are Date objects
           const newStartDate = typeof r.startDate === 'string' ? new Date(r.startDate) : r.startDate;
           const newEndDate = typeof r.endDate === 'string' ? new Date(r.endDate) : r.endDate;
           
-          // Defensive check in case Date objects are somehow invalid after parsing
           const finalStartDate = newStartDate instanceof Date && !isNaN(newStartDate.getTime()) ? newStartDate : new Date();
           const finalEndDate = newEndDate instanceof Date && !isNaN(newEndDate.getTime()) ? newEndDate : new Date();
 
@@ -90,7 +91,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         })
       );
     }
-  }, [isDataLoaded, setRentals]);
+  }, [isDataLoaded, setRentals]); // Include setRentals as it's an external function
 
 
   const addCategory = (category: Omit<Category, 'id'>) => {
@@ -101,7 +102,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
   const deleteCategory = (categoryId: string) => {
     setCategories(prev => prev.filter(cat => cat.id !== categoryId));
-    // Also delete associated subcategories
     setSubcategories(prev => prev.filter(subcat => subcat.parentId !== categoryId));
   };
 
@@ -116,7 +116,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
   
   const addEquipmentItem = (item: Omit<EquipmentItem, 'id'>) => {
-    setEquipment(prev => [...prev, { ...item, id: crypto.randomUUID(), imageUrl: item.imageUrl || `https://placehold.co/300x200.png?text=${item.name.replace(/\s/g,"+")}` }]);
+    // Use 600x400 as a consistent placeholder size if not specified, without text query.
+    setEquipment(prev => [...prev, { ...item, id: crypto.randomUUID(), imageUrl: item.imageUrl || `https://placehold.co/600x400.png` }]);
   };
   const updateEquipmentItem = (updatedItem: EquipmentItem) => {
     setEquipment(prev => prev.map(eq => eq.id === updatedItem.id ? updatedItem : eq));
