@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, Dispatch, SetStateAction } from 'react';
@@ -5,43 +6,44 @@ import { useState, useEffect, Dispatch, SetStateAction } from 'react';
 type SetValue<T> = Dispatch<SetStateAction<T>>;
 
 function useLocalStorage<T>(key: string, initialValue: T): [T, SetValue<T>] {
-  // Get from local storage then
-  // parse stored json or return initialValue
-  const readValue = (): T => {
-    // Prevent build error "window is undefined" but keep keep working
+  // STEP 1: Initialize state with initialValue.
+  // This ensures server and initial client render are consistent.
+  const [storedValue, setStoredValue] = useState<T>(initialValue);
+
+  // STEP 2: Load value from localStorage in an effect.
+  // This runs only on the client, after the initial render.
+  useEffect(() => {
+    // Prevent build error "window is undefined"
     if (typeof window === 'undefined') {
-      return initialValue;
+      return;
     }
 
     try {
       const item = window.localStorage.getItem(key);
-      return item ? (JSON.parse(item) as T) : initialValue;
+      if (item) {
+        setStoredValue(JSON.parse(item) as T);
+      }
+      // If item is null, storedValue remains initialValue from useState,
+      // which is correct. AppContext can then decide if sample data is needed.
     } catch (error) {
-      console.warn(`Error reading localStorage key “${key}”:`, error);
-      return initialValue;
+      console.warn(`Error reading localStorage key “${key}” in effect:`, error);
+      // If error, storedValue remains initialValue
     }
-  };
+  }, [key]); // Effect runs when key changes or on mount
 
-  // State to store our value
-  // Pass initial state function to useState so logic is only executed once
-  const [storedValue, setStoredValue] = useState<T>(readValue);
-
-  // Return a wrapped version of useState's setter function that ...
-  // ... persists the new value to localStorage.
+  // Wrapped version of useState's setter function that persists the new value to localStorage.
   const setValue: SetValue<T> = (value) => {
-    // Prevent build error "window is undefined" but keep keep working
+    // Prevent build error "window is undefined"
     if (typeof window === 'undefined') {
       console.warn(
         `Tried setting localStorage key “${key}” even though environment is not a client`
       );
+      return; 
     }
 
     try {
-      // Allow value to be a function so we have same API as useState
       const newValue = value instanceof Function ? value(storedValue) : value;
-      // Save to local storage
       window.localStorage.setItem(key, JSON.stringify(newValue));
-      // Save state
       setStoredValue(newValue);
       // We dispatch a custom event so other tabs can react to changes
       window.dispatchEvent(new Event("local-storage"));
@@ -50,27 +52,55 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, SetValue<T>] {
     }
   };
 
+  // Effect for syncing with 'storage' events from other tabs/windows
   useEffect(() => {
-    setStoredValue(readValue());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    const handleStorageChange = () => {
-      setStoredValue(readValue());
+    if (typeof window === 'undefined') {
+      return;
+    }
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === key) {
+        try {
+          if (event.newValue) {
+            setStoredValue(JSON.parse(event.newValue) as T);
+          } else {
+            // Key was removed or cleared from another tab
+            setStoredValue(initialValue); // Reset to initialValue
+          }
+        } catch (error) {
+          console.warn(`Error parsing storage event for key “${key}”:`, error);
+          setStoredValue(initialValue); // Reset to initialValue on error
+        }
+      }
+    };
+    
+    // Effect for syncing with 'local-storage' events dispatched by setValue in the same document
+    const handleLocalStorageEvent = () => {
+        // This ensures that if multiple hooks use the same key, or if localStorage is modified
+        // externally and the 'local-storage' event is dispatched, the state is updated.
+        if (typeof window !== 'undefined') {
+            try {
+                const item = window.localStorage.getItem(key);
+                if (item) {
+                    setStoredValue(JSON.parse(item) as T);
+                } else {
+                    // If item was removed, reset to initialValue
+                    setStoredValue(initialValue);
+                }
+            } catch (error) {
+                console.warn(`Error reading localStorage key “${key}” on local-storage event:`, error);
+                setStoredValue(initialValue); // Reset to initialValue on error
+            }
+        }
     };
 
-    // this only works for other documents, not the current one
     window.addEventListener('storage', handleStorageChange);
-    // this is for the current document
-    window.addEventListener('local-storage', handleStorageChange);
+    window.addEventListener('local-storage', handleLocalStorageEvent);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('local-storage', handleStorageChange);
+      window.removeEventListener('local-storage', handleLocalStorageEvent);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [key, initialValue]); // initialValue is needed here to correctly reset if the key is cleared in storage.
 
   return [storedValue, setValue];
 }
