@@ -155,21 +155,21 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
       subTotal += isNaN(itemTotal) ? 0 : itemTotal;
     });
 
-    let discountedSubTotal = subTotal;
+    let currentDiscountedSubTotal = subTotal;
     if (watchDiscountType === 'percentage') {
-      discountedSubTotal = subTotal * (1 - (watchDiscountAmount / 100));
+      currentDiscountedSubTotal = subTotal * (1 - (watchDiscountAmount / 100));
     } else { // fixed
-      discountedSubTotal = subTotal - watchDiscountAmount;
+      currentDiscountedSubTotal = subTotal - watchDiscountAmount;
     }
-    discountedSubTotal = Math.max(0, discountedSubTotal);
+    currentDiscountedSubTotal = Math.max(0, currentDiscountedSubTotal);
 
-    const taxAmount = discountedSubTotal * (watchTaxRate / 100); // Use percentage from form state
-    const totalAmount = discountedSubTotal + taxAmount;
+    const taxAmount = currentDiscountedSubTotal * (watchTaxRate / 100); // Use percentage from form state
+    const totalAmount = currentDiscountedSubTotal + taxAmount;
     
-    return { subTotal, taxAmount, totalAmount, days };
+    return { subTotal, discountedSubTotal: currentDiscountedSubTotal, taxAmount, totalAmount, days };
   }, [watchItems, watchStartDate, watchEndDate, watchDiscountAmount, watchDiscountType, watchTaxRate, rentalDays]);
 
-  const { subTotal, taxAmount, totalAmount, days } = calculateTotals();
+  const { subTotal, discountedSubTotal, taxAmount, totalAmount, days } = calculateTotals();
 
   const handleAddEquipment = () => {
     if (equipment.length > 0) {
@@ -212,7 +212,8 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
       };
     });
 
-    const { subTotal, taxAmount, totalAmount } = calculateTotals(); // Recalculate with potentially final form values
+    // Recalculate totals with final form values to be absolutely sure
+    const finalTotals = calculateTotals(); 
 
     const finalClientId = data.clientId === MANUAL_CLIENT_ENTRY_VALUE ? undefined : data.clientId;
 
@@ -220,9 +221,11 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
       ...data,
       clientId: finalClientId,
       items: processedItems,
-      subTotal,
-      taxAmount,
-      totalAmount,
+      subTotal: finalTotals.subTotal,
+      discountAmount: data.discountAmount, // discountAmount is already watched
+      discountType: data.discountType, // discountType is already watched
+      taxAmount: finalTotals.taxAmount,
+      totalAmount: finalTotals.totalAmount,
       taxRate: data.taxRate / 100, // Convert percentage to decimal for storage
       startDate: data.startDate instanceof Date ? data.startDate : new Date(data.startDate),
       endDate: data.endDate instanceof Date ? data.endDate : new Date(data.endDate),
@@ -294,7 +297,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
               <FormLabel>Select Existing Client (Optional)</FormLabel>
               <Select 
                 onValueChange={(value) => {
-                  field.onChange(value); // No longer need to convert MANUAL_CLIENT_ENTRY_VALUE to "" here
+                  field.onChange(value); 
                   if (value === MANUAL_CLIENT_ENTRY_VALUE || value === "") {
                     form.setValue("clientName", "");
                     form.setValue("clientEmail", "");
