@@ -154,7 +154,7 @@ export function QuoteListDisplay() {
               )}
             </div>
           ) : (
-            <Table> {/* The Table component itself has an internal overflow-auto div */}
+            <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Number</TableHead>
