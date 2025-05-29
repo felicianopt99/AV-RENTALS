@@ -45,53 +45,82 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   useEffect(() => {
-    // This effect runs once on the client after mount.
-    // useLocalStorage hook initializes with initialValue, then loads from localStorage in its own effect.
-    // This effect then checks if localStorage was indeed empty to set sample data.
-    if (typeof window !== 'undefined') {
-      const categoriesExist = localStorage.getItem('av_categories');
-      const subcategoriesExist = localStorage.getItem('av_subcategories');
-      const equipmentExist = localStorage.getItem('av_equipment');
-      const rentalsExist = localStorage.getItem('av_rentals');
+    const populateSampleDataIfNeeded = () => {
+      if (typeof window === 'undefined') return;
 
-      if (categoriesExist === null) {
+      const wasKeyNeverSet = (key: string) => {
+        const item = localStorage.getItem(key);
+        // Check if item is null (key not found) or the string "undefined"
+        return item === null || item === 'undefined';
+      };
+
+      if (wasKeyNeverSet('av_categories')) {
         setCategories(sampleCategories);
       }
-      if (subcategoriesExist === null) {
+      if (wasKeyNeverSet('av_subcategories')) {
         setSubcategories(sampleSubcategories);
       }
-      if (equipmentExist === null) {
-        // Use 600x400 as a consistent placeholder size if not specified, without text query.
+      if (wasKeyNeverSet('av_equipment')) {
         setEquipment(sampleEquipment.map(e => ({...e, imageUrl: e.imageUrl || `https://placehold.co/600x400.png` })));
       }
-      if (rentalsExist === null) {
-         setRentals(sampleRentals); // sampleRentals provides Date objects
+      if (wasKeyNeverSet('av_rentals')) {
+         setRentals(sampleRentals); // sampleRentals provides string dates
       }
-      setIsDataLoaded(true);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run once on mount to initialize from localStorage or samples.
+    };
 
-  // Ensure dates in rentals state are Date objects, especially after loading from localStorage (where they'd be strings)
+    populateSampleDataIfNeeded();
+    setIsDataLoaded(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setCategories, setSubcategories, setEquipment, setRentals]); // setX fns are now stable from useLocalStorage
+
   useEffect(() => {
-    if (isDataLoaded) { // Only process if data loading step (including localStorage hydration) is complete
-      setRentals(prevRentals =>
-        prevRentals.map(r => {
-          const newStartDate = typeof r.startDate === 'string' ? new Date(r.startDate) : r.startDate;
-          const newEndDate = typeof r.endDate === 'string' ? new Date(r.endDate) : r.endDate;
-          
-          const finalStartDate = newStartDate instanceof Date && !isNaN(newStartDate.getTime()) ? newStartDate : new Date();
-          const finalEndDate = newEndDate instanceof Date && !isNaN(newEndDate.getTime()) ? newEndDate : new Date();
+    if (isDataLoaded) {
+      setRentals(prevRentals => {
+        let hasChanged = false;
+        const newMappedRentals = prevRentals.map(r => {
+          let currentStartDate = r.startDate;
+          let currentEndDate = r.endDate;
+          let rentalItemChanged = false;
 
-          return {
-            ...r,
-            startDate: finalStartDate,
-            endDate: finalEndDate,
-          };
-        })
-      );
+          if (typeof currentStartDate === 'string') {
+            currentStartDate = new Date(currentStartDate);
+            rentalItemChanged = true;
+          } else if (!(currentStartDate instanceof Date) && currentStartDate !== null && currentStartDate !== undefined) {
+            // Attempt to parse if it's not a Date object already but also not explicitly null/undefined
+            currentStartDate = new Date(String(currentStartDate));
+            rentalItemChanged = true;
+          }
+
+
+          if (typeof currentEndDate === 'string') {
+            currentEndDate = new Date(currentEndDate);
+            rentalItemChanged = true;
+          } else if (!(currentEndDate instanceof Date) && currentEndDate !== null && currentEndDate !== undefined) {
+            currentEndDate = new Date(String(currentEndDate));
+            rentalItemChanged = true;
+          }
+          
+          // If parsing failed, currentStartDate/EndDate will be `Invalid Date`. This is intentional.
+          // No fallback to new Date() for invalid dates.
+
+          if (rentalItemChanged) {
+            hasChanged = true;
+            return {
+              ...r,
+              startDate: currentStartDate,
+              endDate: currentEndDate,
+            };
+          }
+          return r;
+        });
+
+        if (hasChanged) {
+          return newMappedRentals;
+        }
+        return prevRentals; 
+      });
     }
-  }, [isDataLoaded, setRentals]); // Include setRentals as it's an external function
+  }, [isDataLoaded, setRentals]);
 
 
   const addCategory = (category: Omit<Category, 'id'>) => {
@@ -116,7 +145,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
   
   const addEquipmentItem = (item: Omit<EquipmentItem, 'id'>) => {
-    // Use 600x400 as a consistent placeholder size if not specified, without text query.
     setEquipment(prev => [...prev, { ...item, id: crypto.randomUUID(), imageUrl: item.imageUrl || `https://placehold.co/600x400.png` }]);
   };
   const updateEquipmentItem = (updatedItem: EquipmentItem) => {
@@ -127,10 +155,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const addRental = (rental: Omit<Rental, 'id'>) => {
-    setRentals(prev => [...prev, { ...rental, id: crypto.randomUUID() }]);
+    // Ensure dates are Date objects when adding new rental
+    const processedRental = {
+      ...rental,
+      id: crypto.randomUUID(),
+      startDate: rental.startDate instanceof Date ? rental.startDate : new Date(rental.startDate),
+      endDate: rental.endDate instanceof Date ? rental.endDate : new Date(rental.endDate),
+    };
+    setRentals(prev => [...prev, processedRental]);
   };
   const updateRental = (updatedRental: Rental) => {
-    setRentals(prev => prev.map(r => r.id === updatedRental.id ? updatedRental : r));
+     // Ensure dates are Date objects when updating rental
+    const processedRental = {
+      ...updatedRental,
+      startDate: updatedRental.startDate instanceof Date ? updatedRental.startDate : new Date(updatedRental.startDate),
+      endDate: updatedRental.endDate instanceof Date ? updatedRental.endDate : new Date(updatedRental.endDate),
+    };
+    setRentals(prev => prev.map(r => r.id === processedRental.id ? processedRental : r));
   };
   const deleteRental = (rentalId: string) => {
     setRentals(prev => prev.filter(r => r.id !== rentalId));
