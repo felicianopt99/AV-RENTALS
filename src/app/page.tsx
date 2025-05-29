@@ -10,6 +10,7 @@ import { AppHeader } from '@/components/layout/AppHeader';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, SearchSlash, Package, Users, CalendarClock, Wrench } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,12 +41,12 @@ const StatCard: React.FC<{ title: string; value: string | number; icon: React.El
 export default function DashboardPage() {
   const { equipment, categories, subcategories, clients, rentals, deleteEquipmentItem, isDataLoaded } = useAppContext();
   const { toast } = useToast();
+  const router = useRouter();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
   
-  const [editingItem, setEditingItem] = useState<EquipmentItem | null>(null);
   const [itemToDelete, setItemToDelete] = useState<EquipmentItem | null>(null);
 
   const filteredEquipment = useMemo(() => {
@@ -72,10 +73,8 @@ export default function DashboardPage() {
   }, [filteredEquipment, categories]);
 
   const handleEdit = useCallback((item: EquipmentItem) => {
-    setEditingItem(item); 
-    toast({ title: "Edit Item", description: `Navigating to edit ${item.name}. (Not implemented yet)` });
-    // router.push(`/equipment/${item.id}/edit`); // Example navigation
-  }, [toast]);
+    router.push(`/equipment/${item.id}/edit`);
+  }, [router]);
 
   const openDeleteConfirmDialog = useCallback((item: EquipmentItem) => {
     setItemToDelete(item);
@@ -96,8 +95,12 @@ export default function DashboardPage() {
     const sevenDaysFromNow = addDays(today, 7);
 
     const upcomingRentalsCount = rentals.filter(rental => {
-        const rentalStartDate = startOfDay(new Date(rental.startDate));
-        return isFuture(rentalStartDate) && isWithinInterval(rentalStartDate, { start: today, end: sevenDaysFromNow });
+        const rentalStartDate = startOfDay(new Date(rental.startDate)); // Ensure date objects for comparison
+        const rentalEndDate = startOfDay(new Date(rental.endDate)); // Though not strictly needed for this logic, good practice
+        
+        // Check if the rental's start date is in the future and within the next 7 days from today.
+        return isFuture(rentalStartDate) && 
+               isWithinInterval(rentalStartDate, { start: today, end: sevenDaysFromNow });
     }).length;
 
     return {
@@ -169,7 +172,7 @@ export default function DashboardPage() {
                     item={item}
                     category={categories.find(c => c.id === item.categoryId)}
                     subcategory={subcategories.find(s => s.id === item.subcategoryId)}
-                    onEdit={handleEdit}
+                    onEdit={() => handleEdit(item)}
                     onDelete={() => openDeleteConfirmDialog(item)}
                   />
                 ))}
@@ -178,23 +181,6 @@ export default function DashboardPage() {
           ))}
         </div>
       </div>
-
-      {editingItem && (
-         <AlertDialog defaultOpen onOpenChange={(isOpen) => !isOpen && setEditingItem(null)}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Edit Equipment (Placeholder)</AlertDialogTitle>
-              <AlertDialogDescription>
-                Editing for '{editingItem.name}' is not fully implemented in this demo.
-                This would typically open a form pre-filled with item data.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setEditingItem(null)}>Close</AlertDialogCancel>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
 
       {itemToDelete && (
         <AlertDialog open={!!itemToDelete} onOpenChange={(isOpen) => !isOpen && setItemToDelete(null)}>

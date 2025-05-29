@@ -31,7 +31,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { PlusCircle, Edit, Trash2, MoreHorizontal, SearchSlash } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, MoreHorizontal, Search, SearchSlash } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -59,11 +59,12 @@ export function ClientListDisplay() {
   const filteredClients = clients.filter(client =>
     client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (client.contactPerson && client.contactPerson.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (client.email && client.email.toLowerCase().includes(searchTerm.toLowerCase()))
+    (client.email && client.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (client.phone && client.phone.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   if (!isDataLoaded) {
-    return <div className="flex justify-center items-center h-full"><p>Loading client data...</p></div>;
+    return <div className="flex justify-center items-center h-full"><p className="text-lg text-muted-foreground">Loading client data...</p></div>;
   }
 
   return (
@@ -81,20 +82,27 @@ export function ClientListDisplay() {
         <CardHeader>
           <CardTitle>Client List</CardTitle>
           <div className="mt-4">
-            <Input 
-              placeholder="Search clients (name, contact, email)..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-sm"
-            />
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder="Search clients (name, contact, email, phone)..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="max-w-md pl-10"
+              />
+            </div>
           </div>
         </CardHeader>
         <CardContent>
           {filteredClients.length === 0 ? (
-            <div className="text-center py-10 text-muted-foreground">
-              <SearchSlash className="w-12 h-12 mx-auto mb-2 text-primary/50" />
-              <p className="text-lg">No clients found.</p>
-              {searchTerm && <p className="text-sm">Try adjusting your search term.</p>}
+            <div className="text-center py-12 text-muted-foreground flex flex-col items-center">
+              <SearchSlash className="w-16 h-16 mb-4 text-primary/50" />
+              <p className="text-xl mb-1">No clients found.</p>
+              {searchTerm ? (
+                <p className="text-sm">Try adjusting your search term.</p>
+              ) : (
+                <p className="text-sm">Add a new client to get started.</p>
+              )}
             </div>
           ) : (
           <div className="overflow-x-auto">
