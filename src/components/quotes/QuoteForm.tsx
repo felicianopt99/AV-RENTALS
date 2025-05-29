@@ -54,10 +54,9 @@ const quoteFormSchema = z.object({
   items: z.array(quoteItemSchema).min(1, "At least one item is required in the quote."),
   notes: z.string().max(1000).optional().or(z.literal('')),
   status: z.enum(QUOTE_STATUSES as [QuoteStatus, ...QuoteStatus[]]),
-  // Financial fields like subTotal, discount, tax, total are calculated
   discountAmount: z.coerce.number().min(0).optional().default(0),
   discountType: z.enum(['percentage', 'fixed']).optional().default('fixed'),
-  taxRate: z.coerce.number().min(0).max(1).optional().default(0.0), // e.g., 0.05 for 5%
+  taxRate: z.coerce.number().min(0).max(100).optional().default(0), // User inputs percentage e.g. 23 for 23%
 }).refine(data => data.endDate >= data.startDate, {
   message: "End date cannot be before start date.",
   path: ["endDate"],
@@ -80,7 +79,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
       ...initialData,
       startDate: new Date(initialData.startDate),
       endDate: new Date(initialData.endDate),
-      items: initialData.items.map(item => ({ // Ensure items are plain objects for react-hook-form
+      items: initialData.items.map(item => ({
         id: item.id,
         equipmentId: item.equipmentId,
         quantity: item.quantity,
@@ -90,13 +89,13 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
       clientEmail: initialData.clientEmail || '',
       clientPhone: initialData.clientPhone || '',
       clientAddress: initialData.clientAddress || '',
-      clientId: initialData.clientId || "", // Ensure clientId is an empty string if not present
+      clientId: initialData.clientId || MANUAL_CLIENT_ENTRY_VALUE,
       discountAmount: initialData.discountAmount || 0,
       discountType: initialData.discountType || 'fixed',
-      taxRate: initialData.taxRate || 0,
+      taxRate: (initialData.taxRate || 0) * 100, // Convert decimal to percentage for display/editing
     } : {
       name: "",
-      clientId: "",
+      clientId: MANUAL_CLIENT_ENTRY_VALUE,
       clientName: "",
       clientEmail: "",
       clientPhone: "",
@@ -108,11 +107,11 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
       status: "Draft",
       discountAmount: 0,
       discountType: 'fixed',
-      taxRate: 0.0,
+      taxRate: 0, // Default to 0%
     },
   });
 
-  const { fields, append, remove, update } = useFieldArray({
+  const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "items",
   });
@@ -126,7 +125,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
   const watchClientId = form.watch("clientId");
 
   useEffect(() => {
-    if (watchClientId) {
+    if (watchClientId && watchClientId !== MANUAL_CLIENT_ENTRY_VALUE) {
       const selectedClient = clients.find(c => c.id === watchClientId);
       if (selectedClient) {
         form.setValue("clientName", selectedClient.name);
@@ -134,10 +133,10 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
         form.setValue("clientPhone", selectedClient.phone || "");
         form.setValue("clientAddress", selectedClient.address || "");
       }
-    } else { // If clientId is empty (manual entry selected)
-        // Don't clear here, allow manual input if clientId is empty
-        // If clientID was previously set and now is cleared, then manual fields should enable.
-        // This logic is mostly for auto-filling from an existing client.
+    } else if (watchClientId === MANUAL_CLIENT_ENTRY_VALUE) {
+        // Fields are enabled, user can type.
+        // If user explicitly selects "-- None --" AFTER having an existing client selected, clear fields.
+        // This is handled by the onValueChange of the Select component.
     }
   }, [watchClientId, clients, form]);
 
@@ -162,9 +161,9 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
     } else { // fixed
       discountedSubTotal = subTotal - watchDiscountAmount;
     }
-    discountedSubTotal = Math.max(0, discountedSubTotal); // Ensure not negative
+    discountedSubTotal = Math.max(0, discountedSubTotal);
 
-    const taxAmount = discountedSubTotal * watchTaxRate;
+    const taxAmount = discountedSubTotal * (watchTaxRate / 100); // Use percentage from form state
     const totalAmount = discountedSubTotal + taxAmount;
     
     return { subTotal, taxAmount, totalAmount, days };
@@ -186,13 +185,11 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
   };
   
   useEffect(() => {
-    // When equipmentId changes for an item, update its unitPrice
     fields.forEach((field, index) => {
       const selectedEqId = form.watch(`items.${index}.equipmentId`);
       const currentUnitPrice = form.watch(`items.${index}.unitPrice`);
       const eq = equipment.find(e => e.id === selectedEqId);
       if (eq && eq.dailyRate !== currentUnitPrice && !form.getFieldState(`items.${index}.unitPrice`).isDirty) { 
-        // Only update if price is not manually changed
         form.setValue(`items.${index}.unitPrice`, eq.dailyRate, { shouldValidate: true, shouldDirty: true });
       }
     });
@@ -201,7 +198,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
 
   function onSubmit(data: QuoteFormValues) {
     const currentDays = rentalDays();
-    const processedItems: QuoteItem[] = data.items.map((item, index) => {
+    const processedItems: QuoteItem[] = data.items.map((item) => {
       const eq = equipment.find(e => e.id === item.equipmentId);
       const lineTotal = item.quantity * item.unitPrice * currentDays;
       return {
@@ -215,7 +212,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
       };
     });
 
-    const { subTotal, taxAmount, totalAmount } = calculateTotals();
+    const { subTotal, taxAmount, totalAmount } = calculateTotals(); // Recalculate with potentially final form values
 
     const finalClientId = data.clientId === MANUAL_CLIENT_ENTRY_VALUE ? undefined : data.clientId;
 
@@ -226,7 +223,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
       subTotal,
       taxAmount,
       totalAmount,
-      // Ensure dates are properly formatted if they are not already Date objects
+      taxRate: data.taxRate / 100, // Convert percentage to decimal for storage
       startDate: data.startDate instanceof Date ? data.startDate : new Date(data.startDate),
       endDate: data.endDate instanceof Date ? data.endDate : new Date(data.endDate),
     };
@@ -297,7 +294,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
               <FormLabel>Select Existing Client (Optional)</FormLabel>
               <Select 
                 onValueChange={(value) => {
-                  field.onChange(value === MANUAL_CLIENT_ENTRY_VALUE ? "" : value);
+                  field.onChange(value); // No longer need to convert MANUAL_CLIENT_ENTRY_VALUE to "" here
                   if (value === MANUAL_CLIENT_ENTRY_VALUE || value === "") {
                     form.setValue("clientName", "");
                     form.setValue("clientEmail", "");
@@ -321,16 +318,16 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
         />
         <div className="grid md:grid-cols-2 gap-8">
             <FormField control={form.control} name="clientName" render={({ field }) => (
-                <FormItem><FormLabel>Client Name</FormLabel><FormControl><Input placeholder="Client's Full Name or Company" {...field} disabled={!!watchClientId} /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>Client Name</FormLabel><FormControl><Input placeholder="Client's Full Name or Company" {...field} disabled={!!watchClientId && watchClientId !== MANUAL_CLIENT_ENTRY_VALUE} /></FormControl><FormMessage /></FormItem>
             )} />
             <FormField control={form.control} name="clientEmail" render={({ field }) => (
-                <FormItem><FormLabel>Client Email</FormLabel><FormControl><Input type="email" placeholder="client@example.com" {...field} disabled={!!watchClientId} /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>Client Email</FormLabel><FormControl><Input type="email" placeholder="client@example.com" {...field} disabled={!!watchClientId && watchClientId !== MANUAL_CLIENT_ENTRY_VALUE} /></FormControl><FormMessage /></FormItem>
             )} />
             <FormField control={form.control} name="clientPhone" render={({ field }) => (
-                <FormItem><FormLabel>Client Phone</FormLabel><FormControl><Input placeholder="Client's Phone Number" {...field} disabled={!!watchClientId} /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>Client Phone</FormLabel><FormControl><Input placeholder="Client's Phone Number" {...field} disabled={!!watchClientId && watchClientId !== MANUAL_CLIENT_ENTRY_VALUE} /></FormControl><FormMessage /></FormItem>
             )} />
             <FormField control={form.control} name="clientAddress" render={({ field }) => (
-                <FormItem><FormLabel>Client Address</FormLabel><FormControl><Textarea placeholder="Client's Address" {...field} disabled={!!watchClientId} /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>Client Address</FormLabel><FormControl><Textarea placeholder="Client's Address" {...field} disabled={!!watchClientId && watchClientId !== MANUAL_CLIENT_ENTRY_VALUE} /></FormControl><FormMessage /></FormItem>
             )} />
         </div>
 
@@ -410,10 +407,18 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
                 </Select><FormMessage /></FormItem>
             )} />
             <FormField control={form.control} name="discountAmount" render={({ field }) => (
-                <FormItem><FormLabel>Discount Amount</FormLabel><FormControl><Input type="number" step="0.01" {...field} /></FormControl><FormMessage /></FormItem>
+                <FormItem>
+                    <FormLabel>Discount Amount {watchDiscountType === 'percentage' ? '(%)' : '($)'}</FormLabel>
+                    <FormControl><Input type="number" step="0.01" {...field} /></FormControl>
+                    <FormMessage />
+                </FormItem>
             )} />
             <FormField control={form.control} name="taxRate" render={({ field }) => (
-                <FormItem><FormLabel>Tax Rate (%)</FormLabel><FormControl><Input type="number" step="0.001" placeholder="e.g. 0.05 for 5%" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} /></FormControl><FormMessage /></FormItem> // Added || 0 to prevent NaN
+                <FormItem>
+                    <FormLabel>Tax Rate (%)</FormLabel>
+                    <FormControl><Input type="number" step="0.01" placeholder="e.g. 23 for 23%" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} /></FormControl>
+                    <FormMessage />
+                </FormItem>
             )} />
         </div>
         <Card className="p-4 bg-muted/30">
@@ -430,12 +435,10 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
                  <div className="flex justify-between">
                     <span>Total Before Tax:</span>
                     <span>
-                        $ {watchDiscountType === 'percentage' 
-                            ? (subTotal * (1 - (watchDiscountAmount / 100))).toFixed(2) 
-                            : (subTotal - watchDiscountAmount).toFixed(2)}
+                        $ {(discountedSubTotal).toFixed(2)}
                     </span>
                 </div>
-                <div className="flex justify-between"><span>Tax ({ (watchTaxRate * 100).toFixed(1)}%):</span><span>${taxAmount.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span>Tax ({ (watchTaxRate).toFixed(1)}%):</span><span>${taxAmount.toFixed(2)}</span></div>
                 <Separator className="my-1 bg-border"/>
                 <div className="flex justify-between font-bold text-lg"><span>Total Amount:</span><span>${totalAmount.toFixed(2)}</span></div>
             </div>

@@ -83,7 +83,7 @@ export function QuoteListDisplay() {
 
   if (!isDataLoaded) {
     return (
-        <div className="flex flex-col h-[calc(100vh-150px)]">
+        <div className="flex flex-col h-[calc(100vh-150px)]"> {/* Adjust height as needed */}
             <div className="flex-grow flex items-center justify-center">
                 <p className="text-lg text-muted-foreground">Loading quote data...</p>
             </div>
@@ -143,7 +143,8 @@ export function QuoteListDisplay() {
                   <TableHead>Number</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Client</TableHead>
-                  <TableHead>Created</TableHead>
+                  <TableHead>Start Date</TableHead>
+                  <TableHead>End Date</TableHead>
                   <TableHead>Total</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -155,7 +156,8 @@ export function QuoteListDisplay() {
                     <TableCell className="font-medium">{quote.quoteNumber}</TableCell>
                     <TableCell>{quote.name}</TableCell>
                     <TableCell>{quote.clientName || '-'}</TableCell>
-                    <TableCell>{format(new Date(quote.createdAt), 'PP')}</TableCell>
+                    <TableCell>{format(new Date(quote.startDate), 'PP')}</TableCell>
+                    <TableCell>{format(new Date(quote.endDate), 'PP')}</TableCell>
                     <TableCell>${quote.totalAmount.toFixed(2)}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className={`py-1 px-2.5 text-xs ${getStatusColor(quote.status)}`}>
@@ -211,3 +213,4 @@ export function QuoteListDisplay() {
     </div>
   );
 }
+

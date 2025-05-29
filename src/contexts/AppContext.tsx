@@ -59,26 +59,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [quotes, setQuotes] = useLocalStorage<Quote[]>('av_quotes', []);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
-  useEffect(() => {
+ useEffect(() => {
     const populateSampleDataIfNeeded = () => {
       if (typeof window === 'undefined') return;
 
       const wasKeyNeverSet = (key: string) => {
         const item = localStorage.getItem(key);
-        return item === null || item === 'undefined'; // Consider 'undefined' string if it was ever saved that way
+        return item === null || item === 'undefined';
       };
       
+      // Use stable setters from useLocalStorage in the dependency array
       if (wasKeyNeverSet('av_categories')) setCategories(sampleCategories);
       if (wasKeyNeverSet('av_subcategories')) setSubcategories(sampleSubcategories);
       if (wasKeyNeverSet('av_equipment')) {
          setEquipment(sampleEquipment.map(e => ({
           ...e, 
           imageUrl: e.imageUrl || `https://placehold.co/600x400.png`,
-          dailyRate: e.dailyRate || 0, // Ensure dailyRate exists
+          dailyRate: e.dailyRate || 0,
         })));
       } else {
-        // Ensure existing equipment has dailyRate
-        setEquipment(prev => prev.map(e => ({...e, dailyRate: e.dailyRate || 0})));
+        setEquipment(prev => prev.map(e => ({...e, dailyRate: e.dailyRate || 0, imageUrl: e.imageUrl || `https://placehold.co/600x400.png`})));
       }
       if (wasKeyNeverSet('av_clients')) setClients(sampleClients);
       if (wasKeyNeverSet('av_rentals')) setRentals(sampleRentals);
@@ -92,7 +92,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     if (isDataLoaded) {
-        const processDates = (items: any[], dateFields: string[]) => {
+        const processDates = (items: any[], dateFields: string[]): { changed: boolean, newItems: any[] } => {
             let hasChanged = false;
             const newMappedItems = items.map(item => {
                 let currentItemChanged = false;
@@ -100,24 +100,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 dateFields.forEach(field => {
                     if (newItem[field] && !(newItem[field] instanceof Date)) {
                         const parsedDate = new Date(String(newItem[field]));
-                        // Only update if parsing was successful, otherwise keep original or let validation handle it
                         if (!isNaN(parsedDate.getTime())) {
                            newItem[field] = parsedDate;
                            currentItemChanged = true;
-                        } else {
-                            // console.warn(`Failed to parse date string: ${newItem[field]} for field ${field}`);
-                            // Keep original invalid string or set to undefined if critical, for now keep
                         }
                     }
                 });
                 if (currentItemChanged) hasChanged = true;
                 return newItem;
             });
-            return hasChanged ? newMappedItems : items;
+            return { changed: hasChanged, newItems: newMappedItems };
         };
 
-        setRentals(prevRentals => processDates(prevRentals, ['startDate', 'endDate']));
-        setQuotes(prevQuotes => processDates(prevQuotes, ['startDate', 'endDate', 'createdAt', 'updatedAt']));
+        setRentals(prevRentals => {
+            const { changed, newItems } = processDates(prevRentals, ['startDate', 'endDate']);
+            return changed ? newItems : prevRentals;
+        });
+        setQuotes(prevQuotes => {
+            const { changed, newItems } = processDates(prevQuotes, ['startDate', 'endDate', 'createdAt', 'updatedAt']);
+            return changed ? newItems : prevQuotes;
+        });
     }
   }, [isDataLoaded, setRentals, setQuotes]);
 
@@ -147,7 +149,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setEquipment(prev => [...prev, { ...item, id: crypto.randomUUID(), imageUrl: item.imageUrl || `https://placehold.co/600x400.png`, dailyRate: item.dailyRate || 0 }]);
   }, [setEquipment]);
   const updateEquipmentItem = useCallback((updatedItem: EquipmentItem) => {
-    setEquipment(prev => prev.map(eq => eq.id === updatedItem.id ? {...eq, ...updatedItem, dailyRate: updatedItem.dailyRate || 0 } : eq));
+    setEquipment(prev => prev.map(eq => eq.id === updatedItem.id ? {...eq, ...updatedItem, dailyRate: updatedItem.dailyRate || 0, imageUrl: updatedItem.imageUrl || `https://placehold.co/600x400.png` } : eq));
   }, [setEquipment]);
   const deleteEquipmentItem = useCallback((itemId: string) => {
     setEquipment(prev => prev.filter(eq => eq.id !== itemId));
@@ -185,13 +187,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [setRentals]);
 
   const getNextQuoteNumber = useCallback((): string => {
-    const year = new Date().getFullYear();
-    const yearQuotes = quotes.filter(q => q.quoteNumber.startsWith(`Q${year}-`));
-    const maxNum = yearQuotes.reduce((max, q) => {
-        const numPart = parseInt(q.quoteNumber.split('-')[1] || '0', 10);
-        return Math.max(max, numPart);
-    }, 0);
-    return `Q${year}-${String(maxNum + 1).padStart(3, '0')}`;
+    const currentYear = new Date().getFullYear();
+    // Filter quotes for the current year to find the highest sequence number for that year.
+    const yearQuotes = quotes.filter(q => {
+        const quoteYear = parseInt(q.quoteNumber.substring(1, 5), 10); // Assumes QYYYY-NNN format
+        return quoteYear === currentYear;
+    });
+
+    let maxNum = 0;
+    if (yearQuotes.length > 0) {
+        maxNum = yearQuotes.reduce((max, q) => {
+            const numPart = parseInt(q.quoteNumber.split('-')[1] || '0', 10);
+            return Math.max(max, numPart);
+        }, 0);
+    }
+    return `Q${currentYear}-${String(maxNum + 1).padStart(3, '0')}`;
   }, [quotes]);
 
   const addQuote = useCallback((quoteData: Omit<Quote, 'id' | 'quoteNumber' | 'createdAt' | 'updatedAt'>): string => {
@@ -202,7 +212,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         quoteNumber: getNextQuoteNumber(),
         createdAt: new Date(),
         updatedAt: new Date(),
-        // Ensure dates are Date objects
         startDate: quoteData.startDate instanceof Date ? quoteData.startDate : new Date(quoteData.startDate),
         endDate: quoteData.endDate instanceof Date ? quoteData.endDate : new Date(quoteData.endDate),
     };
@@ -214,7 +223,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setQuotes(prev => prev.map(q => q.id === updatedQuoteData.id ? {
         ...updatedQuoteData, 
         updatedAt: new Date(),
-        // Ensure dates are Date objects
         startDate: updatedQuoteData.startDate instanceof Date ? updatedQuoteData.startDate : new Date(updatedQuoteData.startDate),
         endDate: updatedQuoteData.endDate instanceof Date ? updatedQuoteData.endDate : new Date(updatedQuoteData.endDate),
         createdAt: updatedQuoteData.createdAt instanceof Date ? updatedQuoteData.createdAt : new Date(updatedQuoteData.createdAt),
@@ -248,3 +256,4 @@ export const useAppContext = (): AppContextType => {
   }
   return context;
 };
+
