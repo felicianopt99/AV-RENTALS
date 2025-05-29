@@ -3,8 +3,8 @@
 
 import type React from 'react';
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import type { Category, Subcategory, EquipmentItem, Rental, Client } from '@/types';
-import { sampleCategories, sampleSubcategories, sampleEquipment, sampleRentals, sampleClients } from '@/lib/sample-data';
+import type { Category, Subcategory, EquipmentItem, Rental, Client, Quote } from '@/types';
+import { sampleCategories, sampleSubcategories, sampleEquipment, sampleRentals, sampleClients, sampleQuotes } from '@/lib/sample-data';
 import useLocalStorage from '@/hooks/useLocalStorage';
 
 interface AppContextType {
@@ -38,6 +38,13 @@ interface AppContextType {
   updateRental: (rental: Rental) => void;
   deleteRental: (rentalId: string) => void;
   
+  quotes: Quote[];
+  setQuotes: React.Dispatch<React.SetStateAction<Quote[]>>;
+  addQuote: (quote: Omit<Quote, 'id' | 'quoteNumber' | 'createdAt' | 'updatedAt'>) => string; // Returns new quote ID
+  updateQuote: (quote: Quote) => void;
+  deleteQuote: (quoteId: string) => void;
+  getNextQuoteNumber: () => string;
+
   isDataLoaded: boolean;
 }
 
@@ -49,6 +56,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [equipment, setEquipment] = useLocalStorage<EquipmentItem[]>('av_equipment', []);
   const [clients, setClients] = useLocalStorage<Client[]>('av_clients', []);
   const [rentals, setRentals] = useLocalStorage<Rental[]>('av_rentals', []);
+  const [quotes, setQuotes] = useLocalStorage<Quote[]>('av_quotes', []);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   useEffect(() => {
@@ -57,53 +65,61 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       const wasKeyNeverSet = (key: string) => {
         const item = localStorage.getItem(key);
-        return item === null || item === 'undefined';
+        return item === null || item === 'undefined'; // Consider 'undefined' string if it was ever saved that way
       };
-
+      
       if (wasKeyNeverSet('av_categories')) setCategories(sampleCategories);
       if (wasKeyNeverSet('av_subcategories')) setSubcategories(sampleSubcategories);
-      if (wasKeyNeverSet('av_equipment')) setEquipment(sampleEquipment.map(e => ({...e, imageUrl: e.imageUrl || `https://placehold.co/600x400.png` })));
+      if (wasKeyNeverSet('av_equipment')) {
+         setEquipment(sampleEquipment.map(e => ({
+          ...e, 
+          imageUrl: e.imageUrl || `https://placehold.co/600x400.png`,
+          dailyRate: e.dailyRate || 0, // Ensure dailyRate exists
+        })));
+      } else {
+        // Ensure existing equipment has dailyRate
+        setEquipment(prev => prev.map(e => ({...e, dailyRate: e.dailyRate || 0})));
+      }
       if (wasKeyNeverSet('av_clients')) setClients(sampleClients);
       if (wasKeyNeverSet('av_rentals')) setRentals(sampleRentals);
+      if (wasKeyNeverSet('av_quotes')) setQuotes(sampleQuotes);
     };
-
+    
     populateSampleDataIfNeeded();
     setIsDataLoaded(true);
-  }, [setCategories, setSubcategories, setEquipment, setClients, setRentals]); // Stable setters
+  }, [setCategories, setSubcategories, setEquipment, setClients, setRentals, setQuotes]);
+
 
   useEffect(() => {
     if (isDataLoaded) {
-      setRentals(prevRentals => {
-        let hasChanged = false;
-        const newMappedRentals = prevRentals.map(r => {
-          let currentStartDate = r.startDate;
-          let currentEndDate = r.endDate;
-          let rentalItemChanged = false;
+        const processDates = (items: any[], dateFields: string[]) => {
+            let hasChanged = false;
+            const newMappedItems = items.map(item => {
+                let currentItemChanged = false;
+                const newItem = { ...item };
+                dateFields.forEach(field => {
+                    if (newItem[field] && !(newItem[field] instanceof Date)) {
+                        const parsedDate = new Date(String(newItem[field]));
+                        // Only update if parsing was successful, otherwise keep original or let validation handle it
+                        if (!isNaN(parsedDate.getTime())) {
+                           newItem[field] = parsedDate;
+                           currentItemChanged = true;
+                        } else {
+                            // console.warn(`Failed to parse date string: ${newItem[field]} for field ${field}`);
+                            // Keep original invalid string or set to undefined if critical, for now keep
+                        }
+                    }
+                });
+                if (currentItemChanged) hasChanged = true;
+                return newItem;
+            });
+            return hasChanged ? newMappedItems : items;
+        };
 
-          if (!(currentStartDate instanceof Date)) {
-            currentStartDate = new Date(String(currentStartDate)); // Will be Invalid Date if parse fails
-            rentalItemChanged = true;
-          }
-          if (!(currentEndDate instanceof Date)) {
-            currentEndDate = new Date(String(currentEndDate)); // Will be Invalid Date if parse fails
-            rentalItemChanged = true;
-          }
-          
-          if (rentalItemChanged) {
-            hasChanged = true;
-            return {
-              ...r,
-              startDate: currentStartDate,
-              endDate: currentEndDate,
-            };
-          }
-          return r;
-        });
-
-        return hasChanged ? newMappedRentals : prevRentals;
-      });
+        setRentals(prevRentals => processDates(prevRentals, ['startDate', 'endDate']));
+        setQuotes(prevQuotes => processDates(prevQuotes, ['startDate', 'endDate', 'createdAt', 'updatedAt']));
     }
-  }, [isDataLoaded, setRentals]); // setRentals is stable
+  }, [isDataLoaded, setRentals, setQuotes]);
 
 
   const addCategory = useCallback((category: Omit<Category, 'id'>) => {
@@ -128,10 +144,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [setSubcategories]);
   
   const addEquipmentItem = useCallback((item: Omit<EquipmentItem, 'id'>) => {
-    setEquipment(prev => [...prev, { ...item, id: crypto.randomUUID(), imageUrl: item.imageUrl || `https://placehold.co/600x400.png` }]);
+    setEquipment(prev => [...prev, { ...item, id: crypto.randomUUID(), imageUrl: item.imageUrl || `https://placehold.co/600x400.png`, dailyRate: item.dailyRate || 0 }]);
   }, [setEquipment]);
   const updateEquipmentItem = useCallback((updatedItem: EquipmentItem) => {
-    setEquipment(prev => prev.map(eq => eq.id === updatedItem.id ? updatedItem : eq));
+    setEquipment(prev => prev.map(eq => eq.id === updatedItem.id ? {...eq, ...updatedItem, dailyRate: updatedItem.dailyRate || 0 } : eq));
   }, [setEquipment]);
   const deleteEquipmentItem = useCallback((itemId: string) => {
     setEquipment(prev => prev.filter(eq => eq.id !== itemId));
@@ -145,7 +161,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [setClients]);
   const deleteClient = useCallback((clientId: string) => {
     setClients(prev => prev.filter(c => c.id !== clientId));
-    // Consider impact on rentals: maybe mark them as "client deleted" or disallow deletion if active rentals. For now, just deletes client.
   }, [setClients]);
 
   const addRental = useCallback((rental: Omit<Rental, 'id'>) => {
@@ -169,6 +184,48 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setRentals(prev => prev.filter(r => r.id !== rentalId));
   }, [setRentals]);
 
+  const getNextQuoteNumber = useCallback((): string => {
+    const year = new Date().getFullYear();
+    const yearQuotes = quotes.filter(q => q.quoteNumber.startsWith(`Q${year}-`));
+    const maxNum = yearQuotes.reduce((max, q) => {
+        const numPart = parseInt(q.quoteNumber.split('-')[1] || '0', 10);
+        return Math.max(max, numPart);
+    }, 0);
+    return `Q${year}-${String(maxNum + 1).padStart(3, '0')}`;
+  }, [quotes]);
+
+  const addQuote = useCallback((quoteData: Omit<Quote, 'id' | 'quoteNumber' | 'createdAt' | 'updatedAt'>): string => {
+    const newId = crypto.randomUUID();
+    const newQuote: Quote = {
+        ...quoteData,
+        id: newId,
+        quoteNumber: getNextQuoteNumber(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        // Ensure dates are Date objects
+        startDate: quoteData.startDate instanceof Date ? quoteData.startDate : new Date(quoteData.startDate),
+        endDate: quoteData.endDate instanceof Date ? quoteData.endDate : new Date(quoteData.endDate),
+    };
+    setQuotes(prev => [...prev, newQuote]);
+    return newId;
+  }, [setQuotes, getNextQuoteNumber]);
+
+  const updateQuote = useCallback((updatedQuoteData: Quote) => {
+    setQuotes(prev => prev.map(q => q.id === updatedQuoteData.id ? {
+        ...updatedQuoteData, 
+        updatedAt: new Date(),
+        // Ensure dates are Date objects
+        startDate: updatedQuoteData.startDate instanceof Date ? updatedQuoteData.startDate : new Date(updatedQuoteData.startDate),
+        endDate: updatedQuoteData.endDate instanceof Date ? updatedQuoteData.endDate : new Date(updatedQuoteData.endDate),
+        createdAt: updatedQuoteData.createdAt instanceof Date ? updatedQuoteData.createdAt : new Date(updatedQuoteData.createdAt),
+      } : q));
+  }, [setQuotes]);
+
+  const deleteQuote = useCallback((quoteId: string) => {
+    setQuotes(prev => prev.filter(q => q.id !== quoteId));
+  }, [setQuotes]);
+
+
   return (
     <AppContext.Provider value={{
       categories, setCategories, addCategory, updateCategory, deleteCategory,
@@ -176,6 +233,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       equipment, setEquipment, addEquipmentItem, updateEquipmentItem, deleteEquipmentItem,
       clients, setClients, addClient, updateClient, deleteClient,
       rentals, setRentals, addRental, updateRental, deleteRental,
+      quotes, setQuotes, addQuote, updateQuote, deleteQuote, getNextQuoteNumber,
       isDataLoaded
     }}>
       {children}

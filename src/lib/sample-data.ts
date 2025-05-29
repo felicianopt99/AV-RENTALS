@@ -1,4 +1,5 @@
-import type { Category, Subcategory, EquipmentItem, Rental, Client } from '@/types';
+
+import type { Category, Subcategory, EquipmentItem, Rental, Client, Quote, QuoteItem } from '@/types';
 
 export const sampleCategories: Category[] = [
   { id: 'cat1', name: 'Audio', icon: 'Mic' },
@@ -23,57 +24,62 @@ export const sampleEquipment: EquipmentItem[] = [
   {
     id: 'eq1',
     name: 'Shure SM58',
-    description: 'Dynamic Vocal Microphone',
+    description: 'Dynamic Vocal Microphone, industry standard for live vocals and speech.',
     categoryId: 'cat1',
     subcategoryId: 'subcat1_1',
     quantity: 10,
     status: 'good',
     location: 'Shelf A1',
     imageUrl: 'https://placehold.co/600x400.png',
+    dailyRate: 15.00,
   },
   {
     id: 'eq2',
     name: 'Yamaha DBR10',
-    description: '10" Powered Speaker',
+    description: '10" Powered Speaker, 700W, versatile for small to medium events.',
     categoryId: 'cat1',
     subcategoryId: 'subcat1_2',
     quantity: 4,
     status: 'good',
     location: 'Shelf A2',
     imageUrl: 'https://placehold.co/600x400.png',
+    dailyRate: 45.00,
   },
   {
     id: 'eq3',
     name: 'Epson Pro EX7260',
-    description: 'Wireless WXGA 3LCD Projector',
+    description: 'Wireless WXGA 3LCD Projector, 3600 lumens, suitable for presentations.',
     categoryId: 'cat2',
     subcategoryId: 'subcat2_1',
     quantity: 3,
     status: 'maintenance',
     location: 'Tech Bench',
     imageUrl: 'https://placehold.co/600x400.png',
+    dailyRate: 75.00,
   },
   {
     id: 'eq4',
     name: 'Chauvet DJ SlimPAR 56',
-    description: 'LED PAR Can Light',
+    description: 'LED PAR Can Light, RGB color mixing for uplighting and stage wash.',
     categoryId: 'cat3',
     subcategoryId: 'subcat3_1',
     quantity: 12,
     status: 'good',
     location: 'Shelf C1',
     imageUrl: 'https://placehold.co/600x400.png',
+    dailyRate: 10.00,
   },
   {
     id: 'eq5',
     name: 'Sony Alpha a7 III',
-    description: 'Full-frame Mirrorless Camera',
+    description: 'Full-frame Mirrorless Camera, 4K video, excellent for event coverage.',
     categoryId: 'cat2',
     subcategoryId: 'subcat2_3',
     quantity: 2,
     status: 'damaged',
     location: 'Repair Bin',
     imageUrl: 'https://placehold.co/600x400.png',
+    dailyRate: 120.00,
   },
 ];
 
@@ -107,6 +113,13 @@ export const sampleClients: Client[] = [
   },
 ];
 
+const today = new Date();
+const calculateEndDate = (startDate: Date, days: number): Date => {
+  const date = new Date(startDate);
+  date.setDate(date.getDate() + days -1); // If 1 day, end date is same as start date
+  return date;
+}
+
 export const sampleRentals: Rental[] = [
   {
     id: 'rental1',
@@ -114,8 +127,8 @@ export const sampleRentals: Rental[] = [
     equipmentName: 'Shure SM58',
     clientId: 'client1',
     clientName: 'Tech Solutions Inc.',
-    startDate: new Date('2024-07-17T00:00:00.000Z'),
-    endDate: new Date('2024-07-19T00:00:00.000Z'),
+    startDate: new Date(new Date(today).setDate(today.getDate() - 5)), // Past
+    endDate: new Date(new Date(today).setDate(today.getDate() - 3)), // Past
     eventLocation: 'Conference Hall A',
     internalResponsible: 'John Doe',
     quantityRented: 2,
@@ -126,8 +139,8 @@ export const sampleRentals: Rental[] = [
     equipmentName: 'Epson Pro EX7260',
     clientId: 'client2',
     clientName: 'Creative Events Co.',
-    startDate: new Date('2024-07-20T00:00:00.000Z'),
-    endDate: new Date('2024-07-22T00:00:00.000Z'),
+    startDate: new Date(new Date(today).setDate(today.getDate() + 2)), // Upcoming
+    endDate: new Date(new Date(today).setDate(today.getDate() + 4)), // Upcoming
     eventLocation: 'Hotel Ballroom',
     internalResponsible: 'Jane Smith',
     quantityRented: 1,
@@ -138,10 +151,70 @@ export const sampleRentals: Rental[] = [
     equipmentName: 'Yamaha DBR10',
     clientId: 'client1',
     clientName: 'Tech Solutions Inc.',
-    startDate: new Date(new Date().setDate(new Date().getDate() + 5)), // Upcoming
-    endDate: new Date(new Date().setDate(new Date().getDate() + 7)),
+    startDate: new Date(new Date(today).setDate(today.getDate() + 5)), // Upcoming
+    endDate: new Date(new Date(today).setDate(today.getDate() + 7)),
     eventLocation: 'Outdoor Stage',
     internalResponsible: 'John Doe',
     quantityRented: 4,
   },
+];
+
+const quoteItems1: QuoteItem[] = [
+  { id: 'qi1_1', equipmentId: 'eq1', equipmentName: 'Shure SM58', quantity: 4, unitPrice: 15.00, days: 3, lineTotal: 4 * 15.00 * 3 },
+  { id: 'qi1_2', equipmentId: 'eq2', equipmentName: 'Yamaha DBR10', quantity: 2, unitPrice: 45.00, days: 3, lineTotal: 2 * 45.00 * 3 },
+];
+const subTotal1 = quoteItems1.reduce((sum, item) => sum + item.lineTotal, 0);
+const taxAmount1 = subTotal1 * 0.05; // 5% tax
+
+const quoteItems2: QuoteItem[] = [
+  { id: 'qi2_1', equipmentId: 'eq3', equipmentName: 'Epson Pro EX7260', quantity: 1, unitPrice: 70.00, days: 7, lineTotal: 1 * 70.00 * 7 }, // Price override
+  { id: 'qi2_2', equipmentId: 'eq4', equipmentName: 'Chauvet DJ SlimPAR 56', quantity: 8, unitPrice: 10.00, days: 7, lineTotal: 8 * 10.00 * 7 },
+];
+const subTotal2 = quoteItems2.reduce((sum, item) => sum + item.lineTotal, 0);
+const discountAmount2 = 50; // Fixed discount
+const taxAmount2 = (subTotal2 - discountAmount2) * 0.07; // 7% tax
+
+export const sampleQuotes: Quote[] = [
+  {
+    id: 'quote1',
+    quoteNumber: `Q${today.getFullYear()}-001`,
+    name: 'Summer Music Fest',
+    clientId: 'client3',
+    clientName: 'Local Community Fest',
+    clientEmail: 'carol.fest@community.example.org',
+    startDate: new Date(new Date(today).setDate(today.getDate() + 30)),
+    endDate: calculateEndDate(new Date(new Date(today).setDate(today.getDate() + 30)), 3),
+    items: quoteItems1,
+    subTotal: subTotal1,
+    discountType: 'percentage',
+    discountAmount: 0, // No discount
+    taxRate: 0.05,
+    taxAmount: taxAmount1,
+    totalAmount: subTotal1 + taxAmount1,
+    status: 'Draft',
+    notes: 'Setup required by 8 AM on the first day. Soundcheck assistance requested.',
+    createdAt: new Date(new Date(today).setDate(today.getDate() - 5)),
+    updatedAt: new Date(new Date(today).setDate(today.getDate() - 2)),
+  },
+  {
+    id: 'quote2',
+    quoteNumber: `Q${today.getFullYear()}-002`,
+    name: 'Corporate Gala Dinner',
+    clientId: 'client1',
+    clientName: 'Tech Solutions Inc.',
+    clientEmail: 'alice@techsolutions.example.com',
+    startDate: new Date(new Date(today).setDate(today.getDate() + 60)),
+    endDate: calculateEndDate(new Date(new Date(today).setDate(today.getDate() + 60)), 7),
+    items: quoteItems2,
+    subTotal: subTotal2,
+    discountType: 'fixed',
+    discountAmount: discountAmount2,
+    taxRate: 0.07,
+    taxAmount: taxAmount2,
+    totalAmount: subTotal2 - discountAmount2 + taxAmount2,
+    status: 'Sent',
+    notes: 'Includes on-site technician for the main event day.',
+    createdAt: new Date(new Date(today).setDate(today.getDate() - 10)),
+    updatedAt: new Date(new Date(today).setDate(today.getDate() - 1)),
+  }
 ];

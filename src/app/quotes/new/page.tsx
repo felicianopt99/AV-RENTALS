@@ -1,0 +1,25 @@
+
+// src/app/quotes/new/page.tsx
+"use client";
+
+import { QuoteForm } from '@/components/quotes/QuoteForm';
+import { AppHeader } from '@/components/layout/AppHeader';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+export default function NewQuotePage() {
+  return (
+    <div className="flex flex-col h-full">
+      <AppHeader title="Create New Quote" />
+      <div className="p-4 md:p-6">
+        <Card className="max-w-4xl mx-auto shadow-xl">
+          <CardHeader>
+            <CardTitle>New Quote Details</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <QuoteForm />
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}

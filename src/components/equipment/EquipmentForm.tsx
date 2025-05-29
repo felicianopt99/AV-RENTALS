@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -30,6 +31,7 @@ const equipmentFormSchema = z.object({
   categoryId: z.string().min(1, "Please select a category."),
   subcategoryId: z.string().optional(),
   quantity: z.coerce.number().int().min(0, "Quantity cannot be negative."),
+  dailyRate: z.coerce.number().min(0, "Daily rate cannot be negative.").optional().default(0),
   status: z.enum(["good", "damaged", "maintenance"] as [EquipmentStatus, ...EquipmentStatus[]], {
     required_error: "You need to select a status.",
   }),
@@ -56,6 +58,7 @@ export function EquipmentForm({ initialData, onSubmitSuccess }: EquipmentFormPro
     defaultValues: initialData ? {
       ...initialData,
       quantity: initialData.quantity || 0,
+      dailyRate: initialData.dailyRate || 0,
       imageUrl: initialData.imageUrl || '',
     } : {
       name: "",
@@ -63,6 +66,7 @@ export function EquipmentForm({ initialData, onSubmitSuccess }: EquipmentFormPro
       categoryId: "",
       subcategoryId: "",
       quantity: 0,
+      dailyRate: 0,
       status: "good",
       location: "",
       imageUrl: "",
@@ -74,7 +78,6 @@ export function EquipmentForm({ initialData, onSubmitSuccess }: EquipmentFormPro
   useEffect(() => {
     if (selectedCategoryId) {
       setAvailableSubcategories(allSubcategories.filter(sub => sub.parentId === selectedCategoryId));
-      // Reset subcategory if category changes and current subcategory is not valid for new category
       const currentSubcategoryId = form.getValues("subcategoryId");
       if (currentSubcategoryId && !allSubcategories.find(s => s.id === currentSubcategoryId && s.parentId === selectedCategoryId)) {
         form.setValue("subcategoryId", "");
@@ -160,13 +163,14 @@ export function EquipmentForm({ initialData, onSubmitSuccess }: EquipmentFormPro
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Subcategory (Optional)</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={availableSubcategories.length === 0}>
+                <Select onValueChange={field.onChange} value={field.value || ""} disabled={availableSubcategories.length === 0}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder={availableSubcategories.length === 0 ? "No subcategories for selected category" : "Select a subcategory"} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
+                     <SelectItem value="">No subcategory</SelectItem>
                     {availableSubcategories.map(subcat => (
                       <SelectItem key={subcat.id} value={subcat.id}>{subcat.name}</SelectItem>
                     ))}
@@ -177,19 +181,34 @@ export function EquipmentForm({ initialData, onSubmitSuccess }: EquipmentFormPro
             )}
           />
         </div>
-        <FormField
-          control={form.control}
-          name="quantity"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Quantity Available</FormLabel>
-              <FormControl>
-                <Input type="number" placeholder="0" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="grid md:grid-cols-2 gap-8">
+          <FormField
+            control={form.control}
+            name="quantity"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Quantity Available</FormLabel>
+                <FormControl>
+                  <Input type="number" placeholder="0" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="dailyRate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Daily Rate ($)</FormLabel>
+                <FormControl>
+                  <Input type="number" placeholder="0.00" step="0.01" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
         <FormField
           control={form.control}
           name="status"

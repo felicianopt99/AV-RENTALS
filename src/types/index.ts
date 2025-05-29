@@ -1,3 +1,4 @@
+
 export interface Category {
   id: string;
   name: string;
@@ -22,6 +23,7 @@ export interface EquipmentItem {
   status: EquipmentStatus;
   location: string; // Physical location
   imageUrl?: string;
+  dailyRate: number; // Added daily rental rate
 }
 
 export interface Client {
@@ -45,4 +47,41 @@ export interface Rental {
   eventLocation: string;
   internalResponsible: string;
   quantityRented: number;
+}
+
+// New types for Quotes
+export interface QuoteItem {
+  id: string; // Unique ID for the quote item line
+  equipmentId: string;
+  equipmentName: string; // Store at time of quote creation
+  quantity: number;
+  unitPrice: number; // Price per unit per day at time of quote creation
+  days: number;
+  lineTotal: number;
+}
+
+export type QuoteStatus = 'Draft' | 'Sent' | 'Accepted' | 'Declined' | 'Archived';
+
+export interface Quote {
+  id: string;
+  quoteNumber: string; // e.g., Q2024-001
+  name: string; // User-defined name for the quote
+  clientId?: string; // Optional: Link to an existing client
+  clientName: string; // Can be manually entered or from selected client
+  clientEmail?: string;
+  clientPhone?: string;
+  clientAddress?: string;
+  startDate: Date;
+  endDate: Date;
+  items: QuoteItem[];
+  subTotal: number;
+  discountAmount: number; // Can be percentage or fixed amount
+  discountType: 'percentage' | 'fixed';
+  taxRate: number; // Percentage e.g. 0.05 for 5%
+  taxAmount: number;
+  totalAmount: number;
+  status: QuoteStatus;
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }

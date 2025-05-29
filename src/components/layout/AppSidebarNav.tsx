@@ -1,8 +1,9 @@
+
 "use client";
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, PlusSquare, LayoutList, CalendarDays, GanttChartSquare, Users } from 'lucide-react';
+import { Home, PlusSquare, LayoutList, CalendarDays, GanttChartSquare, Users, FileText } from 'lucide-react'; // Added FileText for Quotes
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 
@@ -13,6 +14,7 @@ const navItems = [
   { href: '/clients', label: 'Manage Clients', icon: Users },
   { href: '/rentals/new', label: 'Create Rental', icon: GanttChartSquare },
   { href: '/rentals/calendar', label: 'Rental Calendar', icon: CalendarDays },
+  { href: '/quotes', label: 'Manage Quotes', icon: FileText }, // New Quotes Link
 ];
 
 export function AppSidebarNav() {
