@@ -44,6 +44,8 @@ interface AppContextType {
   updateQuote: (quote: Quote) => void;
   deleteQuote: (quoteId: string) => void;
   getNextQuoteNumber: () => string;
+  approveQuoteAndCreateRentals: (quoteId: string) => Promise<{ success: boolean; message: string }>;
+
 
   isDataLoaded: boolean;
 }
@@ -65,10 +67,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       const wasKeyNeverSet = (key: string) => {
         const item = localStorage.getItem(key);
-        return item === null || item === 'undefined';
+        return item === null || item === 'undefined'; // Check for explicit 'undefined' string if it was ever set that way
       };
       
-      // Use stable setters from useLocalStorage in the dependency array
       if (wasKeyNeverSet('av_categories')) setCategories(sampleCategories);
       if (wasKeyNeverSet('av_subcategories')) setSubcategories(sampleSubcategories);
       if (wasKeyNeverSet('av_equipment')) {
@@ -78,6 +79,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           dailyRate: e.dailyRate || 0,
         })));
       } else {
+        // Ensure existing equipment has defaults if they were missing
         setEquipment(prev => prev.map(e => ({...e, dailyRate: e.dailyRate || 0, imageUrl: e.imageUrl || `https://placehold.co/600x400.png`})));
       }
       if (wasKeyNeverSet('av_clients')) setClients(sampleClients);
@@ -100,9 +102,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 dateFields.forEach(field => {
                     if (newItem[field] && !(newItem[field] instanceof Date)) {
                         const parsedDate = new Date(String(newItem[field]));
+                        // Only update if it's a valid date and different from original (or if original was not a Date)
                         if (!isNaN(parsedDate.getTime())) {
                            newItem[field] = parsedDate;
                            currentItemChanged = true;
+                        } else {
+                            // Handle invalid date strings if necessary, e.g., set to null or log error
+                            // For now, we'll leave it as is if parsing fails, to avoid overwriting with 'Invalid Date'
                         }
                     }
                 });
@@ -173,7 +179,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       endDate: rental.endDate instanceof Date ? rental.endDate : new Date(rental.endDate),
     };
     setRentals(prev => [...prev, processedRental]);
-  }, [setRentals]);
+  }, [setRentals]); // rentals state itself is not a dependency here, only its setter
+
   const updateRental = useCallback((updatedRental: Rental) => {
     const processedRental = {
       ...updatedRental,
@@ -188,16 +195,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const getNextQuoteNumber = useCallback((): string => {
     const currentYear = new Date().getFullYear();
-    // Filter quotes for the current year to find the highest sequence number for that year.
     const yearQuotes = quotes.filter(q => {
-        const quoteYear = parseInt(q.quoteNumber.substring(1, 5), 10); // Assumes QYYYY-NNN format
-        return quoteYear === currentYear;
+      if (!q.quoteNumber || typeof q.quoteNumber !== 'string') return false;
+        const quoteYearMatch = q.quoteNumber.match(/^Q(\d{4})-(\d+)$/);
+        return quoteYearMatch && parseInt(quoteYearMatch[1], 10) === currentYear;
     });
 
     let maxNum = 0;
     if (yearQuotes.length > 0) {
         maxNum = yearQuotes.reduce((max, q) => {
-            const numPart = parseInt(q.quoteNumber.split('-')[1] || '0', 10);
+            const numPartMatch = q.quoteNumber.match(/-(\d+)$/);
+            const numPart = numPartMatch ? parseInt(numPartMatch[1], 10) : 0;
             return Math.max(max, numPart);
         }, 0);
     }
@@ -233,6 +241,45 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setQuotes(prev => prev.filter(q => q.id !== quoteId));
   }, [setQuotes]);
 
+  const approveQuoteAndCreateRentals = useCallback(async (quoteId: string): Promise<{ success: boolean; message: string }> => {
+    const quote = quotes.find(q => q.id === quoteId);
+    if (!quote) {
+      return { success: false, message: "Quote not found." };
+    }
+
+    if (!quote.clientId) {
+      return { success: false, message: "Quote must be associated with an existing client before it can be approved. Please edit the quote to select a client." };
+    }
+    
+    // Ensure client exists (should generally be true if clientId is set)
+    const client = clients.find(c => c.id === quote.clientId);
+    if (!client) {
+       return { success: false, message: "Associated client not found. Please verify client selection in the quote." };
+    }
+
+
+    const updatedQuote: Quote = { ...quote, status: "Accepted", updatedAt: new Date() };
+    updateQuote(updatedQuote);
+
+    quote.items.forEach(item => {
+      const rentalData: Omit<Rental, 'id'> = {
+        equipmentId: item.equipmentId,
+        equipmentName: item.equipmentName,
+        clientId: quote.clientId!, // We've checked this above
+        clientName: quote.clientName, // Use the clientName from the quote (could also be client.name)
+        startDate: quote.startDate,
+        endDate: quote.endDate,
+        quantityRented: item.quantity,
+        eventLocation: `${quote.name} (from Quote)`,
+        internalResponsible: "System (Generated from Quote)",
+      };
+      addRental(rentalData);
+    });
+    
+    return { success: true, message: `Quote "${quote.name || quote.quoteNumber}" approved and rentals created.` };
+
+  }, [quotes, clients, updateQuote, addRental]);
+
 
   return (
     <AppContext.Provider value={{
@@ -241,7 +288,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       equipment, setEquipment, addEquipmentItem, updateEquipmentItem, deleteEquipmentItem,
       clients, setClients, addClient, updateClient, deleteClient,
       rentals, setRentals, addRental, updateRental, deleteRental,
-      quotes, setQuotes, addQuote, updateQuote, deleteQuote, getNextQuoteNumber,
+      quotes, setQuotes, addQuote, updateQuote, deleteQuote, getNextQuoteNumber, approveQuoteAndCreateRentals,
       isDataLoaded
     }}>
       {children}

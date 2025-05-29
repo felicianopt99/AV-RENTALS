@@ -21,6 +21,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
@@ -32,7 +33,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { PlusCircle, Edit, Trash2, MoreHorizontal, Search, FileText, SearchSlash } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, MoreHorizontal, Search, FileText, SearchSlash, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -40,11 +41,12 @@ import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 
 export function QuoteListDisplay() {
-  const { quotes, deleteQuote, isDataLoaded } = useAppContext();
+  const { quotes, deleteQuote, approveQuoteAndCreateRentals, isDataLoaded } = useAppContext();
   const router = useRouter();
   const { toast } = useToast();
 
   const [quoteToDelete, setQuoteToDelete] = useState<Quote | null>(null);
+  const [quoteToApprove, setQuoteToApprove] = useState<Quote | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
   const openDeleteDialog = useCallback((quote: Quote) => {
@@ -58,6 +60,22 @@ export function QuoteListDisplay() {
       setQuoteToDelete(null);
     }
   }, [quoteToDelete, deleteQuote, toast]);
+
+  const openApproveDialog = useCallback((quote: Quote) => {
+    setQuoteToApprove(quote);
+  }, []);
+
+  const confirmApprove = useCallback(async () => {
+    if (quoteToApprove) {
+      const result = await approveQuoteAndCreateRentals(quoteToApprove.id);
+      if (result.success) {
+        toast({ title: 'Quote Approved', description: result.message });
+      } else {
+        toast({ variant: "destructive", title: 'Approval Failed', description: result.message });
+      }
+      setQuoteToApprove(null);
+    }
+  }, [quoteToApprove, approveQuoteAndCreateRentals, toast]);
 
   const filteredQuotes = useMemo(() => {
     const lowerSearchTerm = searchTerm.toLowerCase();
@@ -176,6 +194,12 @@ export function QuoteListDisplay() {
                           <DropdownMenuItem onClick={() => router.push(`/quotes/${quote.id}`)}>
                             <Edit className="mr-2 h-4 w-4" /> View / Edit
                           </DropdownMenuItem>
+                          {quote.status !== "Accepted" && quote.status !== "Declined" && quote.status !== "Archived" && (
+                            <DropdownMenuItem onClick={() => openApproveDialog(quote)}>
+                              <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" /> Approve & Create Rentals
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => openDeleteDialog(quote)} className="text-destructive focus:text-destructive focus:bg-destructive/10">
                             <Trash2 className="mr-2 h-4 w-4" /> Delete
                           </DropdownMenuItem>
@@ -205,6 +229,28 @@ export function QuoteListDisplay() {
               <AlertDialogCancel onClick={() => setQuoteToDelete(null)}>Cancel</AlertDialogCancel>
               <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">
                 Delete Quote
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+
+      {quoteToApprove && (
+        <AlertDialog open={!!quoteToApprove} onOpenChange={(isOpen) => !isOpen && setQuoteToApprove(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirm Quote Approval</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to approve the quote "{quoteToApprove.name || quoteToApprove.quoteNumber}"?
+                This will change the quote status to "Accepted" and create corresponding rental entries. <br/><br/>
+                <strong className="text-destructive-foreground">Important:</strong> Ensure the quote is linked to an existing client in the system. If not, please edit the quote first.
+                This action may create rentals even if items are overbooked, which will be highlighted in the calendar.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setQuoteToApprove(null)}>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmApprove} className="bg-green-600 hover:bg-green-600/90">
+                Approve & Create Rentals
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
