@@ -120,7 +120,7 @@ export function QuoteListDisplay() {
         </Link>
       </div>
 
-      <Card className="shadow-lg">
+      <Card className="shadow-lg overflow-hidden"> {/* Added overflow-hidden here */}
         <CardHeader>
           <CardTitle>Quote List</CardTitle>
           <CardDescription>View, search, and manage all your quotes.</CardDescription>
@@ -154,8 +154,7 @@ export function QuoteListDisplay() {
               )}
             </div>
           ) : (
-          <div className="overflow-x-auto">
-            <Table>
+            <Table> {/* The Table component itself has an internal overflow-auto div */}
               <TableHeader>
                 <TableRow>
                   <TableHead>Number</TableHead>
@@ -210,7 +209,6 @@ export function QuoteListDisplay() {
                 ))}
               </TableBody>
             </Table>
-          </div>
           )}
         </CardContent>
       </Card>
