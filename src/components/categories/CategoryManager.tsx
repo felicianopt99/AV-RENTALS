@@ -149,7 +149,7 @@ export function CategoryManager() {
         </Button>
       </div>
 
-      <ScrollArea className="h-[calc(100vh-250px)]"> {/* Adjust height as needed */}
+      <ScrollArea className="h-[calc(100vh-18rem)]"> {/* Adjusted height for better responsiveness */}
         <div className="space-y-4 pr-4">
         {categories.length === 0 && (
           <div className="text-center py-16 text-muted-foreground flex flex-col items-center">

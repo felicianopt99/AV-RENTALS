@@ -134,9 +134,9 @@ export default function DashboardPage() {
           <StatCard title="Needs Maintenance" value={dashboardStats.maintenanceItems} icon={Wrench} />
         </div>
 
-        <div className="flex justify-end mb-6">
+        <div className="mb-6">
           <Link href="/equipment/new" passHref>
-            <Button size="lg" className="shadow-md hover:shadow-lg transition-shadow">
+            <Button size="lg" className="w-full md:w-auto shadow-md hover:shadow-lg transition-shadow">
               <PlusCircle className="mr-2 h-5 w-5" /> Add New Equipment
             </Button>
           </Link>

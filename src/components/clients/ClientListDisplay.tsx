@@ -96,7 +96,7 @@ export function ClientListDisplay() {
                 placeholder="Search clients (name, contact, email, phone)..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="max-w-md pl-10"
+                className="w-full sm:max-w-sm md:max-w-md pl-10"
               />
             </div>
           </div>

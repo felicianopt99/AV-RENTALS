@@ -158,7 +158,7 @@ export function RentalCalendarView() {
           </CardHeader>
           <CardContent>
             {rentalsForSelectedDate.length > 0 ? (
-              <ScrollArea className="h-[calc(100vh-350px)]"> {/* Adjust height as needed */}
+              <ScrollArea className="h-80 lg:h-[calc(100vh-380px)]"> {/* Adjusted height for mobile/tablet and larger screens */}
                 <ul className="space-y-3">
                   {rentalsForSelectedDate.map(rental => (
                     <li key={rental.id} className="p-3 border rounded-md bg-card-foreground/5 group hover:bg-card-foreground/10 transition-colors">
