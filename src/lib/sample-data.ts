@@ -77,13 +77,17 @@ export const sampleEquipment: EquipmentItem[] = [
   },
 ];
 
+// Using fixed ISO date strings for sample data to ensure consistency
+// For example, using a base date of 2024-07-15 for "today" in samples
 export const sampleRentals: Rental[] = [
   {
     id: 'rental1',
     equipmentId: 'eq1',
     equipmentName: 'Shure SM58',
-    startDate: new Date(new Date().setDate(new Date().getDate() + 2)),
-    endDate: new Date(new Date().setDate(new Date().getDate() + 4)),
+    // Represents 2024-07-17T00:00:00.000Z
+    startDate: new Date('2024-07-17T00:00:00.000Z'),
+    // Represents 2024-07-19T00:00:00.000Z
+    endDate: new Date('2024-07-19T00:00:00.000Z'),
     eventLocation: 'Conference Hall A',
     clientName: 'Tech Corp',
     internalResponsible: 'John Doe',
@@ -93,8 +97,10 @@ export const sampleRentals: Rental[] = [
     id: 'rental2',
     equipmentId: 'eq3',
     equipmentName: 'Epson Pro EX7260',
-    startDate: new Date(new Date().setDate(new Date().getDate() + 5)),
-    endDate: new Date(new Date().setDate(new Date().getDate() + 7)),
+    // Represents 2024-07-20T00:00:00.000Z
+    startDate: new Date('2024-07-20T00:00:00.000Z'),
+    // Represents 2024-07-22T00:00:00.000Z
+    endDate: new Date('2024-07-22T00:00:00.000Z'),
     eventLocation: 'Hotel Ballroom',
     clientName: 'Events Inc.',
     internalResponsible: 'Jane Smith',

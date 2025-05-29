@@ -45,6 +45,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     // Initialize with sample data if local storage is empty
+    // This effect runs once on the client after mount.
     if (typeof window !== 'undefined') {
       if (localStorage.getItem('av_categories') === null) {
         setCategories(sampleCategories);
@@ -55,24 +56,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (localStorage.getItem('av_equipment') === null) {
         setEquipment(sampleEquipment.map(e => ({...e, imageUrl: e.imageUrl || `https://placehold.co/300x200.png?text=${e.name.replace(/\s/g, "+")}` })));
       }
+      // For rentals, if localStorage is empty, use sampleRentals.
+      // sampleRentals now initializes Date objects from fixed strings, so they are consistent.
       if (localStorage.getItem('av_rentals') === null) {
-         setRentals(sampleRentals.map(r => ({...r, startDate: new Date(r.startDate), endDate: new Date(r.endDate)})));
+         setRentals(sampleRentals);
       }
+      // If rentals are loaded from localStorage by useLocalStorage, they will be initially set.
+      // The useEffect below will handle converting string dates from localStorage to Date objects.
       setIsDataLoaded(true);
     }
-  }, [setCategories, setSubcategories, setEquipment, setRentals]);
-  
-  // Ensure dates are Date objects after loading from localStorage
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run once on mount to initialize from localStorage or samples.
+           // Setters from useLocalStorage are stable.
+
+  // Ensure dates in rentals state are Date objects, especially after loading from localStorage (where they'd be strings)
   useEffect(() => {
     if (isDataLoaded) {
-      setRentals(prevRentals => prevRentals.map(r => ({
-        ...r,
-        startDate: new Date(r.startDate),
-        endDate: new Date(r.endDate),
-      })));
+      setRentals(prevRentals =>
+        prevRentals.map(r => {
+          // Ensure startDate and endDate are Date objects
+          const newStartDate = typeof r.startDate === 'string' ? new Date(r.startDate) : r.startDate;
+          const newEndDate = typeof r.endDate === 'string' ? new Date(r.endDate) : r.endDate;
+          
+          // Defensive check in case Date objects are somehow invalid after parsing
+          const finalStartDate = newStartDate instanceof Date && !isNaN(newStartDate.getTime()) ? newStartDate : new Date();
+          const finalEndDate = newEndDate instanceof Date && !isNaN(newEndDate.getTime()) ? newEndDate : new Date();
+
+          return {
+            ...r,
+            startDate: finalStartDate,
+            endDate: finalEndDate,
+          };
+        })
+      );
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDataLoaded]);
+  }, [isDataLoaded, setRentals]);
 
 
   const addCategory = (category: Omit<Category, 'id'>) => {
@@ -116,11 +134,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const deleteRental = (rentalId: string) => {
     setRentals(prev => prev.filter(r => r.id !== rentalId));
   };
-
-  // The AppProvider should always render its children.
-  // Consumers of the context will use isDataLoaded to determine their rendering logic.
-  // For example, showing a loading spinner if isDataLoaded is false.
-  // The initial check for isDataLoaded before returning children has been removed.
 
   return (
     <AppContext.Provider value={{
