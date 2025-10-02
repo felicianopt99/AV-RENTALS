@@ -10,10 +10,12 @@ import { format, isWithinInterval, startOfDay, endOfDay, parseISO } from 'date-f
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, Edit3 } from 'lucide-react';
+import { AlertTriangle, Edit3, ListChecks } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from '@/lib/utils';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { MoreHorizontal } from 'lucide-react';
 
 export function RentalCalendarView() {
   const { rentals, equipment, isDataLoaded } = useAppContext();
@@ -181,7 +183,7 @@ export function RentalCalendarView() {
                       <li 
                         key={rental.id} 
                         className={cn(
-                          "p-3 border rounded-md bg-card-foreground/5 group hover:bg-card-foreground/10 transition-colors",
+                          "p-3 border rounded-md bg-card-foreground/5 group transition-colors",
                           isOverbookedOnSelectedDate && "bg-destructive/10 border-destructive/30 ring-1 ring-destructive/50"
                         )}
                       >
@@ -203,20 +205,25 @@ export function RentalCalendarView() {
                                 )}
                             </div>
                             <p className="text-xs text-muted-foreground">Client: {rental.clientName}</p>
-                            <p className="text-xs text-muted-foreground">Event: {rental.eventLocation}</p>
                             <p className="text-xs text-muted-foreground">
                               Period: {format(new Date(rental.startDate), "PP")} - {format(new Date(rental.endDate), "PP")}
                             </p>
                           </div>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary flex-shrink-0 ml-2"
-                            onClick={() => router.push(`/rentals/${rental.id}/edit`)}
-                            aria-label={`Edit rental for ${rental.equipmentName}`}
-                          >
-                            <Edit3 className="h-4 w-4" />
-                          </Button>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button variant="ghost" size="sm" className="flex-shrink-0 ml-2">
+                                        <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-40 p-1">
+                                    <Button variant="ghost" className="w-full justify-start text-sm" onClick={() => router.push(`/rentals/${rental.id}/prep`)}>
+                                        <ListChecks className="mr-2 h-4 w-4" /> Prepare
+                                    </Button>
+                                    <Button variant="ghost" className="w-full justify-start text-sm" onClick={() => router.push(`/rentals/${rental.id}/edit`)}>
+                                        <Edit3 className="mr-2 h-4 w-4" /> Edit
+                                    </Button>
+                                </PopoverContent>
+                            </Popover>
                         </div>
                       </li>
                     );

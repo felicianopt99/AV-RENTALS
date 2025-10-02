@@ -36,6 +36,8 @@ export interface Client {
   notes?: string;
 }
 
+export type RentalPrepStatus = 'pending' | 'checked-out' | 'checked-in';
+
 export interface Rental {
   id: string;
   equipmentId: string;
@@ -47,6 +49,7 @@ export interface Rental {
   eventLocation: string;
   internalResponsible: string;
   quantityRented: number;
+  prepStatus?: RentalPrepStatus; // New property for check-in/out
 }
 
 // New types for Quotes
