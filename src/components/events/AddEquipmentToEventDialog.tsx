@@ -37,7 +37,7 @@ interface AddEquipmentToEventDialogProps {
 }
 
 export function AddEquipmentToEventDialog({ isOpen, onOpenChange, event, onSubmitSuccess }: AddEquipmentToEventDialogProps) {
-  const { equipment, rentals, addRental } = useAppContext();
+  const { equipment, rentals, addRental, events } = useAppContext();
   const { toast } = useToast();
   const [availabilityConflict, setAvailabilityConflict] = useState<string | null>(null);
 
@@ -69,7 +69,7 @@ export function AddEquipmentToEventDialog({ isOpen, onOpenChange, event, onSubmi
 
       // Find all rentals for the selected equipment that overlap with the event dates
       const overlappingRentals = rentals.filter(r => {
-        const rentalEvent = useAppContext().events.find(e => e.id === r.eventId);
+        const rentalEvent = events.find(e => e.id === r.eventId);
         if (!rentalEvent) return false;
         
         return r.equipmentId === selectedEquipmentId &&
@@ -87,7 +87,7 @@ export function AddEquipmentToEventDialog({ isOpen, onOpenChange, event, onSubmi
     } else {
       setAvailabilityConflict(null);
     }
-  }, [selectedEquipmentId, quantityToRent, event, equipment, rentals, useAppContext().events]);
+  }, [selectedEquipmentId, quantityToRent, event, equipment, rentals, events]);
 
 
   function onSubmit(data: AddEquipmentFormValues) {
