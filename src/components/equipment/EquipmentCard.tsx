@@ -45,7 +45,7 @@ export function EquipmentCard({ item, category, subcategory, onEdit, onDelete }:
 
   return (
     <>
-      <Card className="flex flex-col overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 ease-in-out transform hover:-translate-y-1 bg-card border border-border/50 rounded-lg">
+      <Card className="flex flex-col overflow-hidden shadow-lg hover:shadow-primary/20 transition-all duration-300 ease-in-out transform hover:-translate-y-1 bg-card border border-border/50 rounded-lg">
         <CardHeader className="p-0">
           <div className="relative w-full aspect-[16/10] rounded-t-lg overflow-hidden">
             <Image 

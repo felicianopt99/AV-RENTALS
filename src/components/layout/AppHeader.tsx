@@ -11,8 +11,8 @@ interface AppHeaderProps {
 
 export function AppHeader({ title }: AppHeaderProps) {
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 py-4">
-      <SidebarTrigger /> {/* Removed sm:hidden to make it always visible */}
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background/95 backdrop-blur-sm px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 py-4">
+      <SidebarTrigger className="sm:hidden" />
       {title && <h1 className="text-xl font-semibold">{title}</h1>}
       <div className="ml-auto flex items-center gap-2">
         <Button variant="ghost" size="icon" className="rounded-full">

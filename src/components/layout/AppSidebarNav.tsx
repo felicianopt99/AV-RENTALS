@@ -30,7 +30,6 @@ export function AppSidebarNav() {
           <SidebarMenuItem key={item.href}>
             <Link href={item.href} passHref legacyBehavior>
               <SidebarMenuButton
-                className={cn(isActive && "bg-sidebar-accent text-sidebar-accent-foreground")}
                 isActive={isActive}
                 tooltip={item.label}
               >

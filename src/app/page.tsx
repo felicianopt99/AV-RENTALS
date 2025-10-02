@@ -6,14 +6,14 @@ import { useMemo } from 'react';
 import { useAppContext } from '@/contexts/AppContext';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Package, Users, CalendarClock, Wrench, GanttChartSquare, FileText, PartyPopper } from 'lucide-react';
+import { PlusCircle, Package, Users, CalendarClock, Wrench, FileText, PartyPopper } from 'lucide-react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { isFuture, isWithinInterval, addDays, startOfDay } from 'date-fns';
 
 const StatCard: React.FC<{ title: string; value: string | number; icon: React.ElementType; description?: string, href?: string }> = ({ title, value, icon: Icon, description, href }) => {
   const cardContent = (
-    <Card className="shadow-lg hover:shadow-primary/20 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+    <Card className="shadow-lg hover:shadow-primary/20 hover:border-primary/30 transition-all duration-300 transform hover:-translate-y-1">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
         <Icon className="h-4 w-4 text-muted-foreground" />
@@ -30,7 +30,7 @@ const StatCard: React.FC<{ title: string; value: string | number; icon: React.El
 
 
 export default function DashboardPage() {
-  const { equipment, clients, events, rentals, isDataLoaded } = useAppContext();
+  const { equipment, clients, events, isDataLoaded } = useAppContext();
 
   const dashboardStats = useMemo(() => {
     if (!isDataLoaded) return { totalEquipment: 0, totalClients: 0, upcomingEvents: 0, maintenanceItems: 0 };
@@ -56,7 +56,7 @@ export default function DashboardPage() {
   if (!isDataLoaded) {
     return (
         <div className="flex flex-col h-screen">
-            <AppHeader title="Equipment Dashboard" />
+            <AppHeader title="Dashboard" />
             <div className="flex-grow flex items-center justify-center p-4 md:p-6">
                 <p className="text-lg text-muted-foreground">Loading dashboard data...</p>
             </div>
@@ -83,17 +83,17 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <Link href="/equipment/new" passHref>
-              <Button size="lg" variant="outline" className="w-full h-20 text-base justify-start p-4 hover:bg-primary/5 hover:border-primary">
+              <Button size="lg" variant="outline" className="w-full h-20 text-base justify-start p-4 hover:bg-accent hover:text-accent-foreground">
                 <PlusCircle className="mr-3 h-6 w-6 text-primary" /> Add New Equipment
               </Button>
             </Link>
              <Link href="/events" passHref>
-               <Button size="lg" variant="outline" className="w-full h-20 text-base justify-start p-4 hover:bg-primary/5 hover:border-primary">
+               <Button size="lg" variant="outline" className="w-full h-20 text-base justify-start p-4 hover:bg-accent hover:text-accent-foreground">
                 <PartyPopper className="mr-3 h-6 w-6 text-primary" /> Manage Events
               </Button>
             </Link>
             <Link href="/quotes/new" passHref>
-               <Button size="lg" variant="outline" className="w-full h-20 text-base justify-start p-4 hover:bg-primary/5 hover:border-primary">
+               <Button size="lg" variant="outline" className="w-full h-20 text-base justify-start p-4 hover:bg-accent hover:text-accent-foreground">
                 <FileText className="mr-3 h-6 w-6 text-primary" /> Create New Quote
               </Button>
             </Link>
