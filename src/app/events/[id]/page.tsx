@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Edit, Trash2, PackageSearch } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, PackageSearch, ListChecks } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { EventFormDialog } from '@/components/events/EventFormDialog';
@@ -127,14 +127,17 @@ export default function EventDetailsPage() {
       <div className="flex-1 overflow-y-auto p-4 md:p-6">
         <Card className="max-w-4xl mx-auto shadow-xl">
           <CardHeader>
-            <div className='flex justify-between items-start'>
+            <div className='flex justify-between items-start gap-4'>
                 <div>
                     <CardTitle className="text-3xl">{event.name}</CardTitle>
                     <CardDescription className="mt-2 text-base">
                         For: <Link href={`/clients/${client?.id}/edit`} className="text-primary hover:underline">{client?.name || 'Unknown Client'}</Link>
                     </CardDescription>
                 </div>
-                <Button variant="outline" onClick={() => setIsEditFormOpen(true)}><Edit className="mr-2 h-4 w-4" /> Edit Event</Button>
+                <div className="flex flex-col sm:flex-row gap-2 flex-shrink-0">
+                  <Button variant="default" onClick={() => router.push(`/rentals/${event.id}/prep`)}><ListChecks className="mr-2 h-4 w-4" /> Prepare Event</Button>
+                  <Button variant="outline" onClick={() => setIsEditFormOpen(true)}><Edit className="mr-2 h-4 w-4" /> Edit Event</Button>
+                </div>
             </div>
             <div className="text-sm text-muted-foreground pt-4 flex flex-wrap gap-x-6 gap-y-2">
                 <span><strong>Location:</strong> {event.location}</span>

@@ -21,7 +21,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { PlusCircle, Edit, MoreHorizontal, Search, SearchSlash, PartyPopper } from 'lucide-react';
+import { PlusCircle, Edit, MoreHorizontal, Search, SearchSlash, PartyPopper, ListChecks } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { format } from 'date-fns';
@@ -121,15 +121,18 @@ export function EventListDisplay() {
               </TableHeader>
               <TableBody>
                 {filteredEvents.map((event) => (
-                  <TableRow key={event.id} className="cursor-pointer" onClick={() => router.push(`/events/${event.id}`)}>
-                    <TableCell className="font-medium">{event.name}</TableCell>
+                  <TableRow key={event.id} >
+                    <TableCell className="font-medium cursor-pointer" onClick={() => router.push(`/events/${event.id}`)}>{event.name}</TableCell>
                     <TableCell>{event.client?.name || 'N/A'}</TableCell>
                     <TableCell>{event.location}</TableCell>
                     <TableCell>{format(new Date(event.startDate), 'PP')}</TableCell>
                     <TableCell>{format(new Date(event.endDate), 'PP')}</TableCell>
-                    <TableCell className="text-right">
-                       <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); router.push(`/events/${event.id}`)}}>
-                            <Edit className="mr-2 h-4 w-4" /> View / Manage
+                    <TableCell className="text-right space-x-2">
+                       <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); router.push(`/events/${event.id}`)}}>
+                            <Edit className="mr-2 h-4 w-4" /> View
+                        </Button>
+                        <Button variant="default" size="sm" onClick={(e) => { e.stopPropagation(); router.push(`/rentals/${event.id}/prep`)}}>
+                            <ListChecks className="mr-2 h-4 w-4" /> Prepare
                         </Button>
                     </TableCell>
                   </TableRow>
