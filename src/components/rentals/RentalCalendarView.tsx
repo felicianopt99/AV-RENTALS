@@ -41,14 +41,15 @@ export function RentalCalendarView() {
   const rentalsForSelectedDate = useMemo(() => {
     if (!selectedDate) return [];
     return rentalsWithEventData.filter(rental => 
-        isWithinInterval(selectedDate, { start: startOfDay(new Date(rental.event!.startDate)), end: endOfDay(new Date(rental.event!.endDate)) })
+        rental.event && isWithinInterval(selectedDate, { start: startOfDay(new Date(rental.event.startDate)), end: endOfDay(new Date(rental.event.endDate)) })
       );
   }, [selectedDate, rentalsWithEventData]);
 
   const rentalDateModifiers = useMemo(() => {
     return rentalsWithEventData.reduce((acc, rental) => {
-      const start = startOfDay(new Date(rental.event!.startDate));
-      const end = endOfDay(new Date(rental.event!.endDate));
+      if(!rental.event) return acc;
+      const start = startOfDay(new Date(rental.event.startDate));
+      const end = endOfDay(new Date(rental.event.endDate));
       
       let currentDateLoop = new Date(start);
       while (currentDateLoop <= end) {
@@ -79,8 +80,9 @@ export function RentalCalendarView() {
   const { dailyRentalCounts, conflicts, conflictDates } = useMemo(() => {
     const newDailyRentalCounts: Record<string, Record<string, number>> = {};
     rentalsWithEventData.forEach(rental => {
-      let currentDateLoop = startOfDay(new Date(rental.event!.startDate));
-      const endDateLoop = endOfDay(new Date(rental.event!.endDate));
+      if(!rental.event) return;
+      let currentDateLoop = startOfDay(new Date(rental.event.startDate));
+      const endDateLoop = endOfDay(new Date(rental.event.endDate));
       while (currentDateLoop <= endDateLoop) {
         const dateStr = format(currentDateLoop, 'yyyy-MM-dd');
         if (!newDailyRentalCounts[dateStr]) newDailyRentalCounts[dateStr] = {};
@@ -229,7 +231,7 @@ export function RentalCalendarView() {
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-40 p-1">
-                                    <Button variant="ghost" className="w-full justify-start text-sm" onClick={() => router.push(`/rentals/${rental.id}/prep`)}>
+                                    <Button variant="ghost" className="w-full justify-start text-sm" onClick={() => router.push(`/rentals/${rental.eventId}/prep`)}>
                                         <ListChecks className="mr-2 h-4 w-4" /> Prepare
                                     </Button>
                                     <Button variant="ghost" className="w-full justify-start text-sm" onClick={() => router.push(`/events/${rental.eventId}`)}>

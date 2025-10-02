@@ -15,7 +15,7 @@ export interface Subcategory {
 export type EquipmentStatus = 'good' | 'damaged' | 'maintenance';
 
 export interface EquipmentItem {
-  id: string;
+  id:string;
   name: string;
   description: string;
   categoryId: string;
@@ -75,6 +75,7 @@ export interface Quote {
   id: string;
   quoteNumber: string; // e.g., Q2024-001
   name: string; // User-defined name for the quote
+  location: string; // Venue/location for the event
   clientId?: string; // Optional: Link to an existing client
   clientName: string; // Can be manually entered or from selected client
   clientEmail?: string;

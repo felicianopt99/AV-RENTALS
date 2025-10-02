@@ -157,6 +157,12 @@ export const sampleRentals: Rental[] = [
     equipmentId: 'eq1',
     quantityRented: 2,
   },
+   {
+    id: 'rental1.2',
+    eventId: 'event1',
+    equipmentId: 'eq2',
+    quantityRented: 2,
+  },
   {
     id: 'rental2',
     eventId: 'event2',
@@ -191,6 +197,7 @@ export const sampleQuotes: Quote[] = [
     id: 'quote1',
     quoteNumber: `Q${today.getFullYear()}-001`,
     name: 'Summer Music Fest',
+    location: 'Community Park Stage',
     clientId: 'client3',
     clientName: 'Local Community Fest',
     clientEmail: 'carol.fest@community.example.org',
@@ -212,6 +219,7 @@ export const sampleQuotes: Quote[] = [
     id: 'quote2',
     quoteNumber: `Q${today.getFullYear()}-002`,
     name: 'Corporate Gala Dinner',
+    location: 'Grand Hotel Ballroom',
     clientId: 'client1',
     clientName: 'Tech Solutions Inc.',
     clientEmail: 'alice@techsolutions.example.com',

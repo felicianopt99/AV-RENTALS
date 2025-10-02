@@ -1,10 +1,11 @@
 
+
 // src/app/rentals/[id]/prep/page.tsx
 "use client";
 
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo } from 'react';
-import type { Rental, EquipmentItem } from '@/types';
+import type { Rental, EquipmentItem, Event } from '@/types';
 import { useAppContext } from '@/contexts/AppContext';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -25,68 +26,77 @@ type PrepItem = {
 export default function RentalPrepPage() {
   const params = useParams();
   const router = useRouter();
-  const { rentals, equipment, isDataLoaded, updateRental } = useAppContext();
+  // The `id` from the URL is now an EVENT ID, not a rental ID.
+  const eventId = typeof params.id === 'string' ? params.id : undefined;
+  
+  const { events, rentals, equipment, isDataLoaded } = useAppContext();
 
-  const [rental, setRental] = useState<Rental | null>(null);
+  const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [prepList, setPrepList] = useState<PrepItem[]>([]);
   const [checkInList, setCheckInList] = useState<PrepItem[]>([]);
 
-  const rentalId = typeof params.id === 'string' ? params.id : undefined;
-
   useEffect(() => {
-    if (isDataLoaded && rentalId) {
-      const foundRental = rentals.find(r => r.id === rentalId);
-      if (foundRental) {
-        setRental(foundRental);
-        // Initialize prep lists based on rental items
-        const items: PrepItem[] = [{
-          equipmentId: foundRental.equipmentId,
-          name: foundRental.equipmentName,
-          quantity: foundRental.quantityRented,
-          status: 'not-scanned'
-        }];
-        setPrepList(items);
-        setCheckInList(items.map(i => ({...i, status: 'not-scanned'})));
+    if (isDataLoaded && eventId) {
+      const foundEvent = events.find(e => e.id === eventId);
+      if (foundEvent) {
+        setEvent(foundEvent);
+        
+        // Get all rentals for this event
+        const eventRentals = rentals.filter(r => r.eventId === eventId);
+        
+        // Create the list of items to prep based on all rentals for the event
+        const itemsToPrep: PrepItem[] = eventRentals.map(rental => {
+            const equipmentItem = equipment.find(eq => eq.id === rental.equipmentId);
+            return {
+                equipmentId: rental.equipmentId,
+                name: equipmentItem?.name || "Unknown Equipment",
+                quantity: rental.quantityRented,
+                status: 'not-scanned'
+            };
+        });
+
+        setPrepList(itemsToPrep);
+        setCheckInList(itemsToPrep.map(i => ({...i, status: 'not-scanned'})));
 
       } else {
-        router.replace('/rentals/calendar'); 
+        router.replace('/events'); 
       }
       setLoading(false);
-    } else if (isDataLoaded && !rentalId) {
-        router.replace('/rentals/calendar');
+    } else if (isDataLoaded && !eventId) {
+        router.replace('/events');
         setLoading(false);
     }
-  }, [rentalId, rentals, isDataLoaded, router]);
+  }, [eventId, events, rentals, equipment, isDataLoaded, router]);
 
   const { checkedOutCount, totalToCheckout } = useMemo(() => ({
-    checkedOutCount: prepList.filter(i => i.status === 'scanned').length,
-    totalToCheckout: prepList.length
+    checkedOutCount: prepList.filter(i => i.status === 'scanned').reduce((sum, i) => sum + i.quantity, 0),
+    totalToCheckout: prepList.reduce((sum, i) => sum + i.quantity, 0)
   }), [prepList]);
 
   const { checkedInCount, totalToCheckIn } = useMemo(() => ({
-    checkedInCount: checkInList.filter(i => i.status === 'scanned').length,
-    totalToCheckIn: checkInList.length
+    checkedInCount: checkInList.filter(i => i.status === 'scanned').reduce((sum, i) => sum + i.quantity, 0),
+    totalToCheckIn: checkInList.reduce((sum, i) => sum + i.quantity, 0)
   }), [checkInList]);
 
   if (loading || !isDataLoaded) {
     return (
         <div className="flex flex-col h-screen">
-            <AppHeader title="Prepare Rental" />
+            <AppHeader title="Prepare Event" />
             <div className="flex-grow flex items-center justify-center p-4 md:p-6">
-                <p className="text-lg text-muted-foreground">Loading rental data...</p>
+                <p className="text-lg text-muted-foreground">Loading event data...</p>
             </div>
         </div>
     );
   }
 
-  if (!rental) {
+  if (!event) {
     return (
         <div className="flex flex-col h-screen">
-            <AppHeader title="Prepare Rental" />
+            <AppHeader title="Prepare Event" />
             <div className="flex-grow flex items-center justify-center p-4 md:p-6">
-                <p className="text-lg text-destructive">Rental not found.</p>
+                <p className="text-lg text-destructive">Event not found.</p>
             </div>
         </div>
     );
@@ -99,17 +109,19 @@ export default function RentalPrepPage() {
       default: return <Circle className="h-5 w-5 text-muted-foreground" />;
     }
   };
+  
+  const client = useAppContext().clients.find(c => c.id === event.clientId);
 
   return (
     <div className="flex flex-col h-full">
-      <AppHeader title={`Prepare: ${rental.equipmentName}`} />
+      <AppHeader title={`Prepare: ${event.name}`} />
       <div className="flex-1 overflow-y-auto p-4 md:p-6">
         
         <Card className="mb-6 shadow-md">
           <CardHeader>
-            <CardTitle>{rental.clientName}</CardTitle>
+            <CardTitle>{client?.name || "Unknown Client"}</CardTitle>
             <CardDescription>
-              {rental.eventLocation} | {format(new Date(rental.startDate), "PPP")} to {format(new Date(rental.endDate), "PPP")}
+              {event.location} | {format(new Date(event.startDate), "PPP")} to {format(new Date(event.endDate), "PPP")}
             </CardDescription>
           </CardHeader>
         </Card>
@@ -194,4 +206,3 @@ export default function RentalPrepPage() {
     </div>
   );
 }
-

@@ -1,4 +1,5 @@
 
+
 // src/components/quotes/QuoteForm.tsx
 "use client";
 
@@ -44,6 +45,7 @@ const quoteItemSchema = z.object({
 
 const quoteFormSchema = z.object({
   name: z.string().min(2, "Quote name must be at least 2 characters.").max(100),
+  location: z.string().min(2, "Location is required.").max(100),
   clientId: z.string().optional(),
   clientName: z.string().min(1, "Client name is required if not selecting an existing client.").max(100),
   clientEmail: z.string().email("Invalid email.").optional().or(z.literal('')),
@@ -95,6 +97,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
       taxRate: (initialData.taxRate || 0) * 100, // Convert decimal to percentage for display/editing
     } : {
       name: "",
+      location: "",
       clientId: MANUAL_CLIENT_ENTRY_VALUE,
       clientName: "",
       clientEmail: "",
@@ -287,7 +290,18 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
         </div>
 
         <Separator />
-        <h3 className="text-lg font-medium">Client Information</h3>
+        <h3 className="text-lg font-medium">Event & Client Information</h3>
+         <FormField
+            control={form.control}
+            name="location"
+            render={({ field }) => (
+            <FormItem>
+                <FormLabel>Event Location / Venue</FormLabel>
+                <FormControl><Input placeholder="e.g., Grand Hyatt Ballroom" {...field} /></FormControl>
+                <FormMessage />
+            </FormItem>
+            )}
+        />
         
         <FormField
           control={form.control}
@@ -457,4 +471,3 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
     </Form>
   );
 }
-

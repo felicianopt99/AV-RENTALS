@@ -285,7 +285,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const eventId = addEvent({
         name: quote.name,
         clientId: quote.clientId,
-        location: `From Quote #${quote.quoteNumber}`,
+        location: quote.location || `From Quote #${quote.quoteNumber}`,
         startDate: quote.startDate,
         endDate: quote.endDate,
     });
