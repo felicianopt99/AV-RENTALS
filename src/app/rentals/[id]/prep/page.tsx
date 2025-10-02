@@ -15,28 +15,33 @@ import { ListChecks, LogIn, LogOut, Camera, Circle, CheckCircle2, XCircle } from
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { QRCodeScanner } from '@/components/rentals/QRCodeScanner';
+import { useToast } from '@/hooks/use-toast';
 
 type PrepItem = {
   equipmentId: string;
   name: string;
   quantity: number;
-  status: 'scanned' | 'not-scanned';
+  scannedQuantity: number;
 };
 
 export default function RentalPrepPage() {
   const params = useParams();
   const router = useRouter();
-  // The `id` from the URL is now an EVENT ID, not a rental ID.
-  const eventId = typeof params.id === 'string' ? params.id : undefined;
-  
   const { events, rentals, equipment, isDataLoaded, clients } = useAppContext();
+  const eventId = typeof params.id === 'string' ? params.id : undefined;
 
+  const { toast } = useToast();
+  
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [prepList, setPrepList] = useState<PrepItem[]>([]);
   const [checkInList, setCheckInList] = useState<PrepItem[]>([]);
   
+  const [isScanningCheckout, setIsScanningCheckout] = useState(false);
+  const [isScanningCheckin, setIsScanningCheckin] = useState(false);
+
   const client = useMemo(() => {
     if (!event) return null;
     return clients.find(c => c.id === event.clientId);
@@ -48,10 +53,8 @@ export default function RentalPrepPage() {
       if (foundEvent) {
         setEvent(foundEvent);
         
-        // Get all rentals for this event
         const eventRentals = rentals.filter(r => r.eventId === eventId);
         
-        // Aggregate quantities by equipmentId
         const aggregatedItems: { [key: string]: { name: string, quantity: number, equipmentId: string } } = {};
         eventRentals.forEach(rental => {
             const equipmentItem = equipment.find(eq => eq.id === rental.equipmentId);
@@ -67,14 +70,13 @@ export default function RentalPrepPage() {
             }
         });
         
-        // Create the list of items to prep based on aggregated data
         const itemsToPrep: PrepItem[] = Object.values(aggregatedItems).map(item => ({
             ...item,
-            status: 'not-scanned'
+            scannedQuantity: 0,
         }));
 
         setPrepList(itemsToPrep);
-        setCheckInList(itemsToPrep.map(i => ({...i, status: 'not-scanned'})));
+        setCheckInList(itemsToPrep.map(i => ({...i, scannedQuantity: 0})));
 
       } else {
         router.replace('/events'); 
@@ -85,14 +87,47 @@ export default function RentalPrepPage() {
         setLoading(false);
     }
   }, [eventId, events, rentals, equipment, isDataLoaded, router]);
+  
+  const handleScan = (result: string, scanType: 'checkout' | 'checkin') => {
+    try {
+        const url = new URL(result);
+        const pathSegments = url.pathname.split('/');
+        const equipmentId = pathSegments[pathSegments.length - 2]; // Assuming URL is /equipment/{id}/edit
+
+        const listToUpdate = scanType === 'checkout' ? prepList : checkInList;
+        const setList = scanType === 'checkout' ? setPrepList : setCheckInList;
+        
+        const itemIndex = listToUpdate.findIndex(item => item.equipmentId === equipmentId);
+
+        if (itemIndex > -1) {
+            setList(currentList => {
+                const newList = [...currentList];
+                const item = newList[itemIndex];
+                if(item.scannedQuantity < item.quantity) {
+                    newList[itemIndex] = { ...item, scannedQuantity: item.scannedQuantity + 1};
+                    toast({title: "Scan Successful", description: `1x ${item.name} scanned.`});
+                } else {
+                    toast({variant: "destructive", title: "Scan Limit Reached", description: `All ${item.quantity} units of ${item.name} already scanned.`});
+                }
+                return newList;
+            });
+        } else {
+            toast({variant: "destructive", title: "Scan Error", description: "This equipment does not belong to this event."});
+        }
+    } catch(e) {
+        console.error("Invalid QR code data", e);
+        toast({variant: "destructive", title: "Invalid QR Code", description: "The scanned QR code is not a valid equipment URL."});
+    }
+  };
+
 
   const { checkedOutCount, totalToCheckout } = useMemo(() => ({
-    checkedOutCount: prepList.filter(i => i.status === 'scanned').reduce((sum, i) => sum + i.quantity, 0),
+    checkedOutCount: prepList.reduce((sum, i) => sum + i.scannedQuantity, 0),
     totalToCheckout: prepList.reduce((sum, i) => sum + i.quantity, 0)
   }), [prepList]);
 
   const { checkedInCount, totalToCheckIn } = useMemo(() => ({
-    checkedInCount: checkInList.filter(i => i.status === 'scanned').reduce((sum, i) => sum + i.quantity, 0),
+    checkedInCount: checkInList.reduce((sum, i) => sum + i.scannedQuantity, 0),
     totalToCheckIn: checkInList.reduce((sum, i) => sum + i.quantity, 0)
   }), [checkInList]);
 
@@ -118,12 +153,10 @@ export default function RentalPrepPage() {
     );
   }
   
-  const getStatusIcon = (status: 'scanned' | 'not-scanned') => {
-    switch(status) {
-      case 'scanned': return <CheckCircle2 className="h-5 w-5 text-green-500" />;
-      case 'not-scanned': return <Circle className="h-5 w-5 text-muted-foreground" />;
-      default: return <Circle className="h-5 w-5 text-muted-foreground" />;
-    }
+  const getStatusIcon = (scanned: number, total: number) => {
+    if (scanned === 0) return <Circle className="h-5 w-5 text-muted-foreground" />;
+    if (scanned < total) return <div className="h-5 w-5 rounded-full bg-yellow-500 flex items-center justify-center text-white text-xs font-bold">{scanned}</div>;
+    return <CheckCircle2 className="h-5 w-5 text-green-500" />;
   };
   
   return (
@@ -159,17 +192,19 @@ export default function RentalPrepPage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Button className="w-full md:w-auto" disabled>
-                  <Camera className="mr-2 h-4 w-4" /> Start Scanning (Coming Soon)
+                <Button className="w-full md:w-auto" onClick={() => setIsScanningCheckout(true)}>
+                  <Camera className="mr-2 h-4 w-4" /> Start Scanning
                 </Button>
                 <Separator />
                 <ul className="space-y-2">
                   {prepList.map((item, index) => (
                     <li key={`${item.equipmentId}-${index}`} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
                       <div className="flex items-center">
-                        {getStatusIcon(item.status)}
+                        {getStatusIcon(item.scannedQuantity, item.quantity)}
                         <span className="ml-3 font-medium">{item.name}</span>
-                        <Badge variant="secondary" className="ml-2">Qty: {item.quantity}</Badge>
+                        <Badge variant="secondary" className="ml-2">
+                          {item.scannedQuantity} / {item.quantity}
+                        </Badge>
                       </div>
                     </li>
                   ))}
@@ -191,22 +226,24 @@ export default function RentalPrepPage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                 <Button className="w-full md:w-auto" disabled>
-                  <Camera className="mr-2 h-4 w-4" /> Start Scanning (Coming Soon)
+                 <Button className="w-full md:w-auto" onClick={() => setIsScanningCheckin(true)}>
+                  <Camera className="mr-2 h-4 w-4" /> Start Scanning
                 </Button>
                 <Separator />
                 <ul className="space-y-2">
                   {checkInList.map((item, index) => (
                     <li key={`${item.equipmentId}-${index}`} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
                       <div className="flex items-center">
-                        {getStatusIcon(item.status)}
+                        {getStatusIcon(item.scannedQuantity, item.quantity)}
                          <span className="ml-3 font-medium">{item.name}</span>
-                        <Badge variant="secondary" className="ml-2">Qty: {item.quantity}</Badge>
+                        <Badge variant="secondary" className="ml-2">
+                          {item.scannedQuantity} / {item.quantity}
+                        </Badge>
                       </div>
-                       {totalToCheckIn === checkedInCount && item.status === 'not-scanned' && (
+                       {totalToCheckIn > 0 && checkedInCount === totalToCheckIn && item.scannedQuantity < item.quantity && (
                         <div className="flex items-center text-red-500">
                           <XCircle className="h-4 w-4 mr-1"/>
-                          <span className="text-xs font-semibold">MISSING</span>
+                          <span className="text-xs font-semibold">MISSING: {item.quantity - item.scannedQuantity}</span>
                         </div>
                       )}
                     </li>
@@ -217,6 +254,22 @@ export default function RentalPrepPage() {
           </TabsContent>
         </Tabs>
       </div>
+      
+      {isScanningCheckout && (
+        <QRCodeScanner
+            isOpen={isScanningCheckout}
+            onOpenChange={setIsScanningCheckout}
+            onScan={(result) => handleScan(result, 'checkout')}
+        />
+      )}
+
+      {isScanningCheckin && (
+        <QRCodeScanner
+            isOpen={isScanningCheckin}
+            onOpenChange={setIsScanningCheckin}
+            onScan={(result) => handleScan(result, 'checkin')}
+        />
+      )}
     </div>
   );
 }
