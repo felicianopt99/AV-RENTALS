@@ -23,7 +23,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     <SidebarProvider defaultOpen>
       <Sidebar variant="sidebar" collapsible="icon">
         <SidebarHeader>
-          <AppLogo />
+            <AppLogo />
         </SidebarHeader>
         <Separator className="my-2" />
         <SidebarContent>
