@@ -4,6 +4,7 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo } from 'react';
+import Link from 'next/link';
 import type { Event, Rental, EquipmentItem, Client } from '@/types';
 import { useAppContext } from '@/contexts/AppContext';
 import { AppHeader } from '@/components/layout/AppHeader';
