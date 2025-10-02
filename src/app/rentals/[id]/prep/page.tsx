@@ -36,6 +36,11 @@ export default function RentalPrepPage() {
 
   const [prepList, setPrepList] = useState<PrepItem[]>([]);
   const [checkInList, setCheckInList] = useState<PrepItem[]>([]);
+  
+  const client = useMemo(() => {
+    if (!event) return null;
+    return clients.find(c => c.id === event.clientId);
+  }, [event, clients]);
 
   useEffect(() => {
     if (isDataLoaded && eventId) {
@@ -46,16 +51,27 @@ export default function RentalPrepPage() {
         // Get all rentals for this event
         const eventRentals = rentals.filter(r => r.eventId === eventId);
         
-        // Create the list of items to prep based on all rentals for the event
-        const itemsToPrep: PrepItem[] = eventRentals.map(rental => {
+        // Aggregate quantities by equipmentId
+        const aggregatedItems: { [key: string]: { name: string, quantity: number, equipmentId: string } } = {};
+        eventRentals.forEach(rental => {
             const equipmentItem = equipment.find(eq => eq.id === rental.equipmentId);
-            return {
-                equipmentId: rental.equipmentId,
-                name: equipmentItem?.name || "Unknown Equipment",
-                quantity: rental.quantityRented,
-                status: 'not-scanned'
-            };
+            const name = equipmentItem?.name || "Unknown Equipment";
+            if(aggregatedItems[rental.equipmentId]) {
+                aggregatedItems[rental.equipmentId].quantity += rental.quantityRented;
+            } else {
+                aggregatedItems[rental.equipmentId] = {
+                    equipmentId: rental.equipmentId,
+                    name: name,
+                    quantity: rental.quantityRented,
+                };
+            }
         });
+        
+        // Create the list of items to prep based on aggregated data
+        const itemsToPrep: PrepItem[] = Object.values(aggregatedItems).map(item => ({
+            ...item,
+            status: 'not-scanned'
+        }));
 
         setPrepList(itemsToPrep);
         setCheckInList(itemsToPrep.map(i => ({...i, status: 'not-scanned'})));
@@ -110,8 +126,6 @@ export default function RentalPrepPage() {
     }
   };
   
-  const client = clients.find(c => c.id === event.clientId);
-
   return (
     <div className="flex flex-col h-full">
       <AppHeader title={`Prepare: ${event.name}`} />
@@ -150,8 +164,8 @@ export default function RentalPrepPage() {
                 </Button>
                 <Separator />
                 <ul className="space-y-2">
-                  {prepList.map(item => (
-                    <li key={item.equipmentId} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
+                  {prepList.map((item, index) => (
+                    <li key={`${item.equipmentId}-${index}`} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
                       <div className="flex items-center">
                         {getStatusIcon(item.status)}
                         <span className="ml-3 font-medium">{item.name}</span>
@@ -182,8 +196,8 @@ export default function RentalPrepPage() {
                 </Button>
                 <Separator />
                 <ul className="space-y-2">
-                  {checkInList.map(item => (
-                    <li key={item.equipmentId} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
+                  {checkInList.map((item, index) => (
+                    <li key={`${item.equipmentId}-${index}`} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
                       <div className="flex items-center">
                         {getStatusIcon(item.status)}
                          <span className="ml-3 font-medium">{item.name}</span>
