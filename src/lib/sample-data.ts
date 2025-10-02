@@ -1,5 +1,6 @@
 
-import type { Category, Subcategory, EquipmentItem, Rental, Client, Quote, QuoteItem } from '@/types';
+
+import type { Category, Subcategory, EquipmentItem, Rental, Client, Quote, QuoteItem, Event } from '@/types';
 
 export const sampleCategories: Category[] = [
   { id: 'cat1', name: 'Audio', icon: 'Mic' },
@@ -120,41 +121,52 @@ const calculateEndDate = (startDate: Date, days: number): Date => {
   return date;
 }
 
+
+export const sampleEvents: Event[] = [
+    {
+        id: 'event1',
+        name: 'Tech Solutions Annual Conference',
+        clientId: 'client1',
+        location: 'Conference Hall A',
+        startDate: new Date(new Date(today).setDate(today.getDate() - 5)),
+        endDate: new Date(new Date(today).setDate(today.getDate() - 3)),
+    },
+    {
+        id: 'event2',
+        name: 'Creative Events Gala',
+        clientId: 'client2',
+        location: 'Hotel Ballroom',
+        startDate: new Date(new Date(today).setDate(today.getDate() + 2)),
+        endDate: new Date(new Date(today).setDate(today.getDate() + 4)),
+    },
+    {
+        id: 'event3',
+        name: 'Tech Solutions Product Launch',
+        clientId: 'client1',
+        location: 'Outdoor Stage',
+        startDate: new Date(new Date(today).setDate(today.getDate() + 5)),
+        endDate: new Date(new Date(today).setDate(today.getDate() + 7)),
+    }
+];
+
+
 export const sampleRentals: Rental[] = [
   {
     id: 'rental1',
+    eventId: 'event1',
     equipmentId: 'eq1',
-    equipmentName: 'Shure SM58',
-    clientId: 'client1',
-    clientName: 'Tech Solutions Inc.',
-    startDate: new Date(new Date(today).setDate(today.getDate() - 5)), // Past
-    endDate: new Date(new Date(today).setDate(today.getDate() - 3)), // Past
-    eventLocation: 'Conference Hall A',
-    internalResponsible: 'John Doe',
     quantityRented: 2,
   },
   {
     id: 'rental2',
+    eventId: 'event2',
     equipmentId: 'eq3',
-    equipmentName: 'Epson Pro EX7260',
-    clientId: 'client2',
-    clientName: 'Creative Events Co.',
-    startDate: new Date(new Date(today).setDate(today.getDate() + 2)), // Upcoming
-    endDate: new Date(new Date(today).setDate(today.getDate() + 4)), // Upcoming
-    eventLocation: 'Hotel Ballroom',
-    internalResponsible: 'Jane Smith',
     quantityRented: 1,
   },
   {
     id: 'rental3',
+    eventId: 'event3',
     equipmentId: 'eq2',
-    equipmentName: 'Yamaha DBR10',
-    clientId: 'client1',
-    clientName: 'Tech Solutions Inc.',
-    startDate: new Date(new Date(today).setDate(today.getDate() + 5)), // Upcoming
-    endDate: new Date(new Date(today).setDate(today.getDate() + 7)),
-    eventLocation: 'Outdoor Stage',
-    internalResponsible: 'John Doe',
     quantityRented: 4,
   },
 ];

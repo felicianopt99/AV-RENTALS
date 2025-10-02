@@ -1,4 +1,5 @@
 
+
 export interface Category {
   id: string;
   name: string;
@@ -38,19 +39,24 @@ export interface Client {
 
 export type RentalPrepStatus = 'pending' | 'checked-out' | 'checked-in';
 
-export interface Rental {
+// New Event type
+export interface Event {
   id: string;
-  equipmentId: string;
-  equipmentName: string; // For display convenience
-  clientId: string; // Link to the Client
-  clientName: string; // For display convenience, denormalized
+  name: string;
+  clientId: string;
+  location: string;
   startDate: Date;
   endDate: Date;
-  eventLocation: string;
-  internalResponsible: string;
+}
+
+export interface Rental {
+  id: string;
+  eventId: string; // Link to the Event
+  equipmentId: string;
   quantityRented: number;
   prepStatus?: RentalPrepStatus; // New property for check-in/out
 }
+
 
 // New types for Quotes
 export interface QuoteItem {

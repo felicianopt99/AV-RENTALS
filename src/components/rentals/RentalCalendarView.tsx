@@ -1,10 +1,11 @@
 
+
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Calendar } from '@/components/ui/calendar';
-import type { Rental, EquipmentItem } from '@/types';
+import type { Rental, EquipmentItem, Event } from '@/types';
 import { useAppContext } from '@/contexts/AppContext';
 import { format, isWithinInterval, startOfDay, endOfDay, parseISO } from 'date-fns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,7 +19,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { MoreHorizontal } from 'lucide-react';
 
 export function RentalCalendarView() {
-  const { rentals, equipment, isDataLoaded } = useAppContext();
+  const { rentals, equipment, events, isDataLoaded } = useAppContext();
   const router = useRouter();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
 
@@ -26,18 +27,28 @@ export function RentalCalendarView() {
     // Set initial date only on client after mount to avoid hydration mismatch
     setSelectedDate(new Date());
   }, []);
+  
+  const rentalsWithEventData = useMemo(() => {
+    return rentals.map(rental => {
+        const event = events.find(e => e.id === rental.eventId);
+        return {
+            ...rental,
+            event: event,
+        };
+    }).filter(r => r.event); // Filter out rentals with no associated event
+  }, [rentals, events]);
 
   const rentalsForSelectedDate = useMemo(() => {
     if (!selectedDate) return [];
-    return rentals.filter(rental => 
-        isWithinInterval(selectedDate, { start: startOfDay(new Date(rental.startDate)), end: endOfDay(new Date(rental.endDate)) })
+    return rentalsWithEventData.filter(rental => 
+        isWithinInterval(selectedDate, { start: startOfDay(new Date(rental.event!.startDate)), end: endOfDay(new Date(rental.event!.endDate)) })
       );
-  }, [selectedDate, rentals]);
+  }, [selectedDate, rentalsWithEventData]);
 
   const rentalDateModifiers = useMemo(() => {
-    return rentals.reduce((acc, rental) => {
-      const start = startOfDay(new Date(rental.startDate));
-      const end = endOfDay(new Date(rental.endDate));
+    return rentalsWithEventData.reduce((acc, rental) => {
+      const start = startOfDay(new Date(rental.event!.startDate));
+      const end = endOfDay(new Date(rental.event!.endDate));
       
       let currentDateLoop = new Date(start);
       while (currentDateLoop <= end) {
@@ -49,7 +60,7 @@ export function RentalCalendarView() {
       }
       return acc;
     }, {} as Record<string, { rented: boolean }>);
-  }, [rentals]);
+  }, [rentalsWithEventData]);
 
   const modifiers = {
     rented: Object.keys(rentalDateModifiers)
@@ -67,9 +78,9 @@ export function RentalCalendarView() {
   
   const { dailyRentalCounts, conflicts, conflictDates } = useMemo(() => {
     const newDailyRentalCounts: Record<string, Record<string, number>> = {};
-    rentals.forEach(rental => {
-      let currentDateLoop = startOfDay(new Date(rental.startDate));
-      const endDateLoop = endOfDay(new Date(rental.endDate));
+    rentalsWithEventData.forEach(rental => {
+      let currentDateLoop = startOfDay(new Date(rental.event!.startDate));
+      const endDateLoop = endOfDay(new Date(rental.event!.endDate));
       while (currentDateLoop <= endDateLoop) {
         const dateStr = format(currentDateLoop, 'yyyy-MM-dd');
         if (!newDailyRentalCounts[dateStr]) newDailyRentalCounts[dateStr] = {};
@@ -90,7 +101,7 @@ export function RentalCalendarView() {
     });
     const newConflictDates = newConflicts.map(c => c.date);
     return { dailyRentalCounts: newDailyRentalCounts, conflicts: newConflicts, conflictDates: newConflictDates };
-  }, [rentals, equipment]);
+  }, [rentalsWithEventData, equipment]);
 
   const conflictModifiers = {
     conflict: conflictDates,
@@ -169,10 +180,14 @@ export function RentalCalendarView() {
           </CardHeader>
           <CardContent>
             {rentalsForSelectedDate.length > 0 ? (
-              <ScrollArea className="h-80 lg:h-[calc(100vh-380px)]"> {/* Adjusted height for mobile/tablet and larger screens */}
+              <ScrollArea className="h-80 lg:h-[calc(100vh-380px)]">
                 <ul className="space-y-3">
                   {rentalsForSelectedDate.map(rental => {
                     const equipmentItem = equipment.find(e => e.id === rental.equipmentId);
+                    const client = rental.event ? useAppContext().clients.find(c => c.id === rental.event!.clientId) : undefined;
+                    const equipmentName = equipmentItem?.name || 'Unknown Equipment';
+                    const clientName = client?.name || 'Unknown Client';
+                    
                     const totalAvailable = equipmentItem ? equipmentItem.quantity : 0;
                     const rentedOnSelectedDate = selectedDateStr && dailyRentalCounts[selectedDateStr] && dailyRentalCounts[selectedDateStr][rental.equipmentId]
                       ? dailyRentalCounts[selectedDateStr][rental.equipmentId]
@@ -190,7 +205,7 @@ export function RentalCalendarView() {
                         <div className="flex justify-between items-start">
                           <div className="flex-grow">
                             <div className="flex items-center">
-                                <p className="font-semibold">{rental.equipmentName} <Badge variant="secondary" className="ml-1">Qty: {rental.quantityRented}</Badge></p>
+                                <p className="font-semibold">{equipmentName} <Badge variant="secondary" className="ml-1">Qty: {rental.quantityRented}</Badge></p>
                                 {isOverbookedOnSelectedDate && (
                                   <TooltipProvider delayDuration={100}>
                                     <Tooltip>
@@ -204,10 +219,8 @@ export function RentalCalendarView() {
                                   </TooltipProvider>
                                 )}
                             </div>
-                            <p className="text-xs text-muted-foreground">Client: {rental.clientName}</p>
-                            <p className="text-xs text-muted-foreground">
-                              Period: {format(new Date(rental.startDate), "PP")} - {format(new Date(rental.endDate), "PP")}
-                            </p>
+                            <p className="text-xs text-muted-foreground">Client: {clientName}</p>
+                            <p className="text-xs text-muted-foreground">Event: {rental.event?.name}</p>
                           </div>
                             <Popover>
                                 <PopoverTrigger asChild>
@@ -219,8 +232,8 @@ export function RentalCalendarView() {
                                     <Button variant="ghost" className="w-full justify-start text-sm" onClick={() => router.push(`/rentals/${rental.id}/prep`)}>
                                         <ListChecks className="mr-2 h-4 w-4" /> Prepare
                                     </Button>
-                                    <Button variant="ghost" className="w-full justify-start text-sm" onClick={() => router.push(`/rentals/${rental.id}/edit`)}>
-                                        <Edit3 className="mr-2 h-4 w-4" /> Edit
+                                    <Button variant="ghost" className="w-full justify-start text-sm" onClick={() => router.push(`/events/${rental.eventId}`)}>
+                                        <Edit3 className="mr-2 h-4 w-4" /> View Event
                                     </Button>
                                 </PopoverContent>
                             </Popover>

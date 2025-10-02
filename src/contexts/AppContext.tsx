@@ -1,10 +1,11 @@
 
+
 "use client";
 
 import type React from 'react';
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import type { Category, Subcategory, EquipmentItem, Rental, Client, Quote } from '@/types';
-import { sampleCategories, sampleSubcategories, sampleEquipment, sampleRentals, sampleClients, sampleQuotes } from '@/lib/sample-data';
+import type { Category, Subcategory, EquipmentItem, Rental, Client, Quote, Event } from '@/types';
+import { sampleCategories, sampleSubcategories, sampleEquipment, sampleRentals, sampleClients, sampleQuotes, sampleEvents } from '@/lib/sample-data';
 import useLocalStorage from '@/hooks/useLocalStorage';
 
 interface AppContextType {
@@ -32,6 +33,12 @@ interface AppContextType {
   updateClient: (client: Client) => void;
   deleteClient: (clientId: string) => void;
 
+  events: Event[];
+  setEvents: React.Dispatch<React.SetStateAction<Event[]>>;
+  addEvent: (event: Omit<Event, 'id'>) => string;
+  updateEvent: (event: Event) => void;
+  deleteEvent: (eventId: string) => void;
+
   rentals: Rental[];
   setRentals: React.Dispatch<React.SetStateAction<Rental[]>>;
   addRental: (rental: Omit<Rental, 'id'>) => void;
@@ -57,6 +64,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [subcategories, setSubcategories] = useLocalStorage<Subcategory[]>('av_subcategories', []);
   const [equipment, setEquipment] = useLocalStorage<EquipmentItem[]>('av_equipment', []);
   const [clients, setClients] = useLocalStorage<Client[]>('av_clients', []);
+  const [events, setEvents] = useLocalStorage<Event[]>('av_events', []);
   const [rentals, setRentals] = useLocalStorage<Rental[]>('av_rentals', []);
   const [quotes, setQuotes] = useLocalStorage<Quote[]>('av_quotes', []);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
@@ -83,13 +91,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setEquipment(prev => prev.map(e => ({...e, dailyRate: e.dailyRate || 0, imageUrl: e.imageUrl || `https://placehold.co/600x400.png`})));
       }
       if (wasKeyNeverSet('av_clients')) setClients(sampleClients);
+      if (wasKeyNeverSet('av_events')) setEvents(sampleEvents);
       if (wasKeyNeverSet('av_rentals')) setRentals(sampleRentals);
       if (wasKeyNeverSet('av_quotes')) setQuotes(sampleQuotes);
     };
     
     populateSampleDataIfNeeded();
     setIsDataLoaded(true);
-  }, [setCategories, setSubcategories, setEquipment, setClients, setRentals, setQuotes]);
+  }, [setCategories, setSubcategories, setEquipment, setClients, setEvents, setRentals, setQuotes]);
 
 
   useEffect(() => {
@@ -118,16 +127,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             return { changed: hasChanged, newItems: newMappedItems };
         };
 
-        setRentals(prevRentals => {
-            const { changed, newItems } = processDates(prevRentals, ['startDate', 'endDate']);
-            return changed ? newItems : prevRentals;
+        setEvents(prevEvents => {
+            const { changed, newItems } = processDates(prevEvents, ['startDate', 'endDate']);
+            return changed ? newItems : prevEvents;
         });
         setQuotes(prevQuotes => {
             const { changed, newItems } = processDates(prevQuotes, ['startDate', 'endDate', 'createdAt', 'updatedAt']);
             return changed ? newItems : prevQuotes;
         });
     }
-  }, [isDataLoaded, setRentals, setQuotes]);
+  }, [isDataLoaded, setEvents, setQuotes]);
 
 
   const addCategory = useCallback((category: Omit<Category, 'id'>) => {
@@ -171,24 +180,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setClients(prev => prev.filter(c => c.id !== clientId));
   }, [setClients]);
 
-  const addRental = useCallback((rental: Omit<Rental, 'id'>) => {
-    const processedRental = {
-      ...rental,
-      id: crypto.randomUUID(),
-      startDate: rental.startDate instanceof Date ? rental.startDate : new Date(rental.startDate),
-      endDate: rental.endDate instanceof Date ? rental.endDate : new Date(rental.endDate),
+  const addEvent = useCallback((event: Omit<Event, 'id'>): string => {
+    const newId = crypto.randomUUID();
+    const processedEvent = {
+        ...event,
+        id: newId,
+        startDate: event.startDate instanceof Date ? event.startDate : new Date(event.startDate),
+        endDate: event.endDate instanceof Date ? event.endDate : new Date(event.endDate),
     };
-    setRentals(prev => [...prev, processedRental]);
-  }, [setRentals]); // rentals state itself is not a dependency here, only its setter
+    setEvents(prev => [...prev, processedEvent]);
+    return newId;
+  }, [setEvents]);
+  const updateEvent = useCallback((updatedEvent: Event) => {
+    const processedEvent = {
+        ...updatedEvent,
+        startDate: updatedEvent.startDate instanceof Date ? updatedEvent.startDate : new Date(updatedEvent.startDate),
+        endDate: updatedEvent.endDate instanceof Date ? updatedEvent.endDate : new Date(updatedEvent.endDate),
+    };
+    setEvents(prev => prev.map(e => e.id === processedEvent.id ? processedEvent : e));
+  }, [setEvents]);
+  const deleteEvent = useCallback((eventId: string) => {
+    setEvents(prev => prev.filter(e => e.id !== eventId));
+    setRentals(prev => prev.filter(r => r.eventId !== eventId));
+  }, [setEvents, setRentals]);
+
+  const addRental = useCallback((rental: Omit<Rental, 'id'>) => {
+    const newRental = { ...rental, id: crypto.randomUUID() };
+    setRentals(prev => [...prev, newRental]);
+  }, [setRentals]);
 
   const updateRental = useCallback((updatedRental: Rental) => {
-    const processedRental = {
-      ...updatedRental,
-      startDate: updatedRental.startDate instanceof Date ? updatedRental.startDate : new Date(updatedRental.startDate),
-      endDate: updatedRental.endDate instanceof Date ? updatedRental.endDate : new Date(updatedRental.endDate),
-    };
-    setRentals(prev => prev.map(r => r.id === processedRental.id ? processedRental : r));
+    setRentals(prev => prev.map(r => r.id === updatedRental.id ? updatedRental : r));
   }, [setRentals]);
+
   const deleteRental = useCallback((rentalId: string) => {
     setRentals(prev => prev.filter(r => r.id !== rentalId));
   }, [setRentals]);
@@ -251,34 +275,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return { success: false, message: "Quote must be associated with an existing client before it can be approved. Please edit the quote to select a client." };
     }
     
-    // Ensure client exists (should generally be true if clientId is set)
     const client = clients.find(c => c.id === quote.clientId);
     if (!client) {
        return { success: false, message: "Associated client not found. Please verify client selection in the quote." };
     }
 
 
+    // Create an Event from the Quote
+    const eventId = addEvent({
+        name: quote.name,
+        clientId: quote.clientId,
+        location: `From Quote #${quote.quoteNumber}`,
+        startDate: quote.startDate,
+        endDate: quote.endDate,
+    });
+    
+    // Update Quote status
     const updatedQuote: Quote = { ...quote, status: "Accepted", updatedAt: new Date() };
     updateQuote(updatedQuote);
 
+    // Create rentals linked to the new event
     quote.items.forEach(item => {
-      const rentalData: Omit<Rental, 'id'> = {
+      addRental({
+        eventId: eventId,
         equipmentId: item.equipmentId,
-        equipmentName: item.equipmentName,
-        clientId: quote.clientId!, // We've checked this above
-        clientName: quote.clientName, // Use the clientName from the quote (could also be client.name)
-        startDate: quote.startDate,
-        endDate: quote.endDate,
         quantityRented: item.quantity,
-        eventLocation: `${quote.name} (from Quote)`,
-        internalResponsible: "System (Generated from Quote)",
-      };
-      addRental(rentalData);
+      });
     });
     
-    return { success: true, message: `Quote "${quote.name || quote.quoteNumber}" approved and rentals created.` };
+    return { success: true, message: `Quote "${quote.name || quote.quoteNumber}" approved. Event and rentals created.` };
 
-  }, [quotes, clients, updateQuote, addRental]);
+  }, [quotes, clients, updateQuote, addRental, addEvent]);
 
 
   return (
@@ -287,6 +314,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       subcategories, setSubcategories, addSubcategory, updateSubcategory, deleteSubcategory,
       equipment, setEquipment, addEquipmentItem, updateEquipmentItem, deleteEquipmentItem,
       clients, setClients, addClient, updateClient, deleteClient,
+      events, setEvents, addEvent, updateEvent, deleteEvent,
       rentals, setRentals, addRental, updateRental, deleteRental,
       quotes, setQuotes, addQuote, updateQuote, deleteQuote, getNextQuoteNumber, approveQuoteAndCreateRentals,
       isDataLoaded
@@ -303,4 +331,3 @@ export const useAppContext = (): AppContextType => {
   }
   return context;
 };
-
