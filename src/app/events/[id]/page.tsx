@@ -156,8 +156,8 @@ export default function EventDetailsPage() {
                         </TableRow>
                         </TableHeader>
                         <TableBody>
-                        {eventRentals.map(rental => (
-                            <TableRow key={rental.id}>
+                        {eventRentals.map((rental, index) => (
+                            <TableRow key={`${rental.id}-${index}`}>
                             <TableCell className="font-medium">{rental.equipment?.name || 'N/A'}</TableCell>
                             <TableCell>{rental.quantityRented}</TableCell>
                             <TableCell>
