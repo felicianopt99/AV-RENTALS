@@ -29,7 +29,7 @@ export default function RentalPrepPage() {
   // The `id` from the URL is now an EVENT ID, not a rental ID.
   const eventId = typeof params.id === 'string' ? params.id : undefined;
   
-  const { events, rentals, equipment, isDataLoaded } = useAppContext();
+  const { events, rentals, equipment, isDataLoaded, clients } = useAppContext();
 
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
@@ -110,7 +110,7 @@ export default function RentalPrepPage() {
     }
   };
   
-  const client = useAppContext().clients.find(c => c.id === event.clientId);
+  const client = clients.find(c => c.id === event.clientId);
 
   return (
     <div className="flex flex-col h-full">
