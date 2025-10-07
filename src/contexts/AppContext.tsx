@@ -4,7 +4,7 @@
 
 import type React from 'react';
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import type { Category, Subcategory, EquipmentItem, Rental, Client, Quote, Event } from '@/types';
+import type { Category, Subcategory, EquipmentItem, Rental, Client, Quote, Event, MaintenanceLog } from '@/types';
 import { sampleCategories, sampleSubcategories, sampleEquipment, sampleRentals, sampleClients, sampleQuotes, sampleEvents } from '@/lib/sample-data';
 import useLocalStorage from '@/hooks/useLocalStorage';
 
@@ -26,6 +26,7 @@ interface AppContextType {
   addEquipmentItem: (item: Omit<EquipmentItem, 'id'>) => void;
   updateEquipmentItem: (item: EquipmentItem) => void;
   deleteEquipmentItem: (itemId: string) => void;
+  addMaintenanceLog: (log: Omit<MaintenanceLog, 'id'>) => void;
 
   clients: Client[];
   setClients: React.Dispatch<React.SetStateAction<Client[]>>;
@@ -170,6 +171,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setEquipment(prev => prev.filter(eq => eq.id !== itemId));
   }, [setEquipment]);
 
+  const addMaintenanceLog = useCallback((log: Omit<MaintenanceLog, 'id'>) => {
+    const newLog = { ...log, id: crypto.randomUUID() };
+    setEquipment(prev => prev.map(item => {
+      if (item.id === log.equipmentId) {
+        const history = item.maintenanceHistory ? [...item.maintenanceHistory, newLog] : [newLog];
+        return { ...item, maintenanceHistory: history };
+      }
+      return item;
+    }));
+  }, [setEquipment]);
+
   const addClient = useCallback((client: Omit<Client, 'id'>) => {
     setClients(prev => [...prev, { ...client, id: crypto.randomUUID() }]);
   }, [setClients]);
@@ -312,7 +324,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     <AppContext.Provider value={{
       categories, setCategories, addCategory, updateCategory, deleteCategory,
       subcategories, setSubcategories, addSubcategory, updateSubcategory, deleteSubcategory,
-      equipment, setEquipment, addEquipmentItem, updateEquipmentItem, deleteEquipmentItem,
+      equipment, setEquipment, addEquipmentItem, updateEquipmentItem, deleteEquipmentItem, addMaintenanceLog,
       clients, setClients, addClient, updateClient, deleteClient,
       events, setEvents, addEvent, updateEvent, deleteEvent,
       rentals, setRentals, addRental, updateRental, deleteRental,

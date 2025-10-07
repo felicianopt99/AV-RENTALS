@@ -14,6 +14,14 @@ export interface Subcategory {
 
 export type EquipmentStatus = 'good' | 'damaged' | 'maintenance';
 
+export interface MaintenanceLog {
+  id: string;
+  equipmentId: string;
+  date: Date;
+  description: string;
+  cost?: number;
+}
+
 export interface EquipmentItem {
   id:string;
   name: string;
@@ -25,6 +33,7 @@ export interface EquipmentItem {
   location: string; // Physical location
   imageUrl?: string;
   dailyRate: number; // Added daily rental rate
+  maintenanceHistory?: MaintenanceLog[]; // New field
 }
 
 export interface Client {

@@ -1,6 +1,6 @@
 
 
-import type { Category, Subcategory, EquipmentItem, Rental, Client, Quote, QuoteItem, Event } from '@/types';
+import type { Category, Subcategory, EquipmentItem, Rental, Client, Quote, QuoteItem, Event, MaintenanceLog } from '@/types';
 
 export const sampleCategories: Category[] = [
   { id: 'cat1', name: 'Audio', icon: 'Mic' },
@@ -20,6 +20,12 @@ export const sampleSubcategories: Subcategory[] = [
   { id: 'subcat3_2', name: 'Moving Heads', parentId: 'cat3' },
   { id: 'subcat4_1', name: 'Platforms', parentId: 'cat4' },
 ];
+
+const sampleMaintenanceHistory: MaintenanceLog[] = [
+    { id: 'maint1', equipmentId: 'eq3', date: new Date(new Date().setDate(new Date().getDate() - 20)), description: 'Replaced bulb assembly.', cost: 150 },
+    { id: 'maint2', equipmentId: 'eq5', date: new Date(new Date().setDate(new Date().getDate() - 5)), description: 'Sensor cleaning and recalibration.', cost: 250 },
+    { id: 'maint3', equipmentId: 'eq5', date: new Date(new Date().setDate(new Date().getDate() - 90)), description: 'Dropped by client. Lens mount replaced.', cost: 500 },
+]
 
 export const sampleEquipment: EquipmentItem[] = [
   {
@@ -57,6 +63,7 @@ export const sampleEquipment: EquipmentItem[] = [
     location: 'Tech Bench',
     imageUrl: 'https://placehold.co/600x400.png',
     dailyRate: 75.00,
+    maintenanceHistory: sampleMaintenanceHistory.filter(m => m.equipmentId === 'eq3')
   },
   {
     id: 'eq4',
@@ -81,6 +88,7 @@ export const sampleEquipment: EquipmentItem[] = [
     location: 'Repair Bin',
     imageUrl: 'https://placehold.co/600x400.png',
     dailyRate: 120.00,
+    maintenanceHistory: sampleMaintenanceHistory.filter(m => m.equipmentId === 'eq5')
   },
 ];
 
@@ -210,10 +218,10 @@ export const sampleQuotes: Quote[] = [
     taxRate: 0.05,
     taxAmount: taxAmount1,
     totalAmount: subTotal1 + taxAmount1,
-    status: 'Draft',
+    status: 'Accepted',
     notes: 'Setup required by 8 AM on the first day. Soundcheck assistance requested.',
-    createdAt: new Date(new Date(today).setDate(today.getDate() - 5)),
-    updatedAt: new Date(new Date(today).setDate(today.getDate() - 2)),
+    createdAt: new Date(new Date(today).setMonth(today.getMonth() - 2)),
+    updatedAt: new Date(new Date(today).setMonth(today.getMonth() - 2)),
   },
   {
     id: 'quote2',
@@ -234,7 +242,31 @@ export const sampleQuotes: Quote[] = [
     totalAmount: subTotal2 - discountAmount2 + taxAmount2,
     status: 'Sent',
     notes: 'Includes on-site technician for the main event day.',
-    createdAt: new Date(new Date(today).setDate(today.getDate() - 10)),
-    updatedAt: new Date(new Date(today).setDate(today.getDate() - 1)),
+    createdAt: new Date(new Date(today).setMonth(today.getMonth() - 1)),
+    updatedAt: new Date(new Date(today).setMonth(today.getMonth() - 1)),
+  },
+  {
+    id: 'quote3',
+    quoteNumber: `Q${today.getFullYear()}-003`,
+    name: 'Another Tech Solutions Event',
+    location: 'HQ Auditorium',
+    clientId: 'client1',
+    clientName: 'Tech Solutions Inc.',
+    clientEmail: 'alice@techsolutions.example.com',
+    startDate: new Date(new Date(today).setDate(today.getDate() + 90)),
+    endDate: calculateEndDate(new Date(new Date(today).setDate(today.getDate() + 90)), 2),
+    items: [
+        { id: 'qi3_1', equipmentId: 'eq1', equipmentName: 'Shure SM58', quantity: 10, unitPrice: 15.00, days: 2, lineTotal: 10 * 15.00 * 2 },
+    ],
+    subTotal: 300,
+    discountType: 'fixed',
+    discountAmount: 0,
+    taxRate: 0.07,
+    taxAmount: 21,
+    totalAmount: 321,
+    status: 'Accepted',
+    notes: '',
+    createdAt: new Date(new Date(today).setMonth(today.getMonth() - 3)),
+    updatedAt: new Date(new Date(today).setMonth(today.getMonth() - 3)),
   }
 ];

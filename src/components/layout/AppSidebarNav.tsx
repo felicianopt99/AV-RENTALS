@@ -4,13 +4,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, PlusSquare, LayoutList, CalendarDays, GanttChartSquare, Users, FileText, Package, PartyPopper } from 'lucide-react';
+import { Home, LayoutList, CalendarDays, Users, FileText, Package, PartyPopper, Wrench } from 'lucide-react';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
-import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: Home },
   { href: '/inventory', label: 'Inventory', icon: Package },
+  { href: '/maintenance', label: 'Maintenance', icon: Wrench },
   { href: '/categories', label: 'Manage Categories', icon: LayoutList },
   { href: '/clients', label: 'Manage Clients', icon: Users },
   { href: '/events', label: 'Events', icon: PartyPopper },
