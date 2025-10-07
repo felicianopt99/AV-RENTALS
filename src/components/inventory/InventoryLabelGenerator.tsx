@@ -133,13 +133,15 @@ export function InventoryLabelGenerator() {
         </Card>
       </div>
 
-      <div className={cn("hidden", { 'printable-area': isPrinting })}>
-        <div className="grid grid-cols-3 gap-2">
-            {selectedEquipment.map(item => (
-                <EquipmentLabel key={item.id} item={item} companyName={companyName} />
-            ))}
+      {isPrinting && (
+        <div className="printable-area">
+          <div className="grid grid-cols-2 gap-2">
+              {selectedEquipment.map(item => (
+                  <EquipmentLabel key={item.id} item={item} companyName={companyName} />
+              ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

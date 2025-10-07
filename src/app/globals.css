@@ -61,7 +61,7 @@
   }
 
   body, .printable-area, .printable-area * {
-    background-color: #ffffff !important;
+    background: #ffffff !important;
     color: #000000 !important;
     border-color: #000000 !important;
     box-shadow: none !important;
@@ -72,7 +72,11 @@
   
   .printable-area {
     display: block !important;
-    position: static;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: auto;
     padding: 0;
     margin: 0;
   }
