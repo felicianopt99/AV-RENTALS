@@ -52,39 +52,3 @@
     /* font-family is handled by Next/Font in layout.tsx */
   }
 }
-
-/* Print styles */
-@media print {
-  @page {
-    size: A4;
-    margin: 1cm;
-  }
-
-  body, .printable-area, .printable-area * {
-    background: #ffffff !important;
-    color: #000000 !important;
-    border-color: #000000 !important;
-    box-shadow: none !important;
-    text-shadow: none !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-  
-  .printable-area {
-    display: block !important;
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: auto;
-    padding: 0;
-    margin: 0;
-  }
-  .no-print {
-    display: none !important;
-  }
-  main {
-    padding: 0 !important;
-    margin: 0 !important;
-  }
-}
