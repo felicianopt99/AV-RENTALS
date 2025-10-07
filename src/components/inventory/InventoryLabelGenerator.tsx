@@ -10,14 +10,15 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Printer, Search, ListChecks } from 'lucide-react';
+import { Printer, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { EquipmentItem } from '@/types';
+import { APP_NAME } from '@/lib/constants';
 
 export function InventoryLabelGenerator() {
   const { equipment, isDataLoaded } = useAppContext();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState('');
+  const [companyName, setCompanyName] = useState(APP_NAME);
   const [isPrinting, setIsPrinting] = useState(false);
 
   const filteredEquipment = useMemo(() => 
@@ -54,20 +55,20 @@ export function InventoryLabelGenerator() {
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle>Inventory Label Generator</CardTitle>
-            <CardDescription>Select equipment to generate printable labels with QR codes.</CardDescription>
+            <CardDescription>Select equipment and customize info to generate printable labels with QR codes.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-grow">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+              <div className="md:col-span-2">
+                <Label htmlFor="company-name">Company Name for Labels</Label>
                 <Input
-                  placeholder="Search equipment..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  id="company-name"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  placeholder="Your Company Name"
                 />
               </div>
-              <Button onClick={handlePrint} disabled={selectedIds.size === 0}>
+              <Button onClick={handlePrint} disabled={selectedIds.size === 0} className="w-full">
                 <Printer className="mr-2 h-4 w-4" />
                 Print {selectedIds.size} Selected Labels
               </Button>
@@ -84,6 +85,15 @@ export function InventoryLabelGenerator() {
                     <Label htmlFor="select-all" className="text-sm font-medium">
                       Select All ({selectedIds.size} / {filteredEquipment.length})
                     </Label>
+                 </div>
+                 <div className="relative w-full max-w-xs">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                    placeholder="Search equipment..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                    />
                  </div>
               </CardHeader>
               <CardContent className="p-0">
@@ -127,7 +137,7 @@ export function InventoryLabelGenerator() {
         <div>
            <div className="grid grid-cols-3 gap-2">
             {selectedEquipment.map(item => (
-              <EquipmentLabel key={item.id} item={item} />
+              <EquipmentLabel key={item.id} item={item} companyName={companyName} />
             ))}
           </div>
         </div>

@@ -6,15 +6,17 @@ import type { EquipmentItem } from '@/types';
 
 interface EquipmentLabelProps {
   item: EquipmentItem;
+  companyName?: string;
 }
 
-export function EquipmentLabel({ item }: EquipmentLabelProps) {
+export function EquipmentLabel({ item, companyName }: EquipmentLabelProps) {
   const qrCodeUrl = typeof window !== 'undefined'
     ? `${window.location.origin}/equipment/${item.id}/edit`
     : '';
 
   return (
     <div className="p-2 border border-solid border-black rounded-md break-inside-avoid flex flex-col items-center justify-center text-center bg-white aspect-[4/3]">
+      {companyName && <p className="text-[8px] font-semibold text-black uppercase tracking-wider mb-1">{companyName}</p>}
       <h3 className="text-xs font-bold text-black mb-1 line-clamp-2">{item.name}</h3>
       <div className="bg-white p-1 rounded-sm w-full h-auto flex-grow">
         {qrCodeUrl && (

@@ -60,14 +60,13 @@
     margin: 1cm;
   }
 
-  body, html {
-    background-color: white !important;
-    color: black !important;
-    width: 100%;
-    height: auto;
+  html, body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
+  
   .printable-area {
     display: block !important;
     position: absolute;
@@ -76,6 +75,8 @@
     width: 100%;
     padding: 0;
     margin: 0;
+    background-color: #ffffff !important;
+    color: #000000 !important;
   }
   .no-print {
     display: none !important;
@@ -83,5 +84,16 @@
   main {
     padding: 0 !important;
     margin: 0 !important;
+  }
+
+  /* Ensure printed elements have white background and black text */
+  .printable-area *,
+  .printable-area *:before,
+  .printable-area *:after {
+      background-color: #ffffff !important;
+      color: #000000 !important;
+      border-color: #000000 !important;
+      box-shadow: none !important;
+      text-shadow: none !important;
   }
 }
