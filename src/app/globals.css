@@ -60,23 +60,21 @@
     margin: 1cm;
   }
 
-  html, body {
+  body, .printable-area, .printable-area * {
     background-color: #ffffff !important;
     color: #000000 !important;
+    border-color: #000000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
   
   .printable-area {
     display: block !important;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
+    position: static;
     padding: 0;
     margin: 0;
-    background-color: #ffffff !important;
-    color: #000000 !important;
   }
   .no-print {
     display: none !important;
@@ -84,16 +82,5 @@
   main {
     padding: 0 !important;
     margin: 0 !important;
-  }
-
-  /* Ensure printed elements have white background and black text */
-  .printable-area *,
-  .printable-area *:before,
-  .printable-area *:after {
-      background-color: #ffffff !important;
-      color: #000000 !important;
-      border-color: #000000 !important;
-      box-shadow: none !important;
-      text-shadow: none !important;
   }
 }

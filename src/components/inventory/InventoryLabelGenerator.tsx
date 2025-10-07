@@ -50,7 +50,7 @@ export function InventoryLabelGenerator() {
   const selectedEquipment = equipment.filter(item => selectedIds.has(item.id));
 
   return (
-    <div className={cn({ 'printable-area': isPrinting })}>
+    <div>
       <div className="no-print">
         <Card className="shadow-lg">
           <CardHeader>
@@ -133,15 +133,13 @@ export function InventoryLabelGenerator() {
         </Card>
       </div>
 
-      {isPrinting && (
-        <div>
-           <div className="grid grid-cols-3 gap-2">
+      <div className={cn("hidden", { 'printable-area': isPrinting })}>
+        <div className="grid grid-cols-3 gap-2">
             {selectedEquipment.map(item => (
-              <EquipmentLabel key={item.id} item={item} companyName={companyName} />
+                <EquipmentLabel key={item.id} item={item} companyName={companyName} />
             ))}
-          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

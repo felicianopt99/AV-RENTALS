@@ -18,7 +18,7 @@ export function EquipmentLabel({ item, companyName }: EquipmentLabelProps) {
     <div className="p-2 border border-solid border-black rounded-md break-inside-avoid flex flex-col items-center justify-center text-center bg-white aspect-[4/3]">
       {companyName && <p className="text-[8px] font-semibold text-black uppercase tracking-wider mb-1">{companyName}</p>}
       <h3 className="text-xs font-bold text-black mb-1 line-clamp-2">{item.name}</h3>
-      <div className="bg-white p-1 rounded-sm w-full h-auto flex-grow">
+      <div className="bg-white p-1 rounded-sm w-full flex-grow flex items-center justify-center">
         {qrCodeUrl && (
            <QRCode
             value={qrCodeUrl}
