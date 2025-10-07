@@ -55,19 +55,32 @@
 
 /* Print styles */
 @media print {
-  body {
+  @page {
+    size: A4;
+    margin: 1cm;
+  }
+
+  body, html {
     background-color: white !important;
     color: black !important;
+    width: 100%;
+    height: auto;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
   .printable-area {
     display: block !important;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 0;
+    margin: 0;
   }
   .no-print {
     display: none !important;
   }
-  /* Ensure full width for printing */
   main {
-    max-width: 100% !important;
     padding: 0 !important;
     margin: 0 !important;
   }
