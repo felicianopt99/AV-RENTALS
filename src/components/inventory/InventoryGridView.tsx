@@ -4,7 +4,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import type { EquipmentItem } from '@/types';
-import { useAppContext } from '@/contexts/AppContext';
+import { useAppContext, useAppDispatch } from '@/contexts/AppContext';
 import { EquipmentCard } from '@/components/equipment/EquipmentCard';
 import { EquipmentFilters } from '@/components/equipment/EquipmentFilters';
 import { SearchSlash, Box } from 'lucide-react';
@@ -23,7 +23,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Separator } from '../ui/separator';
 
 export function InventoryGridView() {
-  const { equipment, categories, subcategories, deleteEquipmentItem, isDataLoaded } = useAppContext();
+  const { equipment, categories, subcategories, isDataLoaded } = useAppContext();
+  const { deleteEquipmentItem } = useAppDispatch();
   const { toast } = useToast();
   const router = useRouter();
 
@@ -177,3 +178,5 @@ export function InventoryGridView() {
     </>
   );
 }
+
+    

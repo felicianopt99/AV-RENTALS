@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertTriangle } from "lucide-react";
 import type { Event } from "@/types";
-import { useAppContext } from "@/contexts/AppContext";
+import { useAppContext, useAppDispatch } from "@/contexts/AppContext";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 
@@ -37,7 +37,8 @@ interface AddEquipmentToEventDialogProps {
 }
 
 export function AddEquipmentToEventDialog({ isOpen, onOpenChange, event, onSubmitSuccess }: AddEquipmentToEventDialogProps) {
-  const { equipment, rentals, addRental, events } = useAppContext();
+  const { equipment, rentals, events } = useAppContext();
+  const { addRental } = useAppDispatch();
   const { toast } = useToast();
   const [availabilityConflict, setAvailabilityConflict] = useState<string | null>(null);
 
@@ -173,3 +174,5 @@ export function AddEquipmentToEventDialog({ isOpen, onOpenChange, event, onSubmi
     </Dialog>
   );
 }
+
+    

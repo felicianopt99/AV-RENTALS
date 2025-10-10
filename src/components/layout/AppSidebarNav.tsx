@@ -40,11 +40,11 @@ export function AppSidebarNav() {
       // Render a placeholder or skeleton on the server and during initial client render
       return (
         <SidebarMenu>
-          {navItems.map((item) => (
-             <SidebarMenuItem key={item.href}>
+          {navItems.map((item, index) => (
+             <SidebarMenuItem key={index}>
                 <SidebarMenuButton isActive={false} disabled>
                     <item.icon className="h-5 w-5" />
-                    <span>{item.label}</span>
+                    <span className='w-32 h-4 bg-muted animate-pulse rounded-md'></span>
                 </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
@@ -85,3 +85,5 @@ export function AppSidebarNav() {
     </SidebarMenu>
   );
 }
+
+    

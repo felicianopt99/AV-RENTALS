@@ -24,7 +24,7 @@ import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import type { EquipmentItem, EquipmentStatus } from "@/types";
 import { EQUIPMENT_STATUSES } from '@/lib/constants';
-import { useAppContext } from "@/contexts/AppContext";
+import { useAppDispatch } from "@/contexts/AppContext";
 import { useToast } from "@/hooks/use-toast";
 
 const logSchema = z.object({
@@ -43,7 +43,7 @@ interface MaintenanceLogDialogProps {
 }
 
 export function MaintenanceLogDialog({ isOpen, onOpenChange, equipmentItem }: MaintenanceLogDialogProps) {
-  const { addMaintenanceLog, updateEquipmentItem } = useAppContext();
+  const { addMaintenanceLog, updateEquipmentItem } = useAppDispatch();
   const { toast } = useToast();
 
   const form = useForm<LogFormValues>({
@@ -174,3 +174,5 @@ export function MaintenanceLogDialog({ isOpen, onOpenChange, equipmentItem }: Ma
     </Dialog>
   );
 }
+
+    

@@ -21,7 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import type { EquipmentItem, Category, Subcategory, EquipmentStatus, EquipmentType } from "@/types";
 import { EQUIPMENT_STATUSES } from "@/lib/constants";
-import { useAppContext } from "@/contexts/AppContext";
+import { useAppContext, useAppDispatch } from "@/contexts/AppContext";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
@@ -51,7 +51,8 @@ interface EquipmentFormProps {
 }
 
 export function EquipmentForm({ initialData, onSubmitSuccess }: EquipmentFormProps) {
-  const { categories, subcategories: allSubcategories, addEquipmentItem, updateEquipmentItem } = useAppContext();
+  const { categories, subcategories: allSubcategories } = useAppContext();
+  const { addEquipmentItem, updateEquipmentItem } = useAppDispatch();
   const router = useRouter();
   const { toast } = useToast();
   
@@ -328,3 +329,5 @@ export function EquipmentForm({ initialData, onSubmitSuccess }: EquipmentFormPro
     </Form>
   );
 }
+
+    

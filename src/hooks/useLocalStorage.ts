@@ -1,13 +1,13 @@
 
 "use client";
 
-import { useState, useEffect, Dispatch, SetStateAction, useCallback } from 'react';
+import { useState, useEffect, Dispatch, SetStateAction } from 'react';
 
 type SetValue<T> = Dispatch<SetStateAction<T>>;
 
 function useLocalStorage<T>(key: string, initialValue: T): [T, SetValue<T>] {
   
-  const readValue = useCallback((): T => {
+  const readValue = (): T => {
     if (typeof window === 'undefined') {
       return initialValue;
     }
@@ -18,11 +18,11 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, SetValue<T>] {
       console.warn(`Error reading localStorage key “${key}”:`, error);
       return initialValue;
     }
-  }, [initialValue, key]);
+  };
 
   const [storedValue, setStoredValue] = useState<T>(readValue);
 
-  const setValue: SetValue<T> = useCallback(value => {
+  const setValue: SetValue<T> = value => {
       if (typeof window === 'undefined') {
         console.warn(
           `Tried setting localStorage key “${key}” even though environment is not a client`
@@ -36,14 +36,16 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, SetValue<T>] {
       } catch (error) {
         console.warn(`Error setting localStorage key “${key}”:`, error);
       }
-    }, [key, storedValue]);
+    };
   
   useEffect(() => {
     setStoredValue(readValue());
-  }, [readValue]);
-
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return [storedValue, setValue];
 }
 
 export default useLocalStorage;
+
+    

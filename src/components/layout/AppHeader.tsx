@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Bell, UserCircle } from 'lucide-react';
-import { useAppContext } from '@/contexts/AppContext';
+import { useAppContext, useAppDispatch } from '@/contexts/AppContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface AppHeaderProps {
@@ -13,7 +13,8 @@ interface AppHeaderProps {
 }
 
 export function AppHeader({ title }: AppHeaderProps) {
-  const { users, currentUser, setCurrentUser } = useAppContext();
+  const { users, currentUser } = useAppContext();
+  const { setCurrentUser } = useAppDispatch();
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -44,7 +45,7 @@ export function AppHeader({ title }: AppHeaderProps) {
               </SelectContent>
           </Select>
         ) : (
-          <div className="w-[180px] h-10" /> // Placeholder to prevent layout shift
+          <div className="w-[180px] h-10 bg-muted rounded-md animate-pulse" />
         )}
         <Button variant="ghost" size="icon" className="rounded-full">
           <Bell className="h-5 w-5" />
@@ -58,3 +59,5 @@ export function AppHeader({ title }: AppHeaderProps) {
     </header>
   );
 }
+
+    

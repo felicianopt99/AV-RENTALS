@@ -1,3 +1,4 @@
+
 // src/components/clients/ClientForm.tsx
 "use client";
 
@@ -17,7 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type { Client } from "@/types";
-import { useAppContext } from "@/contexts/AppContext";
+import { useAppDispatch } from "@/contexts/AppContext";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 
@@ -38,7 +39,7 @@ interface ClientFormProps {
 }
 
 export function ClientForm({ initialData, onSubmitSuccess }: ClientFormProps) {
-  const { addClient, updateClient } = useAppContext();
+  const { addClient, updateClient } = useAppDispatch();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -159,3 +160,5 @@ export function ClientForm({ initialData, onSubmitSuccess }: ClientFormProps) {
     </Form>
   );
 }
+
+    

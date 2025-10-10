@@ -6,7 +6,7 @@ import { useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { Client } from '@/types';
-import { useAppContext } from '@/contexts/AppContext';
+import { useAppContext, useAppDispatch } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -38,7 +38,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 
 export function ClientListDisplay() {
-  const { clients, deleteClient, isDataLoaded } = useAppContext();
+  const { clients, isDataLoaded } = useAppContext();
+  const { deleteClient } = useAppDispatch();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -189,3 +190,5 @@ export function ClientListDisplay() {
     </div>
   );
 }
+
+    

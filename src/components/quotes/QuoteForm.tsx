@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils";
 import { format, differenceInCalendarDays, addDays } from "date-fns";
 import { CalendarIcon, PlusCircle, Trash2, X } from "lucide-react";
 import type { Quote, QuoteItem, Client, EquipmentItem, QuoteStatus } from "@/types";
-import { useAppContext } from "@/contexts/AppContext";
+import { useAppContext, useAppDispatch } from "@/contexts/AppContext";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useCallback } from "react";
@@ -71,7 +71,8 @@ interface QuoteFormProps {
 }
 
 export function QuoteForm({ initialData }: QuoteFormProps) {
-  const { equipment, clients, addQuote, updateQuote, getNextQuoteNumber, isDataLoaded } = useAppContext();
+  const { equipment, clients, isDataLoaded } = useAppContext();
+  const { addQuote, updateQuote } = useAppDispatch();
   const router = useRouter();
   const { toast } = useToast();
   
@@ -473,3 +474,5 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
     </Form>
   );
 }
+
+    

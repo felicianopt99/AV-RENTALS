@@ -43,12 +43,19 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </SidebarContent>
         <Separator className="my-2" />
         <SidebarFooter>
-            {isClient && currentUser && (
+            {isClient && currentUser ? (
             <div className="p-2 space-y-2">
                 <div className="flex items-center gap-2">
                     <UserIcon className="h-5 w-5 text-muted-foreground" />
                     <span className="font-semibold text-sm">{currentUser.name}</span>
                     <span className="text-xs text-muted-foreground ml-auto px-2 py-0.5 rounded-full bg-primary/10">{currentUser.role}</span>
+                </div>
+            </div>
+            ) : (
+             <div className="p-2 space-y-2">
+                <div className="flex items-center gap-2">
+                    <div className="h-5 w-5 bg-muted rounded-full animate-pulse" />
+                    <div className="h-4 w-24 bg-muted rounded-md animate-pulse" />
                 </div>
             </div>
             )}
@@ -69,3 +76,5 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     </SidebarProvider>
   );
 }
+
+    

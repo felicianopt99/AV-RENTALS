@@ -7,7 +7,7 @@ import { useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { Quote } from '@/types';
-import { useAppContext } from '@/contexts/AppContext';
+import { useAppContext, useAppDispatch } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -42,7 +42,8 @@ import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 
 export function QuoteListDisplay() {
-  const { quotes, deleteQuote, approveQuoteAndCreateRentals, isDataLoaded } = useAppContext();
+  const { quotes, isDataLoaded } = useAppContext();
+  const { deleteQuote, approveQuoteAndCreateRentals } = useAppDispatch();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -259,3 +260,5 @@ export function QuoteListDisplay() {
     </div>
   );
 }
+
+    

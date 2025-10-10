@@ -5,7 +5,7 @@ import { useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { Event, Client } from '@/types';
-import { useAppContext } from '@/contexts/AppContext';
+import { useAppContext, useAppDispatch } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -152,3 +152,5 @@ export function EventListDisplay() {
     </div>
   );
 }
+
+    

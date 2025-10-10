@@ -1,3 +1,4 @@
+
 // src/app/clients/[id]/page.tsx
 "use client";
 
@@ -207,3 +208,5 @@ export default function ClientDetailsPage() {
     </div>
   );
 }
+
+    

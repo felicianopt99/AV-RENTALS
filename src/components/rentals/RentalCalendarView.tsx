@@ -19,7 +19,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { MoreHorizontal } from 'lucide-react';
 
 export function RentalCalendarView() {
-  const { rentals, equipment, events, isDataLoaded } = useAppContext();
+  const { rentals, equipment, events, isDataLoaded, clients } = useAppContext();
   const router = useRouter();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
 
@@ -186,7 +186,7 @@ export function RentalCalendarView() {
                 <ul className="space-y-3">
                   {rentalsForSelectedDate.map(rental => {
                     const equipmentItem = equipment.find(e => e.id === rental.equipmentId);
-                    const client = rental.event ? useAppContext().clients.find(c => c.id === rental.event!.clientId) : undefined;
+                    const client = rental.event ? clients.find(c => c.id === rental.event!.clientId) : undefined;
                     const equipmentName = equipmentItem?.name || 'Unknown Equipment';
                     const clientName = client?.name || 'Unknown Client';
                     
@@ -256,3 +256,5 @@ export function RentalCalendarView() {
     </div>
   );
 }
+
+    

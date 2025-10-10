@@ -3,7 +3,7 @@
 
 import { useState, useCallback } from 'react';
 import type { Category, Subcategory } from '@/types';
-import { useAppContext } from '@/contexts/AppContext';
+import { useAppContext, useAppDispatch } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -46,7 +46,8 @@ const availableIcons = ['Mic', 'Videotape', 'Zap', 'Cuboid', 'Speaker', 'Camera'
 
 
 export function CategoryManager() {
-  const { categories, subcategories, addCategory, updateCategory, deleteCategory, addSubcategory, updateSubcategory, deleteSubcategory } = useAppContext();
+  const { categories, subcategories } = useAppContext();
+  const { addCategory, updateCategory, deleteCategory, addSubcategory, updateSubcategory, deleteSubcategory } = useAppDispatch();
   const { toast } = useToast();
 
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -362,3 +363,5 @@ export function CategoryManager() {
     </div>
   );
 }
+
+    

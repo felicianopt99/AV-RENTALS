@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import type { Event } from "@/types";
-import { useAppContext } from "@/contexts/AppContext";
+import { useAppContext, useAppDispatch } from "@/contexts/AppContext";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
 
@@ -47,7 +47,8 @@ interface EventFormDialogProps {
 }
 
 export function EventFormDialog({ isOpen, onOpenChange, initialData, onSubmitSuccess }: EventFormDialogProps) {
-  const { clients, addEvent, updateEvent } = useAppContext();
+  const { clients } = useAppContext();
+  const { addEvent, updateEvent } = useAppDispatch();
   const { toast } = useToast();
 
   const form = useForm<EventFormValues>({
@@ -200,3 +201,5 @@ export function EventFormDialog({ isOpen, onOpenChange, initialData, onSubmitSuc
     </Dialog>
   );
 }
+
+    

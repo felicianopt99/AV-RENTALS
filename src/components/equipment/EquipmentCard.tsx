@@ -108,3 +108,5 @@ export function EquipmentCard({ item, category, subcategory, onEdit, onDelete }:
     </>
   );
 }
+
+    
