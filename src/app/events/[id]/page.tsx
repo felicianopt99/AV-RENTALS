@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import type { Event, Rental, EquipmentItem, Client } from '@/types';
-import { useAppContext } from '@/contexts/AppContext';
+import { useAppContext, useAppDispatch } from '@/contexts/AppContext';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,7 +31,8 @@ import {
 export default function EventDetailsPage() {
   const params = useParams();
   const router = useRouter();
-  const { events, clients, rentals, equipment, isDataLoaded, deleteRental, deleteEvent } = useAppContext();
+  const { events, clients, rentals, equipment, isDataLoaded } = useAppContext();
+  const { deleteRental, deleteEvent } = useAppDispatch();
   const { toast } = useToast();
 
   const [event, setEvent] = useState<Event | null>(null);
@@ -41,7 +42,7 @@ export default function EventDetailsPage() {
   
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [isAddEquipmentOpen, setIsAddEquipmentOpen] = useState(false);
-  const [rentalToDelete, setRentalToDelete] = useState<Rental | null>(null);
+  const [rentalToDelete, setRentalToDelete] = useState<(Rental & { equipment?: EquipmentItem }) | null>(null);
   const [isDeleteEventOpen, setIsDeleteEventOpen] = useState(false);
 
   const eventId = typeof params.id === 'string' ? params.id : undefined;

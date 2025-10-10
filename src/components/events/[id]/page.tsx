@@ -42,7 +42,7 @@ export default function EventDetailsPage() {
   
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [isAddEquipmentOpen, setIsAddEquipmentOpen] = useState(false);
-  const [rentalToDelete, setRentalToDelete] = useState<Rental | null>(null);
+  const [rentalToDelete, setRentalToDelete] = useState<(Rental & { equipment?: EquipmentItem }) | null>(null);
   const [isDeleteEventOpen, setIsDeleteEventOpen] = useState(false);
 
   const eventId = typeof params.id === 'string' ? params.id : undefined;
