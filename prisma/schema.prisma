@@ -1,0 +1,374 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String @id @default(cuid())
+  name     String
+  username String @unique
+  password String
+  role     String // 'Admin' | 'Manager' | 'Technician' | 'Employee' | 'Viewer'
+  isActive Boolean @default(true)
+  version  Int @default(1)
+  lastLoginAt DateTime?
+  
+  // Audit fields
+  createdBy String?
+  updatedBy String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([username])
+  @@index([role])
+  @@index([isActive])
+}
+
+model Category {
+  id   String @id @default(cuid())
+  name String
+  icon String?
+  version Int @default(1)
+  
+  subcategories Subcategory[]
+  equipment     EquipmentItem[]
+  
+  // Audit fields
+  createdBy String?
+  updatedBy String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([name])
+}
+
+model Subcategory {
+  id       String @id @default(cuid())
+  name     String
+  parentId String
+  version  Int @default(1)
+  
+  category  Category        @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  equipment EquipmentItem[]
+  
+  // Audit fields
+  createdBy String?
+  updatedBy String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([parentId])
+  @@index([name])
+}
+
+model EquipmentItem {
+  id            String  @id @default(cuid())
+  name          String
+  description   String
+  categoryId    String
+  subcategoryId String?
+  quantity      Int
+  status        String  // 'good' | 'damaged' | 'maintenance'
+  location      String
+  imageUrl      String?
+  dailyRate     Float   @default(0)
+  type          String  // 'equipment' | 'consumable'
+  version       Int     @default(1)
+  
+  category         Category           @relation(fields: [categoryId], references: [id])
+  subcategory      Subcategory?       @relation(fields: [subcategoryId], references: [id])
+  rentals          Rental[]
+  quoteItems       QuoteItem[]
+  maintenanceLogs  MaintenanceLog[]
+  
+  // Audit fields
+  createdBy String?
+  updatedBy String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([categoryId])
+  @@index([subcategoryId])
+  @@index([status])
+  @@index([type])
+  @@index([name])
+}
+
+model MaintenanceLog {
+  id          String  @id @default(cuid())
+  equipmentId String
+  date        DateTime
+  description String
+  cost        Float?
+  
+  equipment EquipmentItem @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Client {
+  id            String  @id @default(cuid())
+  name          String
+  contactPerson String?
+  email         String?
+  phone         String?
+  address       String?
+  notes         String?
+  version       Int     @default(1)
+  
+  events Event[]
+  quotes Quote[]
+  
+  // Audit fields
+  createdBy String?
+  updatedBy String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([name])
+  @@index([email])
+}
+
+model Event {
+  id        String   @id @default(cuid())
+  name      String
+  clientId  String
+  location  String
+  startDate DateTime
+  endDate   DateTime
+  version   Int      @default(1)
+  
+  client  Client   @relation(fields: [clientId], references: [id])
+  rentals Rental[]
+  
+  // Audit fields
+  createdBy String?
+  updatedBy String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([clientId])
+  @@index([startDate])
+  @@index([endDate])
+}
+
+model Rental {
+  id              String  @id @default(cuid())
+  eventId         String
+  equipmentId     String
+  quantityRented  Int
+  prepStatus      String? // 'pending' | 'checked-out' | 'checked-in'
+  
+  event     Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  equipment EquipmentItem @relation(fields: [equipmentId], references: [id])
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Quote {
+  id             String   @id @default(cuid())
+  quoteNumber    String   @unique
+  name           String
+  location       String
+  clientId       String?
+  clientName     String
+  clientEmail    String?
+  clientPhone    String?
+  clientAddress  String?
+  startDate      DateTime
+  endDate        DateTime
+  subTotal       Float
+  discountAmount Float    @default(0)
+  discountType   String   @default("fixed") // 'percentage' | 'fixed'
+  taxRate        Float    @default(0)
+  taxAmount      Float    @default(0)
+  totalAmount    Float
+  status         String   @default("Draft") // 'Draft' | 'Sent' | 'Accepted' | 'Declined' | 'Archived'
+  notes          String?
+  version        Int      @default(1)
+  
+  client Client?     @relation(fields: [clientId], references: [id])
+  items  QuoteItem[]
+  
+  // Audit fields
+  createdBy String?
+  updatedBy String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([clientId])
+  @@index([status])
+  @@index([startDate])
+  @@index([quoteNumber])
+}
+
+model QuoteItem {
+  id            String @id @default(cuid())
+  quoteId       String
+  equipmentId   String
+  equipmentName String
+  quantity      Int
+  unitPrice     Float
+  days          Int
+  lineTotal     Float
+  
+  quote     Quote         @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  equipment EquipmentItem @relation(fields: [equipmentId], references: [id])
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CustomizationSettings {
+  id String @id @default(cuid())
+  
+  // Branding
+  companyName     String?
+  companyTagline  String?
+  contactEmail    String?
+  contactPhone    String?
+  
+  // Logo Options
+  useTextLogo     Boolean @default(true) // Prioritize company name over image
+  
+  // Theme
+  primaryColor    String?
+  secondaryColor  String?
+  accentColor     String?
+  darkMode        Boolean @default(false)
+  
+  // Logos (fallback options)
+  logoUrl         String?
+  faviconUrl      String?
+  
+  // Login Page Customization
+  loginBackgroundType     String @default("gradient") // "gradient", "solid", "image"
+  loginBackgroundColor1   String? // Primary color for gradient or solid
+  loginBackgroundColor2   String? // Secondary color for gradient
+  loginBackgroundImage    String? // Background image URL
+  loginCardOpacity        Float @default(0.95) // 0.0 to 1.0
+  loginCardBlur           Boolean @default(true) // Glassmorphism effect
+  loginCardPosition       String @default("center") // "center", "left", "right"
+  loginCardWidth          Int @default(400) // Card width in pixels
+  loginCardBorderRadius   Int @default(8) // Border radius in pixels
+  loginCardShadow         String @default("large") // "none", "small", "medium", "large", "xl"
+  loginLogoUrl            String? // Custom logo for login page
+  loginLogoSize           Int @default(80) // Logo size in pixels
+  loginWelcomeMessage     String? // Custom welcome message
+  loginWelcomeSubtitle    String? // Subtitle under welcome message
+  loginFooterText         String? // Footer text on login page
+  loginShowCompanyName    Boolean @default(true) // Show company name on login
+  loginFormSpacing        Int @default(16) // Form element spacing in pixels
+  loginButtonStyle        String @default("default") // "default", "rounded", "pill"
+  loginInputStyle         String @default("default") // "default", "rounded", "underline"
+  loginAnimations         Boolean @default(true) // Enable login page animations
+  
+  // Advanced
+  customCSS       String?
+  footerText      String?
+  
+  // System Settings
+  systemName      String?
+  timezone        String?
+  dateFormat      String?
+  currency        String?
+  language        String?
+  
+  // Security
+  sessionTimeout        Int?
+  requireStrongPasswords Boolean @default(true)
+  enableTwoFactor       Boolean @default(false)
+  maxLoginAttempts      Int?
+  
+  // Email
+  emailEnabled    Boolean @default(true)
+  smtpServer      String?
+  smtpPort        String?
+  smtpUsername    String?
+  smtpPassword    String?
+  fromEmail       String?
+  
+  // Backup
+  autoBackup       Boolean @default(true)
+  backupFrequency  String?
+  backupRetention  Int?
+  
+  version   Int @default(1)
+  
+  // Audit fields
+  updatedBy String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("customization_settings")
+}
+
+// New models for multi-user support
+model UserSession {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  ipAddress String?
+  userAgent String?
+  expiresAt DateTime
+  isActive  Boolean  @default(true)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String   // 'CREATE', 'UPDATE', 'DELETE', 'LOGIN', 'LOGOUT'
+  entityType String? // 'User', 'Equipment', 'Client', etc.
+  entityId  String?
+  oldData   String?  // JSON string of old data
+  newData   String?  // JSON string of new data
+  ipAddress String?
+  userAgent String?
+  
+  createdAt DateTime @default(now())
+  
+  @@index([userId])
+  @@index([action])
+  @@index([entityType])
+  @@index([createdAt])
+}
+
+model DataSyncEvent {
+  id         String   @id @default(cuid())
+  entityType String   // 'User', 'Equipment', 'Client', etc.
+  entityId   String
+  action     String   // 'CREATE', 'UPDATE', 'DELETE'
+  data       String?  // JSON string of the data
+  version    Int
+  processed  Boolean  @default(false)
+  
+  createdAt DateTime @default(now())
+  
+  @@index([entityType])
+  @@index([processed])
+  @@index([createdAt])
+}

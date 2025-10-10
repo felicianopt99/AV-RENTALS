@@ -43,7 +43,7 @@ import { Badge } from '@/components/ui/badge';
 
 export function QuoteListDisplay() {
   const { quotes, isDataLoaded } = useAppContext();
-  const { deleteQuote, approveQuoteAndCreateRentals } = useAppDispatch();
+  const { deleteQuote, approveQuote } = useAppDispatch();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -69,7 +69,7 @@ export function QuoteListDisplay() {
 
   const confirmApprove = useCallback(async () => {
     if (quoteToApprove) {
-      const result = await approveQuoteAndCreateRentals(quoteToApprove.id);
+      const result = await approveQuote(quoteToApprove);
       if (result.success) {
         toast({ title: 'Quote Approved', description: result.message });
         router.push('/events');
@@ -78,7 +78,7 @@ export function QuoteListDisplay() {
       }
       setQuoteToApprove(null);
     }
-  }, [quoteToApprove, approveQuoteAndCreateRentals, toast, router]);
+  }, [quoteToApprove, approveQuote, toast, router]);
 
   const filteredQuotes = useMemo(() => {
     const lowerSearchTerm = searchTerm.toLowerCase();

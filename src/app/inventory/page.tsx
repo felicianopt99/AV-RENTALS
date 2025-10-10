@@ -5,10 +5,11 @@ import { useState } from 'react';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { InventoryGridView } from '@/components/inventory/InventoryGridView';
+import { InventoryListView } from '@/components/inventory/InventoryListView';
 import { InventoryAvailabilityView } from '@/components/inventory/InventoryAvailabilityView';
 import { InventoryLabelGenerator } from '@/components/inventory/InventoryLabelGenerator';
 import { Button } from '@/components/ui/button';
-import { LayoutGrid, CalendarDays, QrCode, Plus } from 'lucide-react';
+import { LayoutGrid, List, CalendarDays, QrCode, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function InventoryPage() {
@@ -27,10 +28,14 @@ export default function InventoryPage() {
           </Button>
         </div>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6">
+          <TabsList className="grid w-full grid-cols-4 mb-6">
             <TabsTrigger value="grid">
               <LayoutGrid className="mr-2 h-4 w-4" />
               Grid View
+            </TabsTrigger>
+            <TabsTrigger value="list">
+              <List className="mr-2 h-4 w-4" />
+              List View
             </TabsTrigger>
             <TabsTrigger value="availability">
               <CalendarDays className="mr-2 h-4 w-4" />
@@ -43,6 +48,9 @@ export default function InventoryPage() {
           </TabsList>
           <TabsContent value="grid">
             <InventoryGridView />
+          </TabsContent>
+          <TabsContent value="list">
+            <InventoryListView />
           </TabsContent>
           <TabsContent value="availability">
             <InventoryAvailabilityView />

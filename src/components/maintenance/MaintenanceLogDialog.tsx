@@ -52,7 +52,7 @@ export function MaintenanceLogDialog({ isOpen, onOpenChange, equipmentItem }: Ma
       date: new Date(),
       description: "",
       cost: 0,
-      updateStatus: "",
+      updateStatus: "no-change",
     },
   });
 
@@ -65,7 +65,7 @@ export function MaintenanceLogDialog({ isOpen, onOpenChange, equipmentItem }: Ma
         cost: data.cost,
       });
 
-      if (data.updateStatus && data.updateStatus !== equipmentItem.status) {
+      if (data.updateStatus && data.updateStatus !== "no-change" && data.updateStatus !== equipmentItem.status) {
         updateEquipmentItem({ ...equipmentItem, status: data.updateStatus as EquipmentStatus });
       }
 
@@ -153,7 +153,7 @@ export function MaintenanceLogDialog({ isOpen, onOpenChange, equipmentItem }: Ma
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">No Change</SelectItem>
+                        <SelectItem value="no-change">No Change</SelectItem>
                         {EQUIPMENT_STATUSES.map(status => (
                             <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
                         ))}

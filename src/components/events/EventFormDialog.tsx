@@ -80,14 +80,14 @@ export function EventFormDialog({ isOpen, onOpenChange, initialData, onSubmitSuc
     }
   }, [initialData, form, isOpen]); // Rerun when dialog opens as well
 
-  function onSubmit(data: EventFormValues) {
+  async function onSubmit(data: EventFormValues) {
     try {
       if (initialData) {
-        updateEvent({ ...initialData, ...data });
+        await updateEvent({ ...initialData, ...data });
         toast({ title: "Event Updated", description: `Event "${data.name}" has been updated.` });
         if (onSubmitSuccess) onSubmitSuccess();
       } else {
-        const newEventId = addEvent(data);
+        const newEventId = await addEvent(data);
         toast({ title: "Event Created", description: `Event "${data.name}" has been created.` });
         if (onSubmitSuccess) onSubmitSuccess(newEventId);
       }

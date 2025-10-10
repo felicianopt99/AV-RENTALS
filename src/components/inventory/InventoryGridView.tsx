@@ -7,8 +7,11 @@ import type { EquipmentItem } from '@/types';
 import { useAppContext, useAppDispatch } from '@/contexts/AppContext';
 import { EquipmentCard } from '@/components/equipment/EquipmentCard';
 import { EquipmentFilters } from '@/components/equipment/EquipmentFilters';
-import { SearchSlash, Box } from 'lucide-react';
+import { SearchSlash, Box, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { EQUIPMENT_STATUSES } from '@/lib/constants';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,16 +26,62 @@ import { useToast } from '@/hooks/use-toast';
 import { Separator } from '../ui/separator';
 
 export function InventoryGridView() {
-  const { equipment, categories, subcategories, isDataLoaded } = useAppContext();
+  const { equipment, categories, subcategories, rentals, events, isDataLoaded } = useAppContext();
   const { deleteEquipmentItem } = useAppDispatch();
   const { toast } = useToast();
   const router = useRouter();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedSubcategory, setSelectedSubcategory] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
-  
+  const [selectedLocation, setSelectedLocation] = useState('');
+  const [selectedType, setSelectedType] = useState('');
+  const [selectedAvailability, setSelectedAvailability] = useState('all');
+  const [sortBy, setSortBy] = useState<'name' | 'quantity' | 'status' | 'dailyRate' | 'location'>('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+
   const [itemToDelete, setItemToDelete] = useState<EquipmentItem | null>(null);
+
+  const locations = useMemo(() => [...new Set(equipment.map(item => item.location))].sort(), [equipment]);
+
+  const isCurrentlyRented = useCallback((equipmentId: string) => {
+    return rentals.some(rental => {
+      if (rental.equipmentId !== equipmentId) return false;
+      const event = events.find(e => e.id === rental.eventId);
+      if (!event) return false;
+      const now = new Date();
+      return event.startDate <= now && now <= event.endDate;
+    });
+  }, [rentals, events]);
+
+  const sortItems = useCallback((items: EquipmentItem[]) => {
+    return [...items].sort((a, b) => {
+      let aValue: string | number = a[sortBy];
+      let bValue: string | number = b[sortBy];
+
+      if (sortBy === 'status') {
+        aValue = EQUIPMENT_STATUSES.find(s => s.value === a.status)?.label || a.status;
+        bValue = EQUIPMENT_STATUSES.find(s => s.value === b.status)?.label || b.status;
+      }
+
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return sortOrder === 'asc' 
+          ? aValue.localeCompare(bValue) 
+          : bValue.localeCompare(aValue);
+      }
+
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return sortOrder === 'asc' 
+          ? aValue - bValue 
+          : bValue - aValue;
+      }
+
+      return 0;
+    });
+  }, [sortBy, sortOrder]);
 
   const { regularEquipment, consumableItems } = useMemo(() => {
     const filtered = equipment
@@ -41,17 +90,30 @@ export function InventoryGridView() {
         item.description.toLowerCase().includes(searchTerm.toLowerCase())
       )
       .filter(item => selectedCategory ? item.categoryId === selectedCategory : true)
-      .filter(item => selectedStatus ? item.status === selectedStatus : true);
-      
+      .filter(item => selectedSubcategory ? item.subcategoryId === selectedSubcategory : true)
+      .filter(item => selectedStatus ? item.status === selectedStatus : true)
+      .filter(item => selectedLocation ? item.location === selectedLocation : true)
+      .filter(item => selectedType ? item.type === selectedType : true)
+      .filter(item => {
+        if (selectedAvailability === 'all') return true;
+        const rented = isCurrentlyRented(item.id);
+        return selectedAvailability === 'rented' ? rented : !rented;
+      });
+
     return {
       regularEquipment: filtered.filter(item => item.type === 'equipment'),
       consumableItems: filtered.filter(item => item.type === 'consumable')
     };
-  }, [equipment, searchTerm, selectedCategory, selectedStatus]);
+  }, [equipment, searchTerm, selectedCategory, selectedSubcategory, selectedStatus, selectedLocation, selectedType, selectedAvailability, isCurrentlyRented]);
+
+  const paginatedRegular = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return regularEquipment.slice(start, start + itemsPerPage);
+  }, [regularEquipment, currentPage]);
 
   const groupedEquipment = useMemo(() => {
     const groups: Record<string, EquipmentItem[]> = {};
-    regularEquipment.forEach(item => {
+    paginatedRegular.forEach(item => {
       const category = categories.find(c => c.id === item.categoryId);
       const categoryName = category ? category.name : 'Uncategorized';
       if (!groups[categoryName]) {
@@ -60,7 +122,9 @@ export function InventoryGridView() {
       groups[categoryName].push(item);
     });
     return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
-  }, [regularEquipment, categories]);
+  }, [paginatedRegular, categories]);
+
+  const totalPages = Math.ceil(regularEquipment.length / itemsPerPage);
 
   const handleEdit = useCallback((item: EquipmentItem) => {
     router.push(`/equipment/${item.id}/edit`);
@@ -97,11 +161,43 @@ export function InventoryGridView() {
         setSearchTerm={setSearchTerm}
         selectedCategory={selectedCategory}
         setSelectedCategory={setSelectedCategory}
+        selectedSubcategory={selectedSubcategory}
+        setSelectedSubcategory={setSelectedSubcategory}
         selectedStatus={selectedStatus}
         setSelectedStatus={setSelectedStatus}
+        selectedLocation={selectedLocation}
+        setSelectedLocation={setSelectedLocation}
+        selectedType={selectedType}
+        setSelectedType={setSelectedType}
+        selectedAvailability={selectedAvailability}
+        setSelectedAvailability={setSelectedAvailability}
         categories={categories}
+        subcategories={subcategories}
+        locations={locations}
       />
-    
+
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-4">
+          <label className="text-sm font-medium">Sort by:</label>
+          <Select value={sortBy} onValueChange={(value) => setSortBy(value as typeof sortBy)}>
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="name">Name</SelectItem>
+              <SelectItem value="quantity">Quantity</SelectItem>
+              <SelectItem value="status">Status</SelectItem>
+              <SelectItem value="dailyRate">Daily Rate</SelectItem>
+              <SelectItem value="location">Location</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button variant="outline" size="sm" onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}>
+            <ArrowUpDown className="h-4 w-4 mr-2" />
+            {sortOrder === 'asc' ? 'Ascending' : 'Descending'}
+          </Button>
+        </div>
+      </div>
+
       {noItemsFound ? (
         <div className="text-center py-16 text-muted-foreground flex flex-col items-center">
           <SearchSlash className="w-16 h-16 mb-4 text-primary/50" />
@@ -155,6 +251,37 @@ export function InventoryGridView() {
             )}
 
           </div>
+      )}
+
+      {regularEquipment.length > itemsPerPage && (
+        <div className="flex items-center justify-between mt-6">
+          <div className="text-sm text-muted-foreground">
+            Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, regularEquipment.length)} of {regularEquipment.length} equipment items
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </Button>
+            <span className="px-3 py-1 text-sm">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       )}
 
       {itemToDelete && (

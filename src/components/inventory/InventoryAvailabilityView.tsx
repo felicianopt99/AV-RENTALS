@@ -21,7 +21,7 @@ export function InventoryAvailabilityView() {
   const { equipment, rentals, events, isDataLoaded } = useAppContext();
   const [currentMonth, setCurrentMonth] = useState(startOfMonth(new Date()));
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
   const daysInMonth = eachDayOfInterval({
     start: startOfMonth(currentMonth),
@@ -48,7 +48,7 @@ export function InventoryAvailabilityView() {
 
     const filteredEquipment = equipment
         .filter(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()))
-        .filter(item => selectedCategory ? item.categoryId === selectedCategory : true);
+        .filter(item => selectedCategory && selectedCategory !== 'all' ? item.categoryId === selectedCategory : true);
 
     return filteredEquipment.map(item => {
       const dailyAvailability = daysInMonth.map(day => {
@@ -101,7 +101,7 @@ export function InventoryAvailabilityView() {
                     <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
-                    <SelectItem value="">All Categories</SelectItem>
+                    <SelectItem value="all">All Categories</SelectItem>
                     {categories.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id}>
                         {cat.name}

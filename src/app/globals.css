@@ -52,3 +52,26 @@
     /* font-family is handled by Next/Font in layout.tsx */
   }
 }
+
+/* FullCalendar Theme Overrides */
+.fc {
+  --fc-page-bg-color: hsl(var(--background));
+  --fc-border-color: hsl(var(--border));
+  --fc-button-bg-color: hsl(var(--secondary));
+  --fc-button-text-color: hsl(var(--secondary-foreground));
+  --fc-button-hover-bg-color: hsl(var(--accent));
+  --fc-button-hover-text-color: hsl(var(--accent-foreground));
+  --fc-button-active-bg-color: hsl(var(--primary));
+  --fc-button-active-text-color: hsl(var(--primary-foreground));
+  --fc-today-bg-color: hsl(var(--muted));
+  --fc-event-bg-color: hsl(var(--primary));
+  --fc-event-border-color: hsl(var(--primary));
+  --fc-event-text-color: hsl(var(--primary-foreground));
+  --fc-list-event-hover-bg-color: hsl(var(--accent));
+  --fc-daygrid-event-dot-color: hsl(var(--primary));
+  --fc-neutral-bg-color: hsl(var(--muted));
+  --fc-neutral-text-color: hsl(var(--muted-foreground));
+  --fc-list-event-dot-color: hsl(var(--primary));
+  --fc-highlight-color: hsl(var(--accent));
+  --fc-border-radius: var(--radius);
+}

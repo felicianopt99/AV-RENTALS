@@ -1,12 +1,59 @@
 
 
-// New User and Role types for permissions
-export type UserRole = 'Admin' | 'Technician';
+// User and Role types for authentication and permissions
+export type UserRole = 'Admin' | 'Manager' | 'Technician' | 'Employee' | 'Viewer';
 
 export interface User {
   id: string;
   name: string;
+  username: string;
+  password?: string; // Optional for client-side usage (never expose)
   role: UserRole;
+  isActive: boolean;
+  version?: number;
+  lastLoginAt?: Date;
+  createdBy?: string;
+  updatedBy?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface AuthUser {
+  id: string;
+  name: string;
+  username: string;
+  role: UserRole;
+}
+
+export interface LoginCredentials {
+  username: string;
+  password: string;
+}
+
+export interface CreateUserData {
+  name: string;
+  username: string;
+  password: string;
+  role: UserRole;
+}
+
+export interface UserFormValues {
+  name: string;
+  username: string;
+  password: string;
+  role: UserRole;
+}
+
+// Role Permissions
+export interface RolePermissions {
+  canManageUsers: boolean;
+  canManageEquipment: boolean;
+  canManageClients: boolean;
+  canManageEvents: boolean;
+  canManageQuotes: boolean;
+  canManageRentals: boolean;
+  canViewReports: boolean;
+  canManageMaintenance: boolean;
 }
 
 export interface Category {

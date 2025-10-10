@@ -2,8 +2,9 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
-import { AppLayout } from '@/components/layout/AppLayout';
+import { ConditionalLayout } from '@/components/layout/ConditionalLayout';
 import { AppProvider } from '@/contexts/AppContext';
+import { ReactQueryProvider } from '@/providers/ReactQueryProvider';
 import { Toaster } from "@/components/ui/toaster";
 
 const geistSans = Geist({
@@ -32,11 +33,13 @@ export default function RootLayout({
         {/* Minimal head, Next.js handles content via metadata */}
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased font-sans`}>
-        <AppProvider>
-          <AppLayout>
-            {children}
-          </AppLayout>
-        </AppProvider>
+        <ReactQueryProvider>
+          <AppProvider>
+            <ConditionalLayout>
+              {children}
+            </ConditionalLayout>
+          </AppProvider>
+        </ReactQueryProvider>
         <Toaster />
       </body>
     </html>

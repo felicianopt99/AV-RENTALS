@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'placehold.co',
+        hostname: '**',
       },
     ],
   },
@@ -15,6 +15,18 @@ const nextConfig: NextConfig = {
   },
   eslint: {
     ignoreDuringBuilds: false,
+  },
+  // Turbopack optimizations (updated syntax)
+  turbopack: {
+    resolveAlias: {
+      // Reduce module resolution time
+      '@': './src',
+    },
+  },
+  // Optimize compilation (removed deprecated swcMinify)
+  compiler: {
+    // Remove console logs in production
+    removeConsole: process.env.NODE_ENV === 'production',
   },
 };
 

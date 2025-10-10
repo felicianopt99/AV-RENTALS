@@ -1,11 +1,19 @@
-
 "use client";
 
 import type React from 'react';
-import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import type { Category, Subcategory, EquipmentItem, Rental, Client, Quote, Event, MaintenanceLog, User, UserRole } from '@/types';
-import { sampleCategories, sampleSubcategories, sampleEquipment, sampleRentals, sampleClients, sampleQuotes, sampleEvents, sampleUsers } from '@/lib/sample-data';
-import useLocalStorage from '@/hooks/useLocalStorage';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import type { Category, Subcategory, EquipmentItem, Rental, Client, Quote, Event, MaintenanceLog, User } from '@/types';
+import {
+  equipmentAPI,
+  categoriesAPI,
+  subcategoriesAPI,
+  clientsAPI,
+  eventsAPI,
+  rentalsAPI,
+  quotesAPI,
+  usersAPI,
+  APIError
+} from '@/lib/api';
 
 // --- State Context ---
 interface AppContextState {
@@ -19,266 +27,522 @@ interface AppContextState {
   rentals: Rental[];
   quotes: Quote[];
   isDataLoaded: boolean;
+  isLoading: boolean;
+  isAuthenticated: boolean;
+  isAuthLoading: boolean;
+  error: string | null;
 }
 
 const AppContext = createContext<AppContextState | undefined>(undefined);
 
-
 // --- Dispatch Context ---
 interface AppContextDispatch {
   setCurrentUser: (user: User | null) => void;
-  addCategory: (category: Omit<Category, 'id'>) => void;
-  updateCategory: (category: Category) => void;
-  deleteCategory: (categoryId: string) => void;
-  addSubcategory: (subcategory: Omit<Subcategory, 'id'>) => void;
-  updateSubcategory: (subcategory: Subcategory) => void;
-  deleteSubcategory: (subcategoryId: string) => void;
-  addEquipmentItem: (item: Omit<EquipmentItem, 'id'>) => void;
-  updateEquipmentItem: (item: EquipmentItem) => void;
-  deleteEquipmentItem: (itemId: string) => void;
-  addMaintenanceLog: (log: Omit<MaintenanceLog, 'id'>) => void;
-  addClient: (client: Omit<Client, 'id'>) => void;
-  updateClient: (client: Client) => void;
-  deleteClient: (clientId: string) => void;
-  addEvent: (event: Omit<Event, 'id'>) => string;
-  updateEvent: (event: Event) => void;
-  deleteEvent: (eventId: string) => void;
-  addRental: (rental: Omit<Rental, 'id'>) => void;
-  updateRental: (rental: Rental) => void;
-  deleteRental: (rentalId: string) => void;
-  addQuote: (quote: Omit<Quote, 'id' | 'quoteNumber' | 'createdAt' | 'updatedAt'>) => string;
-  updateQuote: (quote: Quote) => void;
-  deleteQuote: (quoteId: string) => void;
-  getNextQuoteNumber: () => string;
-  approveQuoteAndCreateRentals: (quoteId: string) => Promise<{ success: boolean; message: string }>;
+  login: (username: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  checkAuth: () => Promise<void>;
+  addCategory: (category: Omit<Category, 'id'>) => Promise<void>;
+  updateCategory: (category: Category) => Promise<void>;
+  deleteCategory: (categoryId: string) => Promise<void>;
+  addSubcategory: (subcategory: Omit<Subcategory, 'id'>) => Promise<void>;
+  updateSubcategory: (subcategory: Subcategory) => Promise<void>;
+  deleteSubcategory: (subcategoryId: string) => Promise<void>;
+  addEquipmentItem: (item: Omit<EquipmentItem, 'id'>) => Promise<void>;
+  updateEquipmentItem: (item: EquipmentItem) => Promise<void>;
+  deleteEquipmentItem: (itemId: string) => Promise<void>;
+  addMaintenanceLog: (log: Omit<MaintenanceLog, 'id'>) => Promise<void>;
+  addClient: (client: Omit<Client, 'id'>) => Promise<void>;
+  updateClient: (client: Client) => Promise<void>;
+  deleteClient: (clientId: string) => Promise<void>;
+  addEvent: (event: Omit<Event, 'id'>) => Promise<string>;
+  updateEvent: (event: Event) => Promise<void>;
+  deleteEvent: (eventId: string) => Promise<void>;
+  addRental: (rental: Omit<Rental, 'id'>) => Promise<void>;
+  updateRental: (rental: Rental) => Promise<void>;
+  deleteRental: (rentalId: string) => Promise<void>;
+  addQuote: (quote: Omit<Quote, 'id' | 'quoteNumber' | 'createdAt' | 'updatedAt'>) => Promise<string>;
+  updateQuote: (quote: Quote) => Promise<void>;
+  deleteQuote: (quoteId: string) => Promise<void>;
+  generateQuoteNumber: () => string;
+  approveQuote: (quote: Quote) => Promise<{ success: boolean; message: string }>;
+  refreshData: () => Promise<void>;
 }
 
 const AppDispatchContext = createContext<AppContextDispatch | undefined>(undefined);
 
-
-export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [users, setUsers] = useLocalStorage<User[]>('av_users', sampleUsers);
-  const [currentUser, setCurrentUser] = useLocalStorage<User | null>('av_currentUser', null);
-  
-  const [categories, setCategories] = useLocalStorage<Category[]>('av_categories', sampleCategories);
-  const [subcategories, setSubcategories] = useLocalStorage<Subcategory[]>('av_subcategories', sampleSubcategories);
-  const [equipment, setEquipment] = useLocalStorage<EquipmentItem[]>('av_equipment', sampleEquipment);
-  const [clients, setClients] = useLocalStorage<Client[]>('av_clients', sampleClients);
-  const [events, setEvents] = useLocalStorage<Event[]>('av_events', sampleEvents);
-  const [rentals, setRentals] = useLocalStorage<Rental[]>('av_rentals', sampleRentals);
-  const [quotes, setQuotes] = useLocalStorage<Quote[]>('av_quotes', sampleQuotes);
+export function AppProvider({ children }: { children: React.ReactNode }) {
+  // State management using React state
+  const [users, setUsers] = useState<User[]>([]);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
+  const [equipment, setEquipment] = useState<EquipmentItem[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [rentals, setRentals] = useState<Rental[]>([]);
+  const [quotes, setQuotes] = useState<Quote[]>([]);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    // This effect ensures data is loaded and the current user is initialized.
-    if (!currentUser && users.length > 0) {
-        const initialUser = users.find(u => u.role === 'Admin') || users[0];
-        setCurrentUser(initialUser);
-     }
-    setIsDataLoaded(true);
-  }, [currentUser, users]); // Removed setCurrentUser from dependency array 
-
- useEffect(() => {
-    const populateSampleDataIfNeeded = () => {
-      if (typeof window === 'undefined') return;
-      const wasKeyNeverSet = (key: string) => localStorage.getItem(key) === null;
-      
-      if (wasKeyNeverSet('av_users')) setUsers(sampleUsers);
-      if (wasKeyNeverSet('av_categories')) setCategories(sampleCategories);
-      if (wasKeyNeverSet('av_subcategories')) setSubcategories(sampleSubcategories);
-      if (wasKeyNeverSet('av_equipment')) {
-         setEquipment(sampleEquipment.map(e => ({
-          ...e, type: e.type || 'equipment', imageUrl: e.imageUrl || `https://placehold.co/600x400.png`, dailyRate: e.dailyRate || 0,
-        })));
-      } else {
-        setEquipment(prev => prev.map(e => ({
-          ...e, type: e.type || 'equipment', dailyRate: e.dailyRate || 0, imageUrl: e.imageUrl || `https://placehold.co/600x400.png`
-        })));
-      }
-      if (wasKeyNeverSet('av_clients')) setClients(sampleClients);
-      if (wasKeyNeverSet('av_events')) setEvents(sampleEvents);
-      if (wasKeyNeverSet('av_rentals')) setRentals(sampleRentals);
-      if (wasKeyNeverSet('av_quotes')) setQuotes(sampleQuotes);
-    };
-    
-    populateSampleDataIfNeeded();
-    setIsDataLoaded(true);
-  }, []); // Removed all setter functions from dependency array since they're stable
-
-
-  useEffect(() => {
-    if (isDataLoaded) {
-        const processDates = (items: any[], dateFields: string[]) => {
-            return items.map(item => {
-                const newItem = { ...item };
-                dateFields.forEach(field => {
-                    if (newItem[field] && !(newItem[field] instanceof Date)) {
-                       newItem[field] = new Date(String(newItem[field]));
-                    }
-                });
-                return newItem;
-            });
-        };
-        setEvents(prev => processDates(prev, ['startDate', 'endDate']));
-        setQuotes(prev => processDates(prev, ['startDate', 'endDate', 'createdAt', 'updatedAt']));
-    }
-  }, [isDataLoaded]); // Removed setter functions from dependency array
-
-  const addCategory = useCallback((category: Omit<Category, 'id'>) => {
-    setCategories(prev => [...prev, { ...category, id: crypto.randomUUID() }]);
-  }, []); // Removed setCategories from dependency array
-  const updateCategory = useCallback((updatedCategory: Category) => {
-    setCategories(prev => prev.map(cat => cat.id === updatedCategory.id ? updatedCategory : cat));
-  }, []); // Removed setCategories from dependency array
-  const deleteCategory = useCallback((categoryId: string) => {
-    setCategories(prev => prev.filter(cat => cat.id !== categoryId));
-    setSubcategories(prev => prev.filter(subcat => subcat.parentId !== categoryId));
-  }, []); // Removed setter functions from dependency array
-
-  const addSubcategory = useCallback((subcategory: Omit<Subcategory, 'id'>) => {
-    setSubcategories(prev => [...prev, { ...subcategory, id: crypto.randomUUID() }]);
-  }, []);
-  const updateSubcategory = useCallback((updatedSubcategory: Subcategory) => {
-    setSubcategories(prev => prev.map(sub => sub.id === updatedSubcategory.id ? updatedSubcategory : sub));
-  }, []);
-  const deleteSubcategory = useCallback((subcategoryId: string) => {
-    setSubcategories(prev => prev.filter(sub => sub.id !== subcategoryId));
-  }, []);
-  
-  const addEquipmentItem = useCallback((item: Omit<EquipmentItem, 'id'>) => {
-    setEquipment(prev => [...prev, { ...item, id: crypto.randomUUID(), type: item.type || 'equipment', imageUrl: item.imageUrl || `https://placehold.co/600x400.png`, dailyRate: item.dailyRate || 0 }]);
-  }, []);
-  const updateEquipmentItem = useCallback((updatedItem: EquipmentItem) => {
-    setEquipment(prev => prev.map(eq => eq.id === updatedItem.id ? {...eq, ...updatedItem, type: updatedItem.type || 'equipment', dailyRate: updatedItem.dailyRate || 0, imageUrl: updatedItem.imageUrl || `https://placehold.co/600x400.png` } : eq));
-  }, []);
-  const deleteEquipmentItem = useCallback((itemId: string) => {
-    setEquipment(prev => prev.filter(eq => eq.id !== itemId));
-  }, []);
-
-  const addMaintenanceLog = useCallback((log: Omit<MaintenanceLog, 'id'>) => {
-    const newLog = { ...log, id: crypto.randomUUID() };
-    setEquipment(prev => prev.map(item => {
-      if (item.id === log.equipmentId) {
-        const history = item.maintenanceHistory ? [...item.maintenanceHistory, newLog] : [newLog];
-        return { ...item, maintenanceHistory: history };
-      }
-      return item;
-    }));
-  }, []);
-
-  const addClient = useCallback((client: Omit<Client, 'id'>) => {
-    setClients(prev => [...prev, { ...client, id: crypto.randomUUID() }]);
-  }, []);
-  const updateClient = useCallback((updatedClient: Client) => {
-    setClients(prev => prev.map(c => c.id === updatedClient.id ? updatedClient : c));
-  }, []);
-  const deleteClient = useCallback((clientId: string) => {
-    setClients(prev => prev.filter(c => c.id !== clientId));
-  }, []);
-
-  const addEvent = useCallback((event: Omit<Event, 'id'>): string => {
-    const newId = crypto.randomUUID();
-    const processedEvent = { ...event, id: newId };
-    setEvents(prev => [...prev, processedEvent]);
-    return newId;
-  }, []);
-
-  const updateEvent = useCallback((updatedEvent: Event) => {
-    setEvents(prev => prev.map(e => e.id === updatedEvent.id ? updatedEvent : e));
-  }, []);
-
-  const deleteEvent = useCallback((eventId: string) => {
-    setEvents(prev => prev.filter(e => e.id !== eventId));
-    setRentals(prev => prev.filter(r => r.eventId !== eventId));
-  }, []);
-
-  const addRental = useCallback((rental: Omit<Rental, 'id'>) => {
-    const newRental = { ...rental, id: crypto.randomUUID() };
-    setRentals(prev => [...prev, newRental]);
-  }, []);
-
-  const updateRental = useCallback((updatedRental: Rental) => {
-    setRentals(prev => prev.map(r => r.id === updatedRental.id ? updatedRental : r));
-  }, []);
-
-  const deleteRental = useCallback((rentalId: string) => {
-    setRentals(prev => prev.filter(r => r.id !== rentalId));
-  }, []);
-
-  const getNextQuoteNumber = useCallback((): string => {
-    const currentYear = new Date().getFullYear();
-    const yearQuotes = quotes.filter(q => {
-      if (!q.quoteNumber || typeof q.quoteNumber !== 'string') return false;
-      const quoteYearMatch = q.quoteNumber.match(/^Q(\d{4})-(\d+)$/);
-      return quoteYearMatch && parseInt(quoteYearMatch[1], 10) === currentYear;
+  // Authentication functions
+  const login = useCallback(async (username: string, password: string) => {
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
     });
-    const maxNum = yearQuotes.reduce((max, q) => {
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Login failed');
+    }
+
+    const result = await response.json();
+    setCurrentUser(result.user);
+    setIsAuthenticated(true);
+  }, []);
+
+  const logout = useCallback(async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    setCurrentUser(null);
+    setIsAuthenticated(false);
+    setIsDataLoaded(false);
+  }, []);
+
+  const checkAuth = useCallback(async () => {
+    try {
+      setIsAuthLoading(true);
+      const response = await fetch('/api/auth/me');
+      
+      if (response.ok) {
+        const result = await response.json();
+        setCurrentUser(result.user);
+        setIsAuthenticated(true);
+      } else {
+        setCurrentUser(null);
+        setIsAuthenticated(false);
+      }
+    } catch (error) {
+      console.error('Auth check failed:', error);
+      setCurrentUser(null);
+      setIsAuthenticated(false);
+    } finally {
+      setIsAuthLoading(false);
+    }
+  }, []);
+
+  // Check authentication on mount
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+  // Load data when authenticated
+  useEffect(() => {
+    if (isAuthenticated && currentUser) {
+      refreshData();
+    }
+  }, [isAuthenticated, currentUser]);
+
+  // Load all data from API
+  const refreshData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const [
+        usersData,
+        categoriesData,
+        subcategoriesData,
+        equipmentData,
+        clientsData,
+        eventsData,
+        rentalsData,
+        quotesData,
+      ] = await Promise.all([
+        usersAPI.getAll().catch(e => { console.warn('Users API failed:', e); return []; }),
+        categoriesAPI.getAll().catch(e => { console.warn('Categories API failed:', e); return []; }),
+        subcategoriesAPI.getAll().catch(e => { console.warn('Subcategories API failed:', e); return []; }),
+        equipmentAPI.getAll().catch(e => { console.warn('Equipment API failed:', e); return []; }),
+        clientsAPI.getAll().catch(e => { console.warn('Clients API failed:', e); return []; }),
+        eventsAPI.getAll().catch(e => { console.warn('Events API failed:', e); return []; }),
+        rentalsAPI.getAll().catch(e => { console.warn('Rentals API failed:', e); return []; }),
+        quotesAPI.getAll().catch(e => { console.warn('Quotes API failed:', e); return []; }),
+      ]);
+
+      setUsers(usersData);
+      setCategories(categoriesData);
+      setSubcategories(subcategoriesData);
+      setEquipment(equipmentData);
+      setClients(clientsData);
+      setEvents(eventsData);
+      setRentals(rentalsData);
+      setQuotes(quotesData);
+
+      if (usersData.length > 0 && !currentUser) {
+        const initialUser = usersData.find((u: User) => u.role === 'Admin') || usersData[0];
+        setCurrentUser(initialUser);
+      }
+
+      setIsDataLoaded(true);
+    } catch (err) {
+      console.error('Error loading data:', err);
+      setError(err instanceof APIError ? err.message : 'Failed to load data');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentUser]);
+
+  // Load data on mount
+  useEffect(() => {
+    refreshData();
+  }, []);
+
+  // Category operations
+  const addCategory = useCallback(async (category: Omit<Category, 'id'>) => {
+    try {
+      const newCategory = await categoriesAPI.create(category);
+      setCategories(prev => [...prev, newCategory]);
+    } catch (err) {
+      console.error('Error adding category:', err);
+      throw err;
+    }
+  }, []);
+
+  const updateCategory = useCallback(async (updatedCategory: Category) => {
+    try {
+      const updated = await categoriesAPI.update(updatedCategory);
+      setCategories(prev => prev.map(cat => cat.id === updated.id ? updated : cat));
+    } catch (err) {
+      console.error('Error updating category:', err);
+      throw err;
+    }
+  }, []);
+
+  const deleteCategory = useCallback(async (categoryId: string) => {
+    try {
+      await categoriesAPI.delete(categoryId);
+      setCategories(prev => prev.filter(cat => cat.id !== categoryId));
+      setSubcategories(prev => prev.filter(subcat => subcat.parentId !== categoryId));
+    } catch (err) {
+      console.error('Error deleting category:', err);
+      throw err;
+    }
+  }, []);
+
+  // Subcategory operations
+  const addSubcategory = useCallback(async (subcategory: Omit<Subcategory, 'id'>) => {
+    try {
+      const newSubcategory = await subcategoriesAPI.create(subcategory);
+      setSubcategories(prev => [...prev, newSubcategory]);
+    } catch (err) {
+      console.error('Error adding subcategory:', err);
+      throw err;
+    }
+  }, []);
+
+  const updateSubcategory = useCallback(async (updatedSubcategory: Subcategory) => {
+    try {
+      const updated = await subcategoriesAPI.update(updatedSubcategory);
+      setSubcategories(prev => prev.map(sub => sub.id === updated.id ? updated : sub));
+    } catch (err) {
+      console.error('Error updating subcategory:', err);
+      throw err;
+    }
+  }, []);
+
+  const deleteSubcategory = useCallback(async (subcategoryId: string) => {
+    try {
+      await subcategoriesAPI.delete(subcategoryId);
+      setSubcategories(prev => prev.filter(sub => sub.id !== subcategoryId));
+    } catch (err) {
+      console.error('Error deleting subcategory:', err);
+      throw err;
+    }
+  }, []);
+
+  // Equipment operations
+  const addEquipmentItem = useCallback(async (item: Omit<EquipmentItem, 'id'>) => {
+    try {
+      const newItem = await equipmentAPI.create(item);
+      setEquipment(prev => [...prev, newItem]);
+    } catch (err) {
+      console.error('Error adding equipment:', err);
+      throw err;
+    }
+  }, []);
+
+  const updateEquipmentItem = useCallback(async (updatedItem: EquipmentItem) => {
+    try {
+      const updated = await equipmentAPI.update(updatedItem);
+      setEquipment(prev => prev.map(eq => eq.id === updated.id ? updated : eq));
+    } catch (err) {
+      console.error('Error updating equipment:', err);
+      throw err;
+    }
+  }, []);
+
+  const deleteEquipmentItem = useCallback(async (itemId: string) => {
+    try {
+      await equipmentAPI.delete(itemId);
+      setEquipment(prev => prev.filter(eq => eq.id !== itemId));
+    } catch (err) {
+      console.error('Error deleting equipment:', err);
+      throw err;
+    }
+  }, []);
+
+  // Maintenance log operations
+  const addMaintenanceLog = useCallback(async (log: Omit<MaintenanceLog, 'id'>) => {
+    // For now, we'll just refresh the equipment data
+    // In a real implementation, you'd have a separate maintenance API
+    await refreshData();
+  }, [refreshData]);
+
+  // Client operations
+  const addClient = useCallback(async (client: Omit<Client, 'id'>) => {
+    try {
+      const newClient = await clientsAPI.create(client);
+      setClients(prev => [...prev, newClient]);
+    } catch (err) {
+      console.error('Error adding client:', err);
+      throw err;
+    }
+  }, []);
+
+  const updateClient = useCallback(async (updatedClient: Client) => {
+    try {
+      const updated = await clientsAPI.update(updatedClient);
+      setClients(prev => prev.map(client => client.id === updated.id ? updated : client));
+    } catch (err) {
+      console.error('Error updating client:', err);
+      throw err;
+    }
+  }, []);
+
+  const deleteClient = useCallback(async (clientId: string) => {
+    try {
+      await clientsAPI.delete(clientId);
+      setClients(prev => prev.filter(client => client.id !== clientId));
+    } catch (err) {
+      console.error('Error deleting client:', err);
+      throw err;
+    }
+  }, []);
+
+  // Event operations
+  const addEvent = useCallback(async (event: Omit<Event, 'id'>): Promise<string> => {
+    try {
+      const newEvent = await eventsAPI.create(event);
+      setEvents(prev => [...prev, newEvent]);
+      return newEvent.id;
+    } catch (err) {
+      console.error('Error adding event:', err);
+      throw err;
+    }
+  }, []);
+
+  const updateEvent = useCallback(async (updatedEvent: Event) => {
+    try {
+      const updated = await eventsAPI.update(updatedEvent);
+      setEvents(prev => prev.map(event => event.id === updated.id ? updated : event));
+    } catch (err) {
+      console.error('Error updating event:', err);
+      throw err;
+    }
+  }, []);
+
+  const deleteEvent = useCallback(async (eventId: string) => {
+    try {
+      await eventsAPI.delete(eventId);
+      setEvents(prev => prev.filter(event => event.id !== eventId));
+      setRentals(prev => prev.filter(rental => rental.eventId !== eventId));
+    } catch (err) {
+      console.error('Error deleting event:', err);
+      throw err;
+    }
+  }, []);
+
+  // Rental operations
+  const addRental = useCallback(async (rental: Omit<Rental, 'id'>) => {
+    try {
+      const newRental = await rentalsAPI.create(rental);
+      setRentals(prev => [...prev, newRental]);
+    } catch (err) {
+      console.error('Error adding rental:', err);
+      throw err;
+    }
+  }, []);
+
+  const updateRental = useCallback(async (updatedRental: Rental) => {
+    try {
+      const updated = await rentalsAPI.update(updatedRental);
+      setRentals(prev => prev.map(rental => rental.id === updated.id ? updated : rental));
+    } catch (err) {
+      console.error('Error updating rental:', err);
+      throw err;
+    }
+  }, []);
+
+  const deleteRental = useCallback(async (rentalId: string) => {
+    try {
+      await rentalsAPI.delete(rentalId);
+      setRentals(prev => prev.filter(rental => rental.id !== rentalId));
+    } catch (err) {
+      console.error('Error deleting rental:', err);
+      throw err;
+    }
+  }, []);
+
+  // Quote operations
+  const generateQuoteNumber = useCallback(() => {
+    const currentYear = new Date().getFullYear();
+    const existingQuotes = quotes.filter(q => q.quoteNumber.startsWith(`Q${currentYear}-`));
+    
+    let maxNum = 0;
+    existingQuotes.forEach(q => {
       const numPartMatch = q.quoteNumber.match(/-(\d+)$/);
-      const numPart = numPartMatch ? parseInt(numPartMatch[1], 10) : 0;
-      return Math.max(max, numPart);
-    }, 0);
+      if (numPartMatch) {
+        maxNum = Math.max(maxNum, parseInt(numPartMatch[1]));
+      }
+    });
+    
     return `Q${currentYear}-${String(maxNum + 1).padStart(3, '0')}`;
   }, [quotes]);
 
-  const addQuote = useCallback((quoteData: Omit<Quote, 'id' | 'quoteNumber' | 'createdAt' | 'updatedAt'>): string => {
-    const newId = crypto.randomUUID();
-    const newQuote: Quote = {
-        ...quoteData, id: newId, quoteNumber: getNextQuoteNumber(), createdAt: new Date(), updatedAt: new Date(),
-    };
-    setQuotes(prev => [...prev, newQuote]);
-    return newId;
+  const addQuote = useCallback(async (quote: Omit<Quote, 'id' | 'quoteNumber' | 'createdAt' | 'updatedAt'>): Promise<string> => {
+    try {
+      const newQuote = await quotesAPI.create(quote);
+      setQuotes(prev => [...prev, newQuote]);
+      return newQuote.id;
+    } catch (err) {
+      console.error('Error adding quote:', err);
+      throw err;
+    }
   }, []);
 
-  const updateQuote = useCallback((updatedQuoteData: Quote) => {
-    setQuotes(prev => prev.map(q => q.id === updatedQuoteData.id ? { ...updatedQuoteData, updatedAt: new Date() } : q));
+  const updateQuote = useCallback(async (updatedQuote: Quote) => {
+    try {
+      const updated = await quotesAPI.update(updatedQuote);
+      setQuotes(prev => prev.map(quote => quote.id === updated.id ? updated : quote));
+    } catch (err) {
+      console.error('Error updating quote:', err);
+      throw err;
+    }
   }, []);
 
-  const deleteQuote = useCallback((quoteId: string) => {
-    setQuotes(prev => prev.filter(q => q.id !== quoteId));
+  const deleteQuote = useCallback(async (quoteId: string) => {
+    try {
+      await quotesAPI.delete(quoteId);
+      setQuotes(prev => prev.filter(quote => quote.id !== quoteId));
+    } catch (err) {
+      console.error('Error deleting quote:', err);
+      throw err;
+    }
   }, []);
 
-  const approveQuoteAndCreateRentals = useCallback(async (quoteId: string): Promise<{ success: boolean; message: string }> => {
-    const quote = quotes.find(q => q.id === quoteId);
-    if (!quote) return { success: false, message: "Quote not found." };
-    if (!quote.clientId) return { success: false, message: "Quote must be associated with an existing client." };
-    
-    const eventId = addEvent({ name: quote.name, clientId: quote.clientId, location: quote.location || `From Quote #${quote.quoteNumber}`, startDate: quote.startDate, endDate: quote.endDate });
-    updateQuote({ ...quote, status: "Accepted", updatedAt: new Date() });
-    quote.items.forEach(item => addRental({ eventId, equipmentId: item.equipmentId, quantityRented: item.quantity }));
-    return { success: true, message: `Quote "${quote.name || quote.quoteNumber}" approved. Event and rentals created.` };
-  }, [quotes, addEvent, updateQuote, addRental]);
+  const approveQuote = useCallback(async (quote: Quote): Promise<{ success: boolean; message: string }> => {
+    try {
+      const eventId = await addEvent({ 
+        name: quote.name, 
+        clientId: quote.clientId || '', 
+        location: quote.location || `From Quote #${quote.quoteNumber}`, 
+        startDate: quote.startDate, 
+        endDate: quote.endDate 
+      });
+      
+      // Create rentals for each quote item
+      for (const item of quote.items) {
+        await addRental({
+          eventId,
+          equipmentId: item.equipmentId,
+          quantityRented: item.quantity,
+          prepStatus: 'pending'
+        });
+      }
+      
+      // Update quote status
+      await updateQuote({ ...quote, status: 'Accepted' });
+      
+      return { success: true, message: `Quote "${quote.name || quote.quoteNumber}" approved. Event and rentals created.` };
+    } catch (err) {
+      console.error('Error approving quote:', err);
+      return { success: false, message: 'Failed to approve quote' };
+    }
+  }, [addEvent, addRental, updateQuote]);
 
-  const stateValue = useMemo(() => ({
-    users, currentUser, categories, subcategories, equipment, clients, events, rentals, quotes, isDataLoaded
-  }), [users, currentUser, categories, subcategories, equipment, clients, events, rentals, quotes, isDataLoaded]);
+  const contextValue: AppContextState = {
+    users,
+    currentUser,
+    categories,
+    subcategories,
+    equipment,
+    clients,
+    events,
+    rentals,
+    quotes,
+    isDataLoaded,
+    isLoading,
+    isAuthenticated,
+    isAuthLoading,
+    error,
+  };
 
-  const dispatchValue = useMemo(() => ({
-    setCurrentUser, addCategory, updateCategory, deleteCategory, addSubcategory, updateSubcategory, deleteSubcategory,
-    addEquipmentItem, updateEquipmentItem, deleteEquipmentItem, addMaintenanceLog, addClient, updateClient, deleteClient,
-    addEvent, updateEvent, deleteEvent, addRental, updateRental, deleteRental, addQuote, updateQuote, deleteQuote,
-    getNextQuoteNumber, approveQuoteAndCreateRentals
-  }), [setCurrentUser, addCategory, updateCategory, deleteCategory, addSubcategory, updateSubcategory, deleteSubcategory,
-    addEquipmentItem, updateEquipmentItem, deleteEquipmentItem, addMaintenanceLog, addClient, updateClient, deleteClient,
-    addEvent, updateEvent, deleteEvent, addRental, updateRental, deleteRental, addQuote, updateQuote, deleteQuote,
-    getNextQuoteNumber, approveQuoteAndCreateRentals]);
+  const dispatchValue: AppContextDispatch = {
+    setCurrentUser,
+    login,
+    logout,
+    checkAuth,
+    addCategory,
+    updateCategory,
+    deleteCategory,
+    addSubcategory,
+    updateSubcategory,
+    deleteSubcategory,
+    addEquipmentItem,
+    updateEquipmentItem,
+    deleteEquipmentItem,
+    addMaintenanceLog,
+    addClient,
+    updateClient,
+    deleteClient,
+    addEvent,
+    updateEvent,
+    deleteEvent,
+    addRental,
+    updateRental,
+    deleteRental,
+    addQuote,
+    updateQuote,
+    deleteQuote,
+    generateQuoteNumber,
+    approveQuote,
+    refreshData,
+  };
 
   return (
-    <AppContext.Provider value={stateValue}>
+    <AppContext.Provider value={contextValue}>
       <AppDispatchContext.Provider value={dispatchValue}>
         {children}
       </AppDispatchContext.Provider>
     </AppContext.Provider>
   );
-};
+}
 
-export const useAppContext = (): AppContextState => {
+export function useAppContext() {
   const context = useContext(AppContext);
-  if (context === undefined) throw new Error('useAppContext must be used within an AppProvider');
+  if (context === undefined) {
+    throw new Error('useAppContext must be used within an AppProvider');
+  }
   return context;
-};
+}
 
-export const useAppDispatch = (): AppContextDispatch => {
+export function useAppDispatch() {
   const context = useContext(AppDispatchContext);
-  if (context === undefined) throw new Error('useAppDispatch must be used within an AppProvider');
+  if (context === undefined) {
+    throw new Error('useAppDispatch must be used within an AppProvider');
+  }
   return context;
-};
+}

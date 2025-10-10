@@ -25,6 +25,7 @@ import { useAppContext, useAppDispatch } from "@/contexts/AppContext";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
+import AIEquipmentAssistant from "./AIEquipmentAssistant";
 
 const NO_SUBCATEGORY_VALUE = "__no_subcategory__";
 
@@ -52,7 +53,7 @@ interface EquipmentFormProps {
 
 export function EquipmentForm({ initialData, onSubmitSuccess }: EquipmentFormProps) {
   const { categories, subcategories: allSubcategories } = useAppContext();
-  const { addEquipmentItem, updateEquipmentItem } = useAppDispatch();
+  const { addEquipmentItem, updateEquipmentItem, refreshData } = useAppDispatch();
   const router = useRouter();
   const { toast } = useToast();
   
@@ -83,6 +84,70 @@ export function EquipmentForm({ initialData, onSubmitSuccess }: EquipmentFormPro
   
   const selectedCategoryId = form.watch("categoryId");
   const itemType = form.watch("type");
+
+  // Handle AI-generated equipment data
+  const handleAIEquipmentGenerated = async (equipmentData: any, refreshDataCallback?: () => Promise<void>) => {
+    console.log('AI Equipment Data received:', equipmentData);
+    
+    // If categories were created, refresh the data first
+    if (refreshDataCallback) {
+      console.log('Refreshing categories data...');
+      await refreshDataCallback();
+      // Small delay to ensure state updates
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    
+    console.log('Available categories:', categories);
+    console.log('Available subcategories:', allSubcategories);
+    
+    let categoryId = "";
+    let subcategoryId = "";
+
+    // If AI assistant provided direct IDs (from newly created categories), use them
+    if (equipmentData.categoryId) {
+      categoryId = equipmentData.categoryId;
+      console.log('Using direct categoryId:', categoryId);
+    } else {
+      // Find matching category by name
+      const matchingCategory = categories.find(cat => 
+        cat.name.toLowerCase().includes(equipmentData.category.toLowerCase()) ||
+        equipmentData.category.toLowerCase().includes(cat.name.toLowerCase())
+      );
+      categoryId = matchingCategory?.id || "";
+      console.log('Found matching category:', matchingCategory, 'ID:', categoryId);
+    }
+
+    // Handle subcategory
+    if (equipmentData.subcategoryId) {
+      subcategoryId = equipmentData.subcategoryId;
+      console.log('Using direct subcategoryId:', subcategoryId);
+    } else if (equipmentData.subcategory && categoryId) {
+      // Find matching subcategory by name
+      const matchingSubcategory = allSubcategories.find(sub => 
+        sub.parentId === categoryId &&
+        (sub.name.toLowerCase().includes(equipmentData.subcategory.toLowerCase()) ||
+         equipmentData.subcategory.toLowerCase().includes(sub.name.toLowerCase()))
+      );
+      subcategoryId = matchingSubcategory?.id || "";
+      console.log('Found matching subcategory:', matchingSubcategory, 'ID:', subcategoryId);
+    }
+
+    // Update form with AI data
+    form.setValue("name", equipmentData.name || "");
+    form.setValue("description", equipmentData.description || "");
+    form.setValue("categoryId", categoryId);
+    form.setValue("subcategoryId", subcategoryId);
+    form.setValue("dailyRate", equipmentData.dailyRate || 0);
+    form.setValue("imageUrl", equipmentData.imageUrl || "");
+    form.setValue("location", "Warehouse"); // Default location
+    form.setValue("status", "good"); // Default status
+    form.setValue("quantity", 1); // Default quantity
+
+    toast({
+      title: "AI Assistant",
+      description: `Form filled with details for: ${equipmentData.name}`,
+    });
+  };
 
   useEffect(() => {
     if (selectedCategoryId) {
@@ -130,6 +195,15 @@ export function EquipmentForm({ initialData, onSubmitSuccess }: EquipmentFormPro
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        {/* AI Equipment Assistant */}
+        {!initialData && (
+          <AIEquipmentAssistant 
+            onEquipmentGenerated={handleAIEquipmentGenerated}
+            refreshData={refreshData}
+            disabled={false}
+          />
+        )}
+        
         <FormField
           control={form.control}
           name="name"

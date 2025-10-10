@@ -2,10 +2,28 @@
 
 import type { Category, Subcategory, EquipmentItem, Rental, Client, Quote, QuoteItem, Event, MaintenanceLog, User } from '@/types';
 
-// New sample data for Users
+// New sample data for Users (for reference only - using database now)
 export const sampleUsers: User[] = [
-  { id: 'user1', name: 'Admin User', role: 'Admin' },
-  { id: 'user2', name: 'Technician User', role: 'Technician' },
+  {
+    id: 'admin-user-id',
+    name: 'System Administrator',
+    username: 'admin',
+    password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password: 'password'
+    role: 'Admin',
+    isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    id: 'tech-user-id',
+    name: 'John Technician',
+    username: 'john.tech',
+    password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password: 'password'
+    role: 'Technician',
+    isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
 ];
 
 
