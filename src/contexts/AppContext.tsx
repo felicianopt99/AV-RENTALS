@@ -76,7 +76,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setCurrentUser(initialUser);
      }
     setIsDataLoaded(true);
-  }, [currentUser, users, setCurrentUser]); 
+  }, [currentUser, users]); // Removed setCurrentUser from dependency array 
 
  useEffect(() => {
     const populateSampleDataIfNeeded = () => {
@@ -103,7 +103,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     
     populateSampleDataIfNeeded();
     setIsDataLoaded(true);
-  }, [setCategories, setSubcategories, setEquipment, setClients, setEvents, setRentals, setQuotes, setUsers]);
+  }, []); // Removed all setter functions from dependency array since they're stable
 
 
   useEffect(() => {
@@ -122,38 +122,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setEvents(prev => processDates(prev, ['startDate', 'endDate']));
         setQuotes(prev => processDates(prev, ['startDate', 'endDate', 'createdAt', 'updatedAt']));
     }
-  }, [isDataLoaded, setEvents, setQuotes]);
+  }, [isDataLoaded]); // Removed setter functions from dependency array
 
   const addCategory = useCallback((category: Omit<Category, 'id'>) => {
     setCategories(prev => [...prev, { ...category, id: crypto.randomUUID() }]);
-  }, [setCategories]);
+  }, []); // Removed setCategories from dependency array
   const updateCategory = useCallback((updatedCategory: Category) => {
     setCategories(prev => prev.map(cat => cat.id === updatedCategory.id ? updatedCategory : cat));
-  }, [setCategories]);
+  }, []); // Removed setCategories from dependency array
   const deleteCategory = useCallback((categoryId: string) => {
     setCategories(prev => prev.filter(cat => cat.id !== categoryId));
     setSubcategories(prev => prev.filter(subcat => subcat.parentId !== categoryId));
-  }, [setCategories, setSubcategories]);
+  }, []); // Removed setter functions from dependency array
 
   const addSubcategory = useCallback((subcategory: Omit<Subcategory, 'id'>) => {
     setSubcategories(prev => [...prev, { ...subcategory, id: crypto.randomUUID() }]);
-  }, [setSubcategories]);
+  }, []);
   const updateSubcategory = useCallback((updatedSubcategory: Subcategory) => {
     setSubcategories(prev => prev.map(sub => sub.id === updatedSubcategory.id ? updatedSubcategory : sub));
-  }, [setSubcategories]);
+  }, []);
   const deleteSubcategory = useCallback((subcategoryId: string) => {
     setSubcategories(prev => prev.filter(sub => sub.id !== subcategoryId));
-  }, [setSubcategories]);
+  }, []);
   
   const addEquipmentItem = useCallback((item: Omit<EquipmentItem, 'id'>) => {
     setEquipment(prev => [...prev, { ...item, id: crypto.randomUUID(), type: item.type || 'equipment', imageUrl: item.imageUrl || `https://placehold.co/600x400.png`, dailyRate: item.dailyRate || 0 }]);
-  }, [setEquipment]);
+  }, []);
   const updateEquipmentItem = useCallback((updatedItem: EquipmentItem) => {
     setEquipment(prev => prev.map(eq => eq.id === updatedItem.id ? {...eq, ...updatedItem, type: updatedItem.type || 'equipment', dailyRate: updatedItem.dailyRate || 0, imageUrl: updatedItem.imageUrl || `https://placehold.co/600x400.png` } : eq));
-  }, [setEquipment]);
+  }, []);
   const deleteEquipmentItem = useCallback((itemId: string) => {
     setEquipment(prev => prev.filter(eq => eq.id !== itemId));
-  }, [setEquipment]);
+  }, []);
 
   const addMaintenanceLog = useCallback((log: Omit<MaintenanceLog, 'id'>) => {
     const newLog = { ...log, id: crypto.randomUUID() };
@@ -164,46 +164,46 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return item;
     }));
-  }, [setEquipment]);
+  }, []);
 
   const addClient = useCallback((client: Omit<Client, 'id'>) => {
     setClients(prev => [...prev, { ...client, id: crypto.randomUUID() }]);
-  }, [setClients]);
+  }, []);
   const updateClient = useCallback((updatedClient: Client) => {
     setClients(prev => prev.map(c => c.id === updatedClient.id ? updatedClient : c));
-  }, [setClients]);
+  }, []);
   const deleteClient = useCallback((clientId: string) => {
     setClients(prev => prev.filter(c => c.id !== clientId));
-  }, [setClients]);
+  }, []);
 
   const addEvent = useCallback((event: Omit<Event, 'id'>): string => {
     const newId = crypto.randomUUID();
     const processedEvent = { ...event, id: newId };
     setEvents(prev => [...prev, processedEvent]);
     return newId;
-  }, [setEvents]);
+  }, []);
 
   const updateEvent = useCallback((updatedEvent: Event) => {
     setEvents(prev => prev.map(e => e.id === updatedEvent.id ? updatedEvent : e));
-  }, [setEvents]);
+  }, []);
 
   const deleteEvent = useCallback((eventId: string) => {
     setEvents(prev => prev.filter(e => e.id !== eventId));
     setRentals(prev => prev.filter(r => r.eventId !== eventId));
-  }, [setEvents, setRentals]);
+  }, []);
 
   const addRental = useCallback((rental: Omit<Rental, 'id'>) => {
     const newRental = { ...rental, id: crypto.randomUUID() };
     setRentals(prev => [...prev, newRental]);
-  }, [setRentals]);
+  }, []);
 
   const updateRental = useCallback((updatedRental: Rental) => {
     setRentals(prev => prev.map(r => r.id === updatedRental.id ? updatedRental : r));
-  }, [setRentals]);
+  }, []);
 
   const deleteRental = useCallback((rentalId: string) => {
     setRentals(prev => prev.filter(r => r.id !== rentalId));
-  }, [setRentals]);
+  }, []);
 
   const getNextQuoteNumber = useCallback((): string => {
     const currentYear = new Date().getFullYear();
@@ -227,15 +227,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     setQuotes(prev => [...prev, newQuote]);
     return newId;
-  }, [setQuotes, getNextQuoteNumber]);
+  }, []);
 
   const updateQuote = useCallback((updatedQuoteData: Quote) => {
     setQuotes(prev => prev.map(q => q.id === updatedQuoteData.id ? { ...updatedQuoteData, updatedAt: new Date() } : q));
-  }, [setQuotes]);
+  }, []);
 
   const deleteQuote = useCallback((quoteId: string) => {
     setQuotes(prev => prev.filter(q => q.id !== quoteId));
-  }, [setQuotes]);
+  }, []);
 
   const approveQuoteAndCreateRentals = useCallback(async (quoteId: string): Promise<{ success: boolean; message: string }> => {
     const quote = quotes.find(q => q.id === quoteId);
