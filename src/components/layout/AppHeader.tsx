@@ -1,6 +1,7 @@
 
 "use client";
 
+import { useState, useEffect } from 'react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Bell, UserCircle } from 'lucide-react';
@@ -13,6 +14,11 @@ interface AppHeaderProps {
 
 export function AppHeader({ title }: AppHeaderProps) {
   const { users, currentUser, setCurrentUser } = useAppContext();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handleUserChange = (userId: string) => {
     const user = users.find(u => u.id === userId);
@@ -26,7 +32,7 @@ export function AppHeader({ title }: AppHeaderProps) {
       <SidebarTrigger className="sm:hidden" />
       {title && <h1 className="text-xl font-semibold">{title}</h1>}
       <div className="ml-auto flex items-center gap-4">
-        {currentUser && (
+        {isClient && currentUser ? (
            <Select onValueChange={handleUserChange} value={currentUser.id}>
               <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Switch User..." />
@@ -37,6 +43,8 @@ export function AppHeader({ title }: AppHeaderProps) {
                   ))}
               </SelectContent>
           </Select>
+        ) : (
+          <div className="w-[180px] h-10" /> // Placeholder to prevent layout shift
         )}
         <Button variant="ghost" size="icon" className="rounded-full">
           <Bell className="h-5 w-5" />
