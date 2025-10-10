@@ -69,11 +69,11 @@ export function AppSidebarNav() {
           <SidebarMenuItem key={item.href}>
              <Tooltip>
                 <TooltipTrigger asChild>
-                    <Link href={item.href}>
-                        <SidebarMenuButton isActive={isActive}>
+                    <SidebarMenuButton asChild isActive={isActive}>
+                        <Link href={item.href}>
                            {buttonContent}
-                        </SidebarMenuButton>
-                    </Link>
+                        </Link>
+                    </SidebarMenuButton>
                 </TooltipTrigger>
                 <TooltipContent side="right" align="center" hidden={sidebarState !== "collapsed" || isMobile}>
                     {item.label}
