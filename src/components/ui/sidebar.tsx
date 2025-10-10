@@ -563,31 +563,29 @@ const SidebarMenuButton = React.forwardRef<
   ) => {
     const Comp = asChild ? Slot : "button"
     const { isMobile, state } = useSidebar()
-
-    const button = React.useMemo(() => (
-      <Comp
-        ref={ref}
-        data-sidebar="menu-button"
-        data-size={size}
-        data-active={isActive}
-        className={cn(sidebarMenuButtonVariants({ variant, size, className }))}
-        {...props}
-      >
-        {children}
-      </Comp>
-    ), [size, isActive, variant, className, children, props, ref]);
+    
+    const buttonElement = (
+        <Comp
+            ref={ref}
+            data-sidebar="menu-button"
+            data-size={size}
+            data-active={isActive}
+            className={cn(sidebarMenuButtonVariants({ variant, size, className }))}
+            {...props}
+        >
+            {children}
+        </Comp>
+    );
 
     if (!tooltip) {
-      return button
+      return buttonElement;
     }
     
-    const tooltipContentProps = React.useMemo(() => 
-        typeof tooltip === "string" ? { children: tooltip } : tooltip
-    , [tooltip]);
+    const tooltipContentProps = typeof tooltip === "string" ? { children: tooltip } : tooltip;
 
     return (
       <Tooltip>
-        <TooltipTrigger asChild>{button}</TooltipTrigger>
+        <TooltipTrigger asChild>{buttonElement}</TooltipTrigger>
         <TooltipContent
           side="right"
           align="center"
@@ -769,5 +767,3 @@ export {
   SidebarTrigger,
   useSidebar,
 }
-
-    
