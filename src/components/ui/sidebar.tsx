@@ -563,16 +563,17 @@ const SidebarMenuButton = React.forwardRef<
     const Comp = asChild ? Slot : "button"
     const { isMobile, state } = useSidebar()
 
-    const button = (
+    const button = React.useMemo(() => (
       <Comp
         ref={ref}
         data-sidebar="menu-button"
         data-size={size}
         data-active={isActive}
-        className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
+        className={cn(sidebarMenuButtonVariants({ variant, size, className }))}
         {...props}
       />
-    )
+    ), [ref, size, isActive, variant, className, props]);
+
 
     if (!tooltip) {
       return button
