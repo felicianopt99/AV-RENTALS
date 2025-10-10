@@ -142,7 +142,7 @@ export default function ClientDetailsPage() {
                 <CardTitle className="flex items-center gap-2"><DollarSign className="w-5 h-5 text-primary"/> Lifetime Value</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold">${clientValue.toFixed(2)}</p>
+                <p className="text-3xl font-bold">€{clientValue.toFixed(2)}</p>
                 <p className="text-sm text-muted-foreground">From {clientQuotes.filter(q=>q.status === 'Accepted').length} accepted quotes.</p>
               </CardContent>
             </Card>
@@ -190,7 +190,7 @@ export default function ClientDetailsPage() {
                             <TableRow key={quote.id} className="cursor-pointer" onClick={() => router.push(`/quotes/${quote.id}`)}>
                             <TableCell className="font-medium">{quote.quoteNumber}</TableCell>
                             <TableCell>{quote.name}</TableCell>
-                            <TableCell>${quote.totalAmount.toFixed(2)}</TableCell>
+                            <TableCell>€{quote.totalAmount.toFixed(2)}</TableCell>
                             <TableCell>
                                 <Badge variant="outline" className={getStatusColor(quote.status)}>{quote.status}</Badge>
                             </TableCell>

@@ -33,14 +33,14 @@ export function RevenueChart({ data }: { data: { month: string; revenue: number 
           tickFormatter={(value) => value.slice(0, 3)}
         />
          <YAxis 
-            tickFormatter={(value) => `$${Number(value) / 1000}k`}
+            tickFormatter={(value) => `€${Number(value) / 1000}k`}
             tickLine={false}
             axisLine={false}
         />
         <ChartTooltip
           cursor={false}
           content={<ChartTooltipContent 
-            formatter={(value) => `$${Number(value).toFixed(2)}`}
+            formatter={(value) => `€${Number(value).toFixed(2)}`}
             indicator="dot"
             />}
         />
@@ -81,7 +81,7 @@ export function TopClientsChart({ data }: { data: { name: string; revenue: numbe
           tickFormatter={(value) => (value.length > 15 ? `${value.substring(0, 15)}...` : value)}
         />
         <XAxis type="number" hide />
-        <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" formatter={(value) => `$${Number(value).toFixed(2)}`} />} />
+        <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" formatter={(value) => `€${Number(value).toFixed(2)}`} />} />
         <Bar dataKey="revenue" layout="vertical" fill="var(--color-revenue)" radius={4}>
            <LabelList
                 dataKey="revenue"

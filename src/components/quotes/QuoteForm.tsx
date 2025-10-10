@@ -392,7 +392,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
                       <FormControl><SelectTrigger><SelectValue placeholder="Select equipment" /></SelectTrigger></FormControl>
                       <SelectContent>
                         {rentableEquipment.map(eq => (
-                          <SelectItem key={eq.id} value={eq.id}>{eq.name} (Rate: ${eq.dailyRate.toFixed(2)})</SelectItem>
+                          <SelectItem key={eq.id} value={eq.id}>{eq.name} (Rate: €{eq.dailyRate.toFixed(2)})</SelectItem>
                         ))}
                       </SelectContent>
                     </Select><FormMessage />
@@ -402,11 +402,11 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
                   <FormItem><FormLabel>Quantity</FormLabel><FormControl><Input type="number" placeholder="1" {...itemField} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name={`items.${index}.unitPrice`} render={({ field: itemField }) => (
-                  <FormItem><FormLabel>Unit Price/Day ($)</FormLabel><FormControl><Input type="number" step="0.01" placeholder="0.00" {...itemField} /></FormControl><FormMessage /></FormItem>
+                  <FormItem><FormLabel>Unit Price/Day (€)</FormLabel><FormControl><Input type="number" step="0.01" placeholder="0.00" {...itemField} /></FormControl><FormMessage /></FormItem>
                 )} />
               </div>
                <p className="text-xs text-muted-foreground mt-2">
-                Line Total: ${( (form.watch(`items.${index}.quantity`) || 0) * (form.watch(`items.${index}.unitPrice`) || 0) * days ).toFixed(2)}
+                Line Total: €{( (form.watch(`items.${index}.quantity`) || 0) * (form.watch(`items.${index}.unitPrice`) || 0) * days ).toFixed(2)}
               </p>
             </Card>
           ))}
@@ -423,12 +423,12 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
                 <FormItem><FormLabel>Discount Type</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                    <SelectContent><SelectItem value="fixed">Fixed ($)</SelectItem><SelectItem value="percentage">Percentage (%)</SelectItem></SelectContent>
+                    <SelectContent><SelectItem value="fixed">Fixed (€)</SelectItem><SelectItem value="percentage">Percentage (%)</SelectItem></SelectContent>
                 </Select><FormMessage /></FormItem>
             )} />
             <FormField control={form.control} name="discountAmount" render={({ field }) => (
                 <FormItem>
-                    <FormLabel>Discount Amount {watchDiscountType === 'percentage' ? '(%)' : '($)'}</FormLabel>
+                    <FormLabel>Discount Amount {watchDiscountType === 'percentage' ? '(%)' : '(€)'}</FormLabel>
                     <FormControl><Input type="number" step="0.01" {...field} /></FormControl>
                     <FormMessage />
                 </FormItem>
@@ -443,24 +443,24 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
         </div>
         <Card className="p-4 bg-muted/30">
             <div className="space-y-1 text-sm">
-                <div className="flex justify-between"><span>Subtotal:</span><span>${subTotal.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span>Subtotal:</span><span>€{subTotal.toFixed(2)}</span></div>
                 <div className="flex justify-between">
                     <span>Discount:</span>
                     <span>
                         {watchDiscountType === 'percentage' 
-                            ? `(${watchDiscountAmount.toFixed(2)}%) - $${(subTotal * (watchDiscountAmount / 100)).toFixed(2)}`
-                            : `- $${watchDiscountAmount.toFixed(2)}`}
+                            ? `(${watchDiscountAmount.toFixed(2)}%) - €${(subTotal * (watchDiscountAmount / 100)).toFixed(2)}`
+                            : `- €${watchDiscountAmount.toFixed(2)}`}
                     </span>
                 </div>
                  <div className="flex justify-between">
                     <span>Total Before Tax:</span>
                     <span>
-                        $ {(discountedSubTotal).toFixed(2)}
+                        €{(discountedSubTotal).toFixed(2)}
                     </span>
                 </div>
-                <div className="flex justify-between"><span>Tax ({ (watchTaxRate).toFixed(1)}%):</span><span>${taxAmount.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span>Tax ({ (watchTaxRate).toFixed(1)}%):</span><span>€{taxAmount.toFixed(2)}</span></div>
                 <Separator className="my-1 bg-border"/>
-                <div className="flex justify-between font-bold text-lg"><span>Total Amount:</span><span>${totalAmount.toFixed(2)}</span></div>
+                <div className="flex justify-between font-bold text-lg"><span>Total Amount:</span><span>€{totalAmount.toFixed(2)}</span></div>
             </div>
         </Card>
 

@@ -177,7 +177,7 @@ export function QuoteListDisplay() {
                     <TableCell>{quote.clientName || '-'}</TableCell>
                     <TableCell>{format(new Date(quote.startDate), 'PP')}</TableCell>
                     <TableCell>{format(new Date(quote.endDate), 'PP')}</TableCell>
-                    <TableCell>${quote.totalAmount.toFixed(2)}</TableCell>
+                    <TableCell>€{quote.totalAmount.toFixed(2)}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className={`py-1 px-2.5 text-xs ${getStatusColor(quote.status)}`}>
                         {quote.status}

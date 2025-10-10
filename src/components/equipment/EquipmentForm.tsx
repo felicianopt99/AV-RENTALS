@@ -259,7 +259,7 @@ export function EquipmentForm({ initialData, onSubmitSuccess }: EquipmentFormPro
             name="dailyRate"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Daily Rate ($)</FormLabel>
+                <FormLabel>Daily Rate (€)</FormLabel>
                 <FormControl>
                   <Input type="number" placeholder="0.00" step="0.01" {...field} disabled={itemType === 'consumable'} />
                 </FormControl>
