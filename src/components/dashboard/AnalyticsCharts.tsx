@@ -50,7 +50,7 @@ export function RevenueChart({ data }: { data: { month: string; revenue: number 
                 position="top"
                 offset={8}
                 className="fill-foreground text-xs"
-                formatter={(value: number) => `$${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+                formatter={(value: number) => `€${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
             />
         </Bar>
       </BarChart>
@@ -88,7 +88,7 @@ export function TopClientsChart({ data }: { data: { name: string; revenue: numbe
                 position="right"
                 offset={8}
                 className="fill-foreground text-xs"
-                formatter={(value: number) => `$${value.toLocaleString()}`}
+                formatter={(value: number) => `€${value.toLocaleString()}`}
             />
         </Bar>
       </BarChart>
