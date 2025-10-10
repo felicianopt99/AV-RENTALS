@@ -116,13 +116,12 @@ export function QuoteListDisplay() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-semibold">Quotes</h2>
-        <Link href="/quotes/new" passHref>
-          <Button>
+        <Button asChild>
+          <Link href="/quotes/new">
             <PlusCircle className="mr-2 h-4 w-4" /> Create New Quote
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       </div>
-
       <Card className="shadow-lg overflow-hidden"> {/* Added overflow-hidden here */}
         <CardHeader>
           <CardTitle>Quote List</CardTitle>
@@ -215,7 +214,6 @@ export function QuoteListDisplay() {
           )}
         </CardContent>
       </Card>
-
       {quoteToDelete && (
         <AlertDialog open={!!quoteToDelete} onOpenChange={(isOpen) => !isOpen && setQuoteToDelete(null)}>
           <AlertDialogContent>
@@ -235,7 +233,6 @@ export function QuoteListDisplay() {
           </AlertDialogContent>
         </AlertDialog>
       )}
-
       {quoteToApprove && (
         <AlertDialog open={!!quoteToApprove} onOpenChange={(isOpen) => !isOpen && setQuoteToApprove(null)}>
           <AlertDialogContent>

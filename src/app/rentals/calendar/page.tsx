@@ -13,11 +13,11 @@ export default function RentalCalendarPage() {
       <AppHeader title="Rental Calendar" />
       <div className="flex-1 overflow-y-auto p-4 md:p-6">
         <div className="mb-6 flex justify-end">
-          <Link href="/rentals/new" passHref>
-            <Button className="shadow-md hover:shadow-lg transition-shadow">
+          <Button asChild className="shadow-md hover:shadow-lg transition-shadow">
+            <Link href="/rentals/new">
               <PlusCircle className="mr-2 h-5 w-5" /> Create New Rental
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
         <RentalCalendarView />
       </div>

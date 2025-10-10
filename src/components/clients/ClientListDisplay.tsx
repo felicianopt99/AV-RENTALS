@@ -79,13 +79,12 @@ export function ClientListDisplay() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-semibold">Clients</h2>
-        <Link href="/clients/new" passHref>
-          <Button>
+        <Button asChild>
+          <Link href="/clients/new">
             <PlusCircle className="mr-2 h-4 w-4" /> Add New Client
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       </div>
-
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle>Client List</CardTitle>
@@ -167,7 +166,6 @@ export function ClientListDisplay() {
           )}
         </CardContent>
       </Card>
-
       {clientToDelete && (
         <AlertDialog open={!!clientToDelete} onOpenChange={(isOpen) => !isOpen && setClientToDelete(null)}>
           <AlertDialogContent>

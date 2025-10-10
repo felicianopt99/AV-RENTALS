@@ -125,72 +125,72 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <AppHeader title="Dashboard" />
-      <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-8">
-        
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <StatCard title="Total Equipment" value={analyticsData.totalEquipment} icon={Package} href="/inventory" />
-          <StatCard title="Total Clients" value={analyticsData.totalClients} icon={Users} href="/clients" />
-          <StatCard title="Upcoming Events" value={analyticsData.upcomingEvents} icon={CalendarClock} description="In next 7 days" href="/events" />
-          <StatCard title="Needs Maintenance" value={analyticsData.maintenanceItems} icon={Wrench} href="/maintenance" />
-        </div>
+      <div className="flex flex-col h-full">
+          <AppHeader title="Dashboard" />
+          <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-8">
+            
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <StatCard title="Total Equipment" value={analyticsData.totalEquipment} icon={Package} href="/inventory" />
+              <StatCard title="Total Clients" value={analyticsData.totalClients} icon={Users} href="/clients" />
+              <StatCard title="Upcoming Events" value={analyticsData.upcomingEvents} icon={CalendarClock} description="In next 7 days" href="/events" />
+              <StatCard title="Needs Maintenance" value={analyticsData.maintenanceItems} icon={Wrench} href="/maintenance" />
+            </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <Card className="lg:col-span-3 shadow-xl">
-                <CardHeader>
-                    <CardTitle>Monthly Revenue</CardTitle>
-                    <CardDescription>Revenue from accepted quotes over the last 6 months.</CardDescription>
-                </CardHeader>
-                <CardContent className="pl-2">
-                    <RevenueChart data={analyticsData.monthlyRevenue} />
-                </CardContent>
-            </Card>
-            <Card className="lg:col-span-2 shadow-xl">
-                <CardHeader>
-                    <CardTitle>Top Clients by Revenue</CardTitle>
-                    <CardDescription>Your most valuable clients based on accepted quotes.</CardDescription>
-                </CardHeader>
-                <CardContent className="pl-2">
-                    <TopClientsChart data={analyticsData.topClients} />
-                </CardContent>
-            </Card>
-            <Card className="shadow-xl">
-                <CardHeader>
-                    <CardTitle>Most Rented Equipment</CardTitle>
-                    <CardDescription>The most popular items in your inventory.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <TopEquipmentChart data={analyticsData.topEquipment} />
-                </CardContent>
-            </Card>
-        </div>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <Card className="lg:col-span-3 shadow-xl">
+                    <CardHeader>
+                        <CardTitle>Monthly Revenue</CardTitle>
+                        <CardDescription>Revenue from accepted quotes over the last 6 months.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pl-2">
+                        <RevenueChart data={analyticsData.monthlyRevenue} />
+                    </CardContent>
+                </Card>
+                <Card className="lg:col-span-2 shadow-xl">
+                    <CardHeader>
+                        <CardTitle>Top Clients by Revenue</CardTitle>
+                        <CardDescription>Your most valuable clients based on accepted quotes.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pl-2">
+                        <TopClientsChart data={analyticsData.topClients} />
+                    </CardContent>
+                </Card>
+                <Card className="shadow-xl">
+                    <CardHeader>
+                        <CardTitle>Most Rented Equipment</CardTitle>
+                        <CardDescription>The most popular items in your inventory.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <TopEquipmentChart data={analyticsData.topEquipment} />
+                    </CardContent>
+                </Card>
+            </div>
 
-        <Card className="shadow-xl border-border/60">
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Get started by creating new items or managing your inventory.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            <Link href="/equipment/new" passHref>
-              <Button size="lg" variant="outline" className="w-full h-20 text-base justify-start p-4 hover:bg-accent hover:text-accent-foreground">
-                <PlusCircle className="mr-3 h-6 w-6 text-primary" /> Add New Equipment
-              </Button>
-            </Link>
-             <Link href="/events" passHref>
-               <Button size="lg" variant="outline" className="w-full h-20 text-base justify-start p-4 hover:bg-accent hover:text-accent-foreground">
-                <PartyPopper className="mr-3 h-6 w-6 text-primary" /> Manage Events
-              </Button>
-            </Link>
-            <Link href="/quotes/new" passHref>
-               <Button size="lg" variant="outline" className="w-full h-20 text-base justify-start p-4 hover:bg-accent hover:text-accent-foreground">
-                <FileText className="mr-3 h-6 w-6 text-primary" /> Create New Quote
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-        
+            <Card className="shadow-xl border-border/60">
+              <CardHeader>
+                <CardTitle>Quick Actions</CardTitle>
+                <CardDescription>Get started by creating new items or managing your inventory.</CardDescription>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <Button asChild size="lg" variant="outline" className="w-full h-20 text-base justify-start p-4 hover:bg-accent hover:text-accent-foreground">
+                  <Link href="/equipment/new">
+                    <PlusCircle className="mr-3 h-6 w-6 text-primary" /> Add New Equipment
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="w-full h-20 text-base justify-start p-4 hover:bg-accent hover:text-accent-foreground">
+                  <Link href="/events">
+                    <PartyPopper className="mr-3 h-6 w-6 text-primary" /> Manage Events
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="w-full h-20 text-base justify-start p-4 hover:bg-accent hover:text-accent-foreground">
+                  <Link href="/quotes/new">
+                    <FileText className="mr-3 h-6 w-6 text-primary" /> Create New Quote
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+            
+          </div>
       </div>
-    </div>
   );
 }
