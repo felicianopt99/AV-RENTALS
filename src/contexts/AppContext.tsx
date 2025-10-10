@@ -71,12 +71,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     // This effect ensures data is loaded and the current user is initialized.
-    const initialUser = users.find(u => u.role === 'Admin') || users[0] || null;
-     if (!currentUser) {
+    if (!currentUser && users.length > 0) {
+        const initialUser = users.find(u => u.role === 'Admin') || users[0];
         setCurrentUser(initialUser);
      }
     setIsDataLoaded(true);
-  }, []); // Run only once
+  }, [currentUser, users, setCurrentUser]); 
 
  useEffect(() => {
     const populateSampleDataIfNeeded = () => {
@@ -122,7 +122,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setEvents(prev => processDates(prev, ['startDate', 'endDate']));
         setQuotes(prev => processDates(prev, ['startDate', 'endDate', 'createdAt', 'updatedAt']));
     }
-  }, [isDataLoaded]);
+  }, [isDataLoaded, setEvents, setQuotes]);
 
   const addCategory = useCallback((category: Omit<Category, 'id'>) => {
     setCategories(prev => [...prev, { ...category, id: crypto.randomUUID() }]);
@@ -282,5 +282,3 @@ export const useAppDispatch = (): AppContextDispatch => {
   if (context === undefined) throw new Error('useAppDispatch must be used within an AppProvider');
   return context;
 };
-
-    
