@@ -6,8 +6,6 @@ import { useState, useEffect, Dispatch, SetStateAction, useCallback } from 'reac
 type SetValue<T> = Dispatch<SetStateAction<T>>;
 
 function useLocalStorage<T>(key: string, initialValue: T): [T, SetValue<T>] {
-  // Get from local storage then
-  // parse stored json or return initialValue
   const readValue = useCallback((): T => {
     if (typeof window === 'undefined') {
       return initialValue;
@@ -21,7 +19,7 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, SetValue<T>] {
     }
   }, [initialValue, key]);
 
-  const [storedValue, setStoredValue] = useState<T>(readValue);
+  const [storedValue, setStoredValue] = useState<T>(initialValue);
 
   const setValue: SetValue<T> = useCallback(
     (value) => {
@@ -35,8 +33,6 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, SetValue<T>] {
         const newValue = value instanceof Function ? value(storedValue) : value;
         window.localStorage.setItem(key, JSON.stringify(newValue));
         setStoredValue(newValue);
-        // We dispatch a custom event so other tabs can sync
-        window.dispatchEvent(new StorageEvent('storage', {key}));
       } catch (error) {
         console.warn(`Error setting localStorage key “${key}”:`, error);
       }
@@ -48,19 +44,6 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, SetValue<T>] {
     setStoredValue(readValue());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === key) {
-        setStoredValue(readValue());
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, [key, readValue]);
 
   return [storedValue, setValue];
 }
