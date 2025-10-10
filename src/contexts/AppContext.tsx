@@ -343,7 +343,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   return (
     <AppContext.Provider value={{
-      users, currentUser, setCurrentUser: (user: User | null) => setCurrentUser(user),
+      users, currentUser, setCurrentUser,
       categories, setCategories, addCategory, updateCategory, deleteCategory,
       subcategories, setSubcategories, addSubcategory, updateSubcategory, deleteSubcategory,
       equipment, setEquipment, addEquipmentItem, updateEquipmentItem, deleteEquipmentItem, addMaintenanceLog,
