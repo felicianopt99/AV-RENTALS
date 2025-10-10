@@ -6,21 +6,22 @@ import { useState, useEffect, Dispatch, SetStateAction, useCallback } from 'reac
 type SetValue<T> = Dispatch<SetStateAction<T>>;
 
 function useLocalStorage<T>(key: string, initialValue: T): [T, SetValue<T>] {
-  const [storedValue, setStoredValue] = useState<T>(initialValue);
-
-  useEffect(() => {
+  // Get from local storage then
+  // parse stored json or return initialValue
+  const readValue = useCallback((): T => {
     if (typeof window === 'undefined') {
-      return;
+      return initialValue;
     }
     try {
       const item = window.localStorage.getItem(key);
-      if (item) {
-        setStoredValue(JSON.parse(item) as T);
-      }
+      return item ? (JSON.parse(item) as T) : initialValue;
     } catch (error) {
-      console.warn(`Error reading localStorage key “${key}” in effect:`, error);
+      console.warn(`Error reading localStorage key “${key}”:`, error);
+      return initialValue;
     }
-  }, [key]);
+  }, [initialValue, key]);
+
+  const [storedValue, setStoredValue] = useState<T>(readValue);
 
   const setValue: SetValue<T> = useCallback(
     (value) => {
@@ -31,64 +32,35 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, SetValue<T>] {
         return;
       }
       try {
-        // Use the callback form of setStoredValue to ensure we're operating on the latest state
-        // and to correctly get the newValue for localStorage.
-        setStoredValue(prevStoredValue => {
-          const newValue = value instanceof Function ? value(prevStoredValue) : value;
-          window.localStorage.setItem(key, JSON.stringify(newValue));
-          window.dispatchEvent(new Event("local-storage")); // Notify other tabs/hooks
-          return newValue;
-        });
+        const newValue = value instanceof Function ? value(storedValue) : value;
+        window.localStorage.setItem(key, JSON.stringify(newValue));
+        setStoredValue(newValue);
+        // We dispatch a custom event so other tabs can sync
+        window.dispatchEvent(new StorageEvent('storage', {key}));
       } catch (error) {
         console.warn(`Error setting localStorage key “${key}”:`, error);
       }
     },
-    [key] // setStoredValue from useState is stable and not needed in deps. key is stable per hook instance.
+    [key, storedValue]
   );
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
+    setStoredValue(readValue());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
     const handleStorageChange = (event: StorageEvent) => {
       if (event.key === key) {
-        try {
-          if (event.newValue) {
-            setStoredValue(JSON.parse(event.newValue) as T);
-          } else {
-            setStoredValue(initialValue);
-          }
-        } catch (error) {
-          console.warn(`Error parsing storage event for key “${key}”:`, error);
-          setStoredValue(initialValue);
-        }
+        setStoredValue(readValue());
       }
-    };
-    
-    const handleLocalStorageEvent = () => {
-        if (typeof window !== 'undefined') {
-            try {
-                const item = window.localStorage.getItem(key);
-                if (item) {
-                    setStoredValue(JSON.parse(item) as T);
-                } else {
-                    setStoredValue(initialValue);
-                }
-            } catch (error) {
-                console.warn(`Error reading localStorage key “${key}” on local-storage event:`, error);
-                setStoredValue(initialValue);
-            }
-        }
     };
 
     window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('local-storage', handleLocalStorageEvent);
-
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('local-storage', handleLocalStorageEvent);
     };
-  }, [key, initialValue]);
+  }, [key, readValue]);
 
   return [storedValue, setValue];
 }
