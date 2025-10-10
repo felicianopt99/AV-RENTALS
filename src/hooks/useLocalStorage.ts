@@ -19,7 +19,8 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, SetValue<T>] {
     }
   }, [initialValue, key]);
 
-  const [storedValue, setStoredValue] = useState<T>(initialValue);
+  // Use lazy state initialization to read from localStorage only once.
+  const [storedValue, setStoredValue] = useState<T>(readValue);
 
   const setValue: SetValue<T> = useCallback(
     (value) => {
@@ -30,6 +31,7 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, SetValue<T>] {
         return;
       }
       try {
+        // Allow value to be a function so we have same API as useState
         const newValue = value instanceof Function ? value(storedValue) : value;
         window.localStorage.setItem(key, JSON.stringify(newValue));
         setStoredValue(newValue);
@@ -39,11 +41,25 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, SetValue<T>] {
     },
     [key, storedValue]
   );
-
+  
+  // This useEffect is to synchronize state between tabs.
   useEffect(() => {
-    setStoredValue(readValue());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === key && event.newValue !== null) {
+        try {
+          setStoredValue(JSON.parse(event.newValue));
+        } catch(error) {
+            console.warn(`Error parsing storage change for key “${key}”:`, error)
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [key]);
+
 
   return [storedValue, setValue];
 }
