@@ -7,6 +7,7 @@ import { Home, LayoutList, CalendarDays, Users, FileText, Package, PartyPopper, 
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton, useSidebar } from '@/components/ui/sidebar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAppContext } from '@/contexts/AppContext';
+import { useEffect, useState } from 'react';
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: Home, requiredRole: ['Admin', 'Technician'] },
@@ -21,21 +22,41 @@ const navItems = [
 
 export function AppSidebarNav() {
   const pathname = usePathname();
-  const { currentUser } = useAppContext();
+  const { currentUser, isDataLoaded } = useAppContext();
   const { state: sidebarState, isMobile } = useSidebar();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const userRole = currentUser?.role || 'Technician';
 
+  // Only render the role-filtered nav items on the client after hydration
+  const visibleNavItems = isClient ? navItems.filter(item => item.requiredRole.includes(userRole)) : [];
+
+
+  if (!isClient || !isDataLoaded) {
+      // Render a placeholder or skeleton on the server and during initial client render
+      return (
+        <SidebarMenu>
+          {navItems.map((item) => (
+             <SidebarMenuItem key={item.href}>
+                <SidebarMenuButton isActive={false} disabled>
+                    <item.icon className="h-5 w-5" />
+                    <span>{item.label}</span>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      )
+  }
+
   return (
     <SidebarMenu>
-      {navItems.map((item) => {
+      {visibleNavItems.map((item) => {
         const Icon = item.icon;
         const isActive = item.href === '/' ? pathname === item.href : pathname.startsWith(item.href);
-        const hasPermission = item.requiredRole.includes(userRole);
-
-        if (!hasPermission) {
-          return null;
-        }
         
         const buttonContent = (
           <>
