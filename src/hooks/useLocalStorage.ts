@@ -22,7 +22,7 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, SetValue<T>] {
 
   const [storedValue, setStoredValue] = useState<T>(readValue);
 
-  const setValue: SetValue<T> = value => {
+  const setValue: SetValue<T> = useCallback(value => {
       if (typeof window === 'undefined') {
         console.warn(
           `Tried setting localStorage key “${key}” even though environment is not a client`
@@ -36,7 +36,7 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, SetValue<T>] {
       } catch (error) {
         console.warn(`Error setting localStorage key “${key}”:`, error);
       }
-    };
+    }, [key, storedValue]);
   
   useEffect(() => {
     setStoredValue(readValue());
