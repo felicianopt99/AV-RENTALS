@@ -556,7 +556,7 @@ const SidebarMenuButton = React.forwardRef<
       size = "default",
       tooltip,
       className,
-      children, 
+      children,
       ...props
     },
     ref
@@ -575,7 +575,7 @@ const SidebarMenuButton = React.forwardRef<
       >
         {children}
       </Comp>
-    ), [ref, size, isActive, variant, className, children, props]);
+    ), [size, isActive, variant, className, children, props, ref]);
 
     if (!tooltip) {
       return button
@@ -769,3 +769,5 @@ export {
   SidebarTrigger,
   useSidebar,
 }
+
+    
