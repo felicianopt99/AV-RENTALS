@@ -1,6 +1,7 @@
 
 "use client";
 import type React from 'react';
+import { useState, useEffect } from 'react';
 import { 
   SidebarProvider, 
   Sidebar, 
@@ -23,6 +24,12 @@ import type { User } from '@/types';
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { currentUser } = useAppContext();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
 
   return (
     <SidebarProvider defaultOpen>
@@ -36,7 +43,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </SidebarContent>
         <Separator className="my-2" />
         <SidebarFooter>
-            {currentUser && (
+            {isClient && currentUser && (
             <div className="p-2 space-y-2">
                 <div className="flex items-center gap-2">
                     <UserIcon className="h-5 w-5 text-muted-foreground" />
