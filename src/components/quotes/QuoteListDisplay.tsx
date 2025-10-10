@@ -1,4 +1,5 @@
 
+
 // src/components/quotes/QuoteListDisplay.tsx
 "use client";
 
@@ -70,12 +71,13 @@ export function QuoteListDisplay() {
       const result = await approveQuoteAndCreateRentals(quoteToApprove.id);
       if (result.success) {
         toast({ title: 'Quote Approved', description: result.message });
+        router.push('/events');
       } else {
         toast({ variant: "destructive", title: 'Approval Failed', description: result.message });
       }
       setQuoteToApprove(null);
     }
-  }, [quoteToApprove, approveQuoteAndCreateRentals, toast]);
+  }, [quoteToApprove, approveQuoteAndCreateRentals, toast, router]);
 
   const filteredQuotes = useMemo(() => {
     const lowerSearchTerm = searchTerm.toLowerCase();
@@ -195,7 +197,7 @@ export function QuoteListDisplay() {
                           </DropdownMenuItem>
                           {quote.status !== "Accepted" && quote.status !== "Declined" && quote.status !== "Archived" && (
                             <DropdownMenuItem onClick={() => openApproveDialog(quote)}>
-                              <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" /> Approve & Create Rentals
+                              <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" /> Approve & Create Event
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuSeparator />
@@ -240,7 +242,7 @@ export function QuoteListDisplay() {
               <AlertDialogTitle>Confirm Quote Approval</AlertDialogTitle>
               <AlertDialogDescription>
                 Are you sure you want to approve the quote "{quoteToApprove.name || quoteToApprove.quoteNumber}"?
-                This will change the quote status to "Accepted" and create corresponding rental entries. <br/><br/>
+                This will change the quote status to "Accepted" and create a corresponding event and rental entries. <br/><br/>
                 <strong className="text-destructive-foreground">Important:</strong> Ensure the quote is linked to an existing client in the system. If not, please edit the quote first.
                 This action may create rentals even if items are overbooked, which will be highlighted in the calendar.
               </AlertDialogDescription>
@@ -248,7 +250,7 @@ export function QuoteListDisplay() {
             <AlertDialogFooter>
               <AlertDialogCancel onClick={() => setQuoteToApprove(null)}>Cancel</AlertDialogCancel>
               <AlertDialogAction onClick={confirmApprove} className="bg-green-600 hover:bg-green-600/90">
-                Approve & Create Rentals
+                Approve & Create Event
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -257,4 +259,3 @@ export function QuoteListDisplay() {
     </div>
   );
 }
-

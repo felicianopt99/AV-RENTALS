@@ -1,5 +1,14 @@
 
 
+// New User and Role types for permissions
+export type UserRole = 'Admin' | 'Technician';
+
+export interface User {
+  id: string;
+  name: string;
+  role: UserRole;
+}
+
 export interface Category {
   id: string;
   name: string;
@@ -13,6 +22,8 @@ export interface Subcategory {
 }
 
 export type EquipmentStatus = 'good' | 'damaged' | 'maintenance';
+// New type to distinguish between standard equipment and consumables
+export type EquipmentType = 'equipment' | 'consumable';
 
 export interface MaintenanceLog {
   id: string;
@@ -32,8 +43,9 @@ export interface EquipmentItem {
   status: EquipmentStatus;
   location: string; // Physical location
   imageUrl?: string;
-  dailyRate: number; // Added daily rental rate
-  maintenanceHistory?: MaintenanceLog[]; // New field
+  dailyRate: number; // Will be 0 for consumables
+  maintenanceHistory?: MaintenanceLog[]; 
+  type: EquipmentType; // Added type field
 }
 
 export interface Client {

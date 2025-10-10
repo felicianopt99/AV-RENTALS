@@ -74,6 +74,8 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
   const { equipment, clients, addQuote, updateQuote, getNextQuoteNumber, isDataLoaded } = useAppContext();
   const router = useRouter();
   const { toast } = useToast();
+  
+  const rentableEquipment = equipment.filter(e => e.type === 'equipment');
 
   const form = useForm<QuoteFormValues>({
     resolver: zodResolver(quoteFormSchema),
@@ -175,15 +177,15 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
   const { subTotal, discountedSubTotal, taxAmount, totalAmount, days } = calculateTotals();
 
   const handleAddEquipment = () => {
-    if (equipment.length > 0) {
-      const firstEquipment = equipment[0];
+    if (rentableEquipment.length > 0) {
+      const firstEquipment = rentableEquipment[0];
       append({
         equipmentId: firstEquipment.id,
         quantity: 1,
         unitPrice: firstEquipment.dailyRate,
       });
     } else {
-      toast({ variant: "destructive", title: "No Equipment Available", description: "Please add equipment items first."})
+      toast({ variant: "destructive", title: "No Rentable Equipment Available", description: "Please add equipment items first (consumables cannot be rented)."})
     }
   };
   
@@ -388,7 +390,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
                     }} defaultValue={itemField.value}>
                       <FormControl><SelectTrigger><SelectValue placeholder="Select equipment" /></SelectTrigger></FormControl>
                       <SelectContent>
-                        {equipment.map(eq => (
+                        {rentableEquipment.map(eq => (
                           <SelectItem key={eq.id} value={eq.id}>{eq.name} (Rate: ${eq.dailyRate.toFixed(2)})</SelectItem>
                         ))}
                       </SelectContent>

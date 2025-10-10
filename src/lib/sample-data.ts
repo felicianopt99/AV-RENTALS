@@ -1,6 +1,13 @@
 
 
-import type { Category, Subcategory, EquipmentItem, Rental, Client, Quote, QuoteItem, Event, MaintenanceLog } from '@/types';
+import type { Category, Subcategory, EquipmentItem, Rental, Client, Quote, QuoteItem, Event, MaintenanceLog, User } from '@/types';
+
+// New sample data for Users
+export const sampleUsers: User[] = [
+  { id: 'user1', name: 'Admin User', role: 'Admin' },
+  { id: 'user2', name: 'Technician User', role: 'Technician' },
+];
+
 
 export const sampleCategories: Category[] = [
   { id: 'cat1', name: 'Audio', icon: 'Mic' },
@@ -39,6 +46,7 @@ export const sampleEquipment: EquipmentItem[] = [
     location: 'Shelf A1',
     imageUrl: 'https://placehold.co/600x400.png',
     dailyRate: 15.00,
+    type: 'equipment',
   },
   {
     id: 'eq2',
@@ -51,6 +59,7 @@ export const sampleEquipment: EquipmentItem[] = [
     location: 'Shelf A2',
     imageUrl: 'https://placehold.co/600x400.png',
     dailyRate: 45.00,
+    type: 'equipment',
   },
   {
     id: 'eq3',
@@ -63,7 +72,8 @@ export const sampleEquipment: EquipmentItem[] = [
     location: 'Tech Bench',
     imageUrl: 'https://placehold.co/600x400.png',
     dailyRate: 75.00,
-    maintenanceHistory: sampleMaintenanceHistory.filter(m => m.equipmentId === 'eq3')
+    maintenanceHistory: sampleMaintenanceHistory.filter(m => m.equipmentId === 'eq3'),
+    type: 'equipment',
   },
   {
     id: 'eq4',
@@ -76,6 +86,7 @@ export const sampleEquipment: EquipmentItem[] = [
     location: 'Shelf C1',
     imageUrl: 'https://placehold.co/600x400.png',
     dailyRate: 10.00,
+    type: 'equipment',
   },
   {
     id: 'eq5',
@@ -88,7 +99,21 @@ export const sampleEquipment: EquipmentItem[] = [
     location: 'Repair Bin',
     imageUrl: 'https://placehold.co/600x400.png',
     dailyRate: 120.00,
-    maintenanceHistory: sampleMaintenanceHistory.filter(m => m.equipmentId === 'eq5')
+    maintenanceHistory: sampleMaintenanceHistory.filter(m => m.equipmentId === 'eq5'),
+    type: 'equipment',
+  },
+  // Sample Consumable
+  {
+    id: 'consumable1',
+    name: 'Gaffer Tape (Black)',
+    description: 'Standard 2-inch black gaffer tape roll.',
+    categoryId: 'cat4', // Or a new "Consumables" category
+    quantity: 20,
+    status: 'good',
+    location: 'Supply Closet',
+    imageUrl: 'https://placehold.co/600x400.png',
+    dailyRate: 0, // Not rented by day
+    type: 'consumable',
   },
 ];
 

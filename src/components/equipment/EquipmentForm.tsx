@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import type { EquipmentItem, Category, Subcategory, EquipmentStatus } from "@/types";
+import type { EquipmentItem, Category, Subcategory, EquipmentStatus, EquipmentType } from "@/types";
 import { EQUIPMENT_STATUSES } from "@/lib/constants";
 import { useAppContext } from "@/contexts/AppContext";
 import { useRouter } from "next/navigation";
@@ -30,6 +31,7 @@ const NO_SUBCATEGORY_VALUE = "__no_subcategory__";
 const equipmentFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters.").max(100),
   description: z.string().min(10, "Description must be at least 10 characters.").max(500),
+  type: z.enum(["equipment", "consumable"] as [EquipmentType, ...EquipmentType[]]),
   categoryId: z.string().min(1, "Please select a category."),
   subcategoryId: z.string().optional(),
   quantity: z.coerce.number().int().min(0, "Quantity cannot be negative."),
@@ -63,6 +65,7 @@ export function EquipmentForm({ initialData, onSubmitSuccess }: EquipmentFormPro
       dailyRate: initialData.dailyRate || 0,
       imageUrl: initialData.imageUrl || '',
       subcategoryId: initialData.subcategoryId || "", // Ensure empty string if undefined
+      type: initialData.type || 'equipment',
     } : {
       name: "",
       description: "",
@@ -73,10 +76,12 @@ export function EquipmentForm({ initialData, onSubmitSuccess }: EquipmentFormPro
       status: "good",
       location: "",
       imageUrl: "",
+      type: "equipment",
     },
   });
   
   const selectedCategoryId = form.watch("categoryId");
+  const itemType = form.watch("type");
 
   useEffect(() => {
     if (selectedCategoryId) {
@@ -93,6 +98,12 @@ export function EquipmentForm({ initialData, onSubmitSuccess }: EquipmentFormPro
     }
   }, [selectedCategoryId, allSubcategories, form]);
 
+  useEffect(() => {
+    if (itemType === 'consumable') {
+      form.setValue('dailyRate', 0);
+    }
+  }, [itemType, form]);
+
 
   function onSubmit(data: EquipmentFormValues) {
     try {
@@ -108,7 +119,7 @@ export function EquipmentForm({ initialData, onSubmitSuccess }: EquipmentFormPro
         addEquipmentItem(finalData);
         toast({ title: "Equipment Added", description: `${finalData.name} has been successfully added.` });
       }
-      onSubmitSuccess ? onSubmitSuccess() : router.push("/");
+      onSubmitSuccess ? onSubmitSuccess() : router.push("/inventory");
     } catch (error) {
       toast({ variant: "destructive", title: "Error", description: "Failed to save equipment. Please try again." });
       console.error("Error saving equipment:", error);
@@ -140,6 +151,35 @@ export function EquipmentForm({ initialData, onSubmitSuccess }: EquipmentFormPro
               <FormControl>
                 <Textarea placeholder="Detailed description of the equipment..." {...field} />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="type"
+          render={({ field }) => (
+            <FormItem className="space-y-3">
+              <FormLabel>Item Type</FormLabel>
+              <FormControl>
+                <RadioGroup
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                  className="flex space-x-4"
+                >
+                  <FormItem className="flex items-center space-x-3 space-y-0">
+                    <FormControl><RadioGroupItem value="equipment" /></FormControl>
+                    <FormLabel className="font-normal">Equipment (Rentable)</FormLabel>
+                  </FormItem>
+                  <FormItem className="flex items-center space-x-3 space-y-0">
+                    <FormControl><RadioGroupItem value="consumable" /></FormControl>
+                    <FormLabel className="font-normal">Consumable (Stock)</FormLabel>
+                  </FormItem>
+                </RadioGroup>
+              </FormControl>
+              <FormDescription>
+                'Equipment' is rentable. 'Consumable' is for tracking stock items like tape or batteries.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -205,7 +245,7 @@ export function EquipmentForm({ initialData, onSubmitSuccess }: EquipmentFormPro
             name="quantity"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Quantity Available</FormLabel>
+                <FormLabel>Quantity in Stock</FormLabel>
                 <FormControl>
                   <Input type="number" placeholder="0" {...field} />
                 </FormControl>
@@ -220,8 +260,9 @@ export function EquipmentForm({ initialData, onSubmitSuccess }: EquipmentFormPro
               <FormItem>
                 <FormLabel>Daily Rate ($)</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="0.00" step="0.01" {...field} />
+                  <Input type="number" placeholder="0.00" step="0.01" {...field} disabled={itemType === 'consumable'} />
                 </FormControl>
+                {itemType === 'consumable' && <FormDescription>Consumables cannot have a daily rate.</FormDescription>}
                 <FormMessage />
               </FormItem>
             )}
@@ -287,4 +328,3 @@ export function EquipmentForm({ initialData, onSubmitSuccess }: EquipmentFormPro
     </Form>
   );
 }
-

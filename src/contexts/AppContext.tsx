@@ -4,11 +4,16 @@
 
 import type React from 'react';
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import type { Category, Subcategory, EquipmentItem, Rental, Client, Quote, Event, MaintenanceLog } from '@/types';
-import { sampleCategories, sampleSubcategories, sampleEquipment, sampleRentals, sampleClients, sampleQuotes, sampleEvents } from '@/lib/sample-data';
+import type { Category, Subcategory, EquipmentItem, Rental, Client, Quote, Event, MaintenanceLog, User, UserRole } from '@/types';
+import { sampleCategories, sampleSubcategories, sampleEquipment, sampleRentals, sampleClients, sampleQuotes, sampleEvents, sampleUsers } from '@/lib/sample-data';
 import useLocalStorage from '@/hooks/useLocalStorage';
 
 interface AppContextType {
+  // User Management
+  users: User[];
+  currentUser: User | null;
+  setCurrentUser: (user: User | null) => void;
+
   categories: Category[];
   setCategories: React.Dispatch<React.SetStateAction<Category[]>>;
   addCategory: (category: Omit<Category, 'id'>) => void;
@@ -61,6 +66,9 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [users, setUsers] = useLocalStorage<User[]>('av_users', []);
+  const [currentUser, setCurrentUser] = useLocalStorage<User | null>('av_currentUser', null);
+  
   const [categories, setCategories] = useLocalStorage<Category[]>('av_categories', []);
   const [subcategories, setSubcategories] = useLocalStorage<Subcategory[]>('av_subcategories', []);
   const [equipment, setEquipment] = useLocalStorage<EquipmentItem[]>('av_equipment', []);
@@ -79,17 +87,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return item === null || item === 'undefined'; // Check for explicit 'undefined' string if it was ever set that way
       };
       
+      if (wasKeyNeverSet('av_users')) {
+        setUsers(sampleUsers);
+        if(!currentUser) {
+            setCurrentUser(sampleUsers.find(u => u.role === 'Admin') || null);
+        }
+      }
+
       if (wasKeyNeverSet('av_categories')) setCategories(sampleCategories);
       if (wasKeyNeverSet('av_subcategories')) setSubcategories(sampleSubcategories);
       if (wasKeyNeverSet('av_equipment')) {
          setEquipment(sampleEquipment.map(e => ({
           ...e, 
+          type: e.type || 'equipment',
           imageUrl: e.imageUrl || `https://placehold.co/600x400.png`,
           dailyRate: e.dailyRate || 0,
         })));
       } else {
         // Ensure existing equipment has defaults if they were missing
-        setEquipment(prev => prev.map(e => ({...e, dailyRate: e.dailyRate || 0, imageUrl: e.imageUrl || `https://placehold.co/600x400.png`})));
+        setEquipment(prev => prev.map(e => ({
+          ...e,
+          type: e.type || 'equipment', 
+          dailyRate: e.dailyRate || 0,
+          imageUrl: e.imageUrl || `https://placehold.co/600x400.png`
+        })));
       }
       if (wasKeyNeverSet('av_clients')) setClients(sampleClients);
       if (wasKeyNeverSet('av_events')) setEvents(sampleEvents);
@@ -99,7 +120,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     
     populateSampleDataIfNeeded();
     setIsDataLoaded(true);
-  }, [setCategories, setSubcategories, setEquipment, setClients, setEvents, setRentals, setQuotes]);
+  }, [setCategories, setSubcategories, setEquipment, setClients, setEvents, setRentals, setQuotes, setUsers, setCurrentUser, currentUser]);
 
 
   useEffect(() => {
@@ -162,10 +183,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [setSubcategories]);
   
   const addEquipmentItem = useCallback((item: Omit<EquipmentItem, 'id'>) => {
-    setEquipment(prev => [...prev, { ...item, id: crypto.randomUUID(), imageUrl: item.imageUrl || `https://placehold.co/600x400.png`, dailyRate: item.dailyRate || 0 }]);
+    setEquipment(prev => [...prev, { ...item, id: crypto.randomUUID(), type: item.type || 'equipment', imageUrl: item.imageUrl || `https://placehold.co/600x400.png`, dailyRate: item.dailyRate || 0 }]);
   }, [setEquipment]);
   const updateEquipmentItem = useCallback((updatedItem: EquipmentItem) => {
-    setEquipment(prev => prev.map(eq => eq.id === updatedItem.id ? {...eq, ...updatedItem, dailyRate: updatedItem.dailyRate || 0, imageUrl: updatedItem.imageUrl || `https://placehold.co/600x400.png` } : eq));
+    setEquipment(prev => prev.map(eq => eq.id === updatedItem.id ? {...eq, ...updatedItem, type: updatedItem.type || 'equipment', dailyRate: updatedItem.dailyRate || 0, imageUrl: updatedItem.imageUrl || `https://placehold.co/600x400.png` } : eq));
   }, [setEquipment]);
   const deleteEquipmentItem = useCallback((itemId: string) => {
     setEquipment(prev => prev.filter(eq => eq.id !== itemId));
@@ -322,6 +343,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   return (
     <AppContext.Provider value={{
+      users, currentUser, setCurrentUser: (user: User | null) => setCurrentUser(user),
       categories, setCategories, addCategory, updateCategory, deleteCategory,
       subcategories, setSubcategories, addSubcategory, updateSubcategory, deleteSubcategory,
       equipment, setEquipment, addEquipmentItem, updateEquipmentItem, deleteEquipmentItem, addMaintenanceLog,
