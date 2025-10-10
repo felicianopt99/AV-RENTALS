@@ -1,11 +1,11 @@
 
-
 "use client";
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, LayoutList, CalendarDays, Users, FileText, Package, PartyPopper, Wrench } from 'lucide-react';
-import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
+import { SidebarMenu, SidebarMenuItem, SidebarMenuButton, useSidebar } from '@/components/ui/sidebar';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAppContext } from '@/contexts/AppContext';
 
 const navItems = [
@@ -22,6 +22,7 @@ const navItems = [
 export function AppSidebarNav() {
   const pathname = usePathname();
   const { currentUser } = useAppContext();
+  const { state: sidebarState, isMobile } = useSidebar();
 
   const userRole = currentUser?.role || 'Technician';
 
@@ -35,18 +36,28 @@ export function AppSidebarNav() {
         if (!hasPermission) {
           return null;
         }
+        
+        const buttonContent = (
+          <>
+            <Icon className="h-5 w-5" />
+            <span>{item.label}</span>
+          </>
+        );
 
         return (
           <SidebarMenuItem key={item.href}>
-            <Link href={item.href} passHref legacyBehavior>
-              <SidebarMenuButton
-                isActive={isActive}
-                tooltip={item.label}
-              >
-                <Icon className="h-5 w-5" />
-                <span>{item.label}</span>
-              </SidebarMenuButton>
-            </Link>
+             <Tooltip>
+                <TooltipTrigger asChild>
+                    <Link href={item.href} passHref legacyBehavior>
+                        <SidebarMenuButton isActive={isActive}>
+                           {buttonContent}
+                        </SidebarMenuButton>
+                    </Link>
+                </TooltipTrigger>
+                <TooltipContent side="right" align="center" hidden={sidebarState !== "collapsed" || isMobile}>
+                    {item.label}
+                </TooltipContent>
+            </Tooltip>
           </SidebarMenuItem>
         );
       })}
