@@ -2,12 +2,22 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
 import bcrypt from 'bcryptjs'
+import jwt from 'jsonwebtoken'
+import { hasPermission } from '@/lib/permissions'
+import type { UserRole } from '@/types'
 
 const createUserSchema = z.object({
   name: z.string().min(1),
   username: z.string().min(1),
   password: z.string().min(6),
   role: z.enum(['Admin', 'Manager', 'Technician', 'Employee', 'Viewer']),
+  // Profile fields optional
+  photoUrl: z.string().optional(),
+  nif: z.string().optional(),
+  iban: z.string().optional(),
+  contactPhone: z.string().optional(),
+  contactEmail: z.string().optional(),
+  emergencyPhone: z.string().optional(),
 })
 
 const updateUserSchema = z.object({
@@ -16,7 +26,27 @@ const updateUserSchema = z.object({
   password: z.string().min(6).optional(),
   role: z.enum(['Admin', 'Manager', 'Technician', 'Employee', 'Viewer']).optional(),
   isActive: z.boolean().optional(),
+  // Profile fields optional
+  photoUrl: z.string().optional(),
+  nif: z.string().optional(),
+  iban: z.string().optional(),
+  contactPhone: z.string().optional(),
+  contactEmail: z.string().optional(),
+  emergencyPhone: z.string().optional(),
 })
+
+// Helper function to get user from token
+function getUserFromRequest(request: NextRequest): { userId: string; username: string; role: string } | null {
+  try {
+    const token = request.cookies.get('auth-token')?.value
+    if (!token) return null
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any
+    return { userId: decoded.userId, username: decoded.username, role: decoded.role }
+  } catch {
+    return null
+  }
+}
 
 // GET /api/users - Get all users
 export async function GET() {
@@ -28,12 +58,19 @@ export async function GET() {
         username: true,
         role: true,
         isActive: true,
+        // Profile fields
+        photoUrl: true,
+        nif: true,
+        iban: true,
+        contactPhone: true,
+        contactEmail: true,
+        emergencyPhone: true,
         createdAt: true,
         updatedAt: true,
       },
       orderBy: { name: 'asc' },
     })
-    
+
     return NextResponse.json(users)
   } catch (error) {
     console.error('Error fetching users:', error)
@@ -44,9 +81,18 @@ export async function GET() {
 // POST /api/users - Create new user
 export async function POST(request: NextRequest) {
   try {
+    const user = getUserFromRequest(request)
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    if (!hasPermission(user.role as UserRole, 'canManageUsers')) {
+      return NextResponse.json({ error: 'Forbidden: Only admins can manage users' }, { status: 403 })
+    }
+
     const body = await request.json()
-    const { name, username, password, role } = createUserSchema.parse(body)
-    
+    const { name, username, password, role, photoUrl, nif, iban, contactPhone, contactEmail, emergencyPhone } = createUserSchema.parse(body)
+
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { username },
@@ -61,26 +107,44 @@ export async function POST(request: NextRequest) {
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12)
-    
-    const user = await prisma.user.create({
-      data: {
-        name,
-        username,
-        password: hashedPassword,
-        role,
-      },
+
+    const data: any = {
+      name,
+      username,
+      password: hashedPassword,
+      role,
+      createdBy: user.userId,
+      updatedBy: user.userId,
+    }
+
+    if (photoUrl !== undefined) data.photoUrl = photoUrl
+    if (nif !== undefined) data.nif = nif
+    if (iban !== undefined) data.iban = iban
+    if (contactPhone !== undefined) data.contactPhone = contactPhone
+    if (contactEmail !== undefined) data.contactEmail = contactEmail
+    if (emergencyPhone !== undefined) data.emergencyPhone = emergencyPhone
+
+    const userCreated = await prisma.user.create({
+      data,
       select: {
         id: true,
         name: true,
         username: true,
         role: true,
         isActive: true,
+        // Profile fields
+        photoUrl: true,
+        nif: true,
+        iban: true,
+        contactPhone: true,
+        contactEmail: true,
+        emergencyPhone: true,
         createdAt: true,
         updatedAt: true,
       },
     })
-    
-    return NextResponse.json(user, { status: 201 })
+
+    return NextResponse.json(userCreated, { status: 201 })
   } catch (error) {
     console.error('Error creating user:', error)
     if (error instanceof z.ZodError) {
@@ -93,9 +157,14 @@ export async function POST(request: NextRequest) {
 // PUT /api/users - Update user
 export async function PUT(request: NextRequest) {
   try {
+    const user = getUserFromRequest(request)
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const body = await request.json()
     const { id, ...updateData } = body
-    
+
     if (!id) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 })
     }
@@ -104,24 +173,34 @@ export async function PUT(request: NextRequest) {
     if (updateData.password) {
       updateData.password = await bcrypt.hash(updateData.password, 12)
     }
-    
+
     const validatedData = updateUserSchema.parse(updateData)
-    
-    const user = await prisma.user.update({
+
+    const userUpdated = await prisma.user.update({
       where: { id },
-      data: validatedData,
+      data: {
+        ...validatedData,
+        updatedBy: user.userId,
+      },
       select: {
         id: true,
         name: true,
         username: true,
         role: true,
         isActive: true,
+        // Profile fields
+        photoUrl: true,
+        nif: true,
+        iban: true,
+        contactPhone: true,
+        contactEmail: true,
+        emergencyPhone: true,
         createdAt: true,
         updatedAt: true,
       },
     })
-    
-    return NextResponse.json(user)
+
+    return NextResponse.json(userUpdated)
   } catch (error) {
     console.error('Error updating user:', error)
     if (error instanceof z.ZodError) {
@@ -134,17 +213,22 @@ export async function PUT(request: NextRequest) {
 // DELETE /api/users - Delete user
 export async function DELETE(request: NextRequest) {
   try {
+    const user = getUserFromRequest(request)
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
-    
+
     if (!id) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 })
     }
-    
+
     await prisma.user.delete({
       where: { id },
     })
-    
+
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting user:', error)

@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle, Wrench, SearchSlash, History, Edit } from 'lucide-react';
 import { format } from 'date-fns';
 import { MaintenanceLogDialog } from './MaintenanceLogDialog';
+import { MaintenanceRequestDialog } from './MaintenanceRequestDialog';
 import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
 
@@ -18,6 +19,7 @@ export function MaintenanceManager() {
   const router = useRouter();
 
   const [isLogDialogOpen, setIsLogDialogOpen] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedEquipment, setSelectedEquipment] = useState<EquipmentItem | null>(null);
 
   const itemsInMaintenance = useMemo(() => {
@@ -44,6 +46,11 @@ export function MaintenanceManager() {
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-end">
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
+          <PlusCircle className="mr-2 h-4 w-4" /> Create New Maintenance
+        </Button>
+      </div>
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle>Maintenance & Repairs</CardTitle>
@@ -101,6 +108,10 @@ export function MaintenanceManager() {
             equipmentItem={selectedEquipment}
         />
       )}
+      <MaintenanceRequestDialog
+        isOpen={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+      />
     </div>
   );
 }

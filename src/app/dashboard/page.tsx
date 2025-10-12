@@ -9,7 +9,8 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle, Package, Users, CalendarClock, Wrench, FileText, PartyPopper } from 'lucide-react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { isFuture, isWithinInterval, addDays, startOfDay, format, getMonth, getYear, subMonths } from 'date-fns';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { isFuture, isWithinInterval, addDays, startOfDay, format, getMonth, getYear, subMonths, startOfWeek, endOfWeek } from 'date-fns';
 import { RevenueChart, TopClientsChart, TopEquipmentChart } from '@/components/dashboard/AnalyticsCharts';
 
 const StatCard: React.FC<{ title: string; value: string | number; icon: React.ElementType; description?: string, href?: string }> = ({ title, value, icon: Icon, description, href }) => {
@@ -35,18 +36,21 @@ export default function DashboardPage() {
   const isAdmin = currentUser?.role === 'Admin';
 
   const analyticsData = useMemo(() => {
-    if (!isDataLoaded) return { 
-      totalEquipment: 0, 
-      totalClients: 0, 
-      upcomingEvents: 0, 
+    if (!isDataLoaded) return {
+      totalEquipment: 0,
+      totalClients: 0,
+      upcomingEvents: 0,
       maintenanceItems: 0,
+      assignedEventsThisWeek: [],
       monthlyRevenue: [],
       topClients: [],
       topEquipment: []
     };
-    
+
     const today = startOfDay(new Date());
     const sevenDaysFromNow = addDays(today, 7);
+    const weekStart = startOfWeek(today);
+    const weekEnd = endOfWeek(today);
 
     const upcomingEventsCount = events.filter(event => {
         const eventStartDate = startOfDay(new Date(event.startDate)); 
@@ -102,11 +106,19 @@ export default function DashboardPage() {
         .sort((a, b) => b.count - a.count)
         .slice(0, 5);
 
+    // Assigned events this week
+    const assignedEventsThisWeek = events.filter(event => {
+        const eventStartDate = startOfDay(new Date(event.startDate));
+        return event.assignedTo === currentUser?.id &&
+               isWithinInterval(eventStartDate, { start: weekStart, end: weekEnd });
+    });
+
     return {
       totalEquipment: equipment.length,
       totalClients: clients.length,
       upcomingEvents: upcomingEventsCount,
       maintenanceItems: equipment.filter(e => e.status === 'maintenance').length,
+      assignedEventsThisWeek,
       monthlyRevenue,
       topClients,
       topEquipment,
@@ -129,13 +141,57 @@ export default function DashboardPage() {
       <div className="flex flex-col h-full">
           <AppHeader title="Dashboard" />
           <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-8">
-            
+
+            {/* Welcome Section */}
+            <Card className="shadow-xl border-border/60">
+              <CardContent className="flex items-center space-x-4 p-6">
+                <Avatar className="h-16 w-16">
+                  <AvatarImage src={currentUser?.photoUrl} alt={currentUser?.name} />
+                  <AvatarFallback>{currentUser?.name?.charAt(0).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <h2 className="text-2xl font-bold">Welcome back, {currentUser?.name}!</h2>
+                  <p className="text-muted-foreground">Here's what's happening this week.</p>
+                </div>
+              </CardContent>
+            </Card>
+
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <StatCard title="Total Equipment" value={analyticsData.totalEquipment} icon={Package} href="/inventory" />
               <StatCard title="Total Clients" value={analyticsData.totalClients} icon={Users} href="/clients" />
               <StatCard title="Upcoming Events" value={analyticsData.upcomingEvents} icon={CalendarClock} description="In next 7 days" href="/events" />
               <StatCard title="Needs Maintenance" value={analyticsData.maintenanceItems} icon={Wrench} href="/maintenance" />
             </div>
+
+            {/* Assigned Events This Week */}
+            {analyticsData.assignedEventsThisWeek.length > 0 && (
+              <Card className="shadow-xl border-border/60">
+                <CardHeader>
+                  <CardTitle>Your Events This Week</CardTitle>
+                  <CardDescription>Events assigned to you for the current week.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {analyticsData.assignedEventsThisWeek.map(event => {
+                      const client = clients.find(c => c.id === event.clientId);
+                      return (
+                        <div key={event.id} className="flex items-center justify-between p-4 border rounded-lg">
+                          <div>
+                            <h4 className="font-semibold">{event.name}</h4>
+                            <p className="text-sm text-muted-foreground">
+                              {client?.name} • {event.location} • {format(new Date(event.startDate), 'MMM dd, yyyy')}
+                            </p>
+                          </div>
+                          <Button asChild variant="outline" size="sm">
+                            <Link href={`/events/${event.id}`}>View Details</Link>
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {isAdmin && (
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

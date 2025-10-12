@@ -33,7 +33,7 @@ export function AppHeader({ title }: AppHeaderProps) {
         title: 'Logged out',
         description: 'You have been successfully logged out.',
       });
-      router.push('/login');
+      window.location.href = '/login';
     } catch (error) {
       console.error('Logout error:', error);
       toast({

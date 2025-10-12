@@ -1,9 +1,8 @@
-
 "use client";
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, LayoutList, CalendarDays, Users, FileText, Package, PartyPopper, Wrench, Shield, Settings, Palette } from 'lucide-react';
+import { Home, LayoutList, CalendarDays, Users, FileText, Package, PartyPopper, Wrench, Shield, Settings, Palette, User } from 'lucide-react';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubItem, SidebarGroup, SidebarGroupLabel, useSidebar } from '@/components/ui/sidebar';
 import { useAppContext } from '@/contexts/AppContext';
 import { cn } from '@/lib/utils';
@@ -18,6 +17,7 @@ const navItems = [
   { href: '/events', label: 'Events', icon: PartyPopper, requiredRole: ['Admin', 'Manager', 'Employee'] },
   { href: '/rentals/calendar', label: 'Event Calendar', icon: CalendarDays, requiredRole: ['Admin', 'Manager', 'Technician', 'Employee'] },
   { href: '/quotes', label: 'Manage Quotes', icon: FileText, requiredRole: ['Admin', 'Manager', 'Employee'] },
+  { href: '/profile', label: 'Profile', icon: User, requiredRole: ['Admin', 'Manager', 'Technician', 'Employee', 'Viewer'] },
 ];
 
 const adminItems = [
@@ -56,12 +56,12 @@ export function AppSidebarNav() {
     <>
       <SidebarMenu>
         {visibleNavItems.map((item) => {
-          const isActive = (item.href === '/dashboard' && (pathname === '/' || pathname === '/dashboard')) || 
+          const isActive = (item.href === '/dashboard' && (pathname === '/' || pathname === '/dashboard')) ||
                           (item.href !== '/dashboard' && pathname.startsWith(item.href));
-          
+
           return (
             <SidebarMenuItem key={item.href}>
-              <Link 
+              <Link
                 href={item.href}
                 data-sidebar="menu-button"
                 data-size="default"
@@ -84,7 +84,7 @@ export function AppSidebarNav() {
           <div className="px-3 py-2">
             <div className="h-px bg-sidebar-border"></div>
           </div>
-          
+
           <SidebarGroup>
             <SidebarGroupLabel className="text-xs font-medium text-sidebar-foreground/70 px-2 pb-2">
               Administration
@@ -92,10 +92,10 @@ export function AppSidebarNav() {
             <SidebarMenu>
               {adminItems.map((item) => {
                 const isActive = pathname.startsWith(item.href);
-                
+
                 return (
                   <SidebarMenuItem key={item.href}>
-                    <Link 
+                    <Link
                       href={item.href}
                       data-sidebar="menu-button"
                       data-size="default"
@@ -118,5 +118,3 @@ export function AppSidebarNav() {
     </>
   );
 }
-
-    

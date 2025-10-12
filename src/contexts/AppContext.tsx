@@ -106,7 +106,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
+    try {
+      const response = await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+      console.log('Logout response status:', response.status);
+      if (!response.ok) {
+        console.error('Logout failed:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Logout fetch error:', error);
+    }
     setCurrentUser(null);
     setIsAuthenticated(false);
     setIsDataLoaded(false);

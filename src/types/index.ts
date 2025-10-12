@@ -12,6 +12,13 @@ export interface User {
   isActive: boolean;
   version?: number;
   lastLoginAt?: Date;
+  // Profile fields
+  photoUrl?: string;
+  nif?: string;
+  iban?: string;
+  contactPhone?: string;
+  contactEmail?: string;
+  emergencyPhone?: string;
   createdBy?: string;
   updatedBy?: string;
   createdAt: Date;
@@ -115,6 +122,7 @@ export interface Event {
   location: string;
   startDate: Date;
   endDate: Date;
+  assignedTo?: string;
 }
 
 export interface Rental {

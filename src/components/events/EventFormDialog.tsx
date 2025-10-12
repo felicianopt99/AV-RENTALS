@@ -32,6 +32,7 @@ const eventFormSchema = z.object({
   location: z.string().min(2, "Location is required."),
   startDate: z.date({ required_error: "Start date is required." }),
   endDate: z.date({ required_error: "End date is required." }),
+  assignedTo: z.string().optional(),
 }).refine(data => data.endDate >= data.startDate, {
   message: "End date cannot be before start date.",
   path: ["endDate"],
@@ -47,7 +48,7 @@ interface EventFormDialogProps {
 }
 
 export function EventFormDialog({ isOpen, onOpenChange, initialData, onSubmitSuccess }: EventFormDialogProps) {
-  const { clients } = useAppContext();
+  const { clients, users } = useAppContext();
   const { addEvent, updateEvent } = useAppDispatch();
   const { toast } = useToast();
 
@@ -59,6 +60,7 @@ export function EventFormDialog({ isOpen, onOpenChange, initialData, onSubmitSuc
       location: "",
       startDate: undefined,
       endDate: undefined,
+      assignedTo: "",
     },
   });
 
@@ -147,6 +149,29 @@ export function EventFormDialog({ isOpen, onOpenChange, initialData, onSubmitSuc
                 <FormItem>
                   <FormLabel>Location</FormLabel>
                   <FormControl><Input placeholder="e.g., Grand Hyatt Ballroom" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="assignedTo"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Assigned To</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a technician/person for this event" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {users.filter(user => user.isActive).map(user => (
+                        <SelectItem key={user.id} value={user.id}>{user.name} ({user.role})</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
