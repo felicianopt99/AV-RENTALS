@@ -1,4 +1,4 @@
-import { Home, CalendarDays, Users, FileText, Package, Wrench, Shield, Settings, Palette } from 'lucide-react';
+import { Home, CalendarDays, Users, FileText, Package, Wrench, Shield, Settings, Palette, Users2 } from 'lucide-react';
 
 export type NavItem = {
   href?: string;
@@ -16,6 +16,7 @@ export const navItems: NavItem[] = [
   ] },
   { href: '/maintenance', label: 'Maintenance', icon: Wrench, requiredRole: ['Admin', 'Manager', 'Technician'] },
   { href: '/clients', label: 'Clients', icon: Users, requiredRole: ['Admin', 'Manager', 'Employee'] },
+  { href: '/team', label: 'Team', icon: Users2, requiredRole: ['Admin', 'Manager', 'Technician', 'Employee', 'Viewer'] },
   { label: 'Rentals', icon: CalendarDays, requiredRole: ['Admin', 'Manager', 'Employee'], subItems: [
     { href: '/rentals/calendar', label: 'Event Calendar' },
     { href: '/events', label: 'Events' },
