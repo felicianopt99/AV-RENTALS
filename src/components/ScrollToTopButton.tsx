@@ -36,7 +36,7 @@ export function ScrollToTopButton() {
       variant="outline"
       size="icon"
       className={cn(
-        "fixed bottom-6 right-6 z-50 rounded-full shadow-lg transition-opacity duration-300 ease-in-out",
+        "fixed bottom-6 right-6 z-[9998] rounded-full shadow-lg transition-opacity duration-300 ease-in-out",
         "hover:bg-primary/90 hover:text-primary-foreground",
         isVisible ? "opacity-100" : "opacity-0 pointer-events-none"
       )}

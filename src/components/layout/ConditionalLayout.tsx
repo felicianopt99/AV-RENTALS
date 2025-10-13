@@ -2,6 +2,8 @@
 
 import { usePathname } from 'next/navigation';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { MobileLayout } from '@/components/layout/MobileLayout';
+import { useIsMobile, useIsTablet } from '@/hooks/use-mobile';
 
 interface ConditionalLayoutProps {
   children: React.ReactNode;
@@ -9,6 +11,8 @@ interface ConditionalLayoutProps {
 
 export function ConditionalLayout({ children }: ConditionalLayoutProps) {
   const pathname = usePathname();
+  const isMobile = useIsMobile();
+  const isTablet = useIsTablet();
   
   // Routes that should not have the main app layout
   const noLayoutRoutes = ['/login'];
@@ -17,9 +21,14 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
     pathname.startsWith(route)
   );
 
-  if (shouldShowLayout) {
-    return <AppLayout>{children}</AppLayout>;
+  if (!shouldShowLayout) {
+    return <>{children}</>;
   }
 
-  return <>{children}</>;
+  // Use the mobile-first layout for both phones and tablets
+  if (isMobile || isTablet) {
+    return <MobileLayout>{children}</MobileLayout>;
+  }
+
+  return <AppLayout>{children}</AppLayout>;
 }

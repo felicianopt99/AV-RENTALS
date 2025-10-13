@@ -6,41 +6,67 @@ import { Home, LayoutList, CalendarDays, Users, FileText, Package, PartyPopper, 
 import { SidebarMenu, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubItem, SidebarGroup, SidebarGroupLabel, useSidebar } from '@/components/ui/sidebar';
 import { useAppContext } from '@/contexts/AppContext';
 import { cn } from '@/lib/utils';
-import { useMemo } from 'react';
+import { useMemo, useRef, useEffect } from 'react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
-const navItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: Home, requiredRole: ['Admin', 'Manager', 'Technician', 'Employee', 'Viewer'] },
-  { href: '/inventory', label: 'Inventory', icon: Package, requiredRole: ['Admin', 'Manager', 'Technician', 'Employee', 'Viewer'] },
-  { href: '/maintenance', label: 'Maintenance', icon: Wrench, requiredRole: ['Admin', 'Manager', 'Technician'] },
-  { href: '/categories', label: 'Manage Categories', icon: LayoutList, requiredRole: ['Admin', 'Manager'] },
-  { href: '/clients', label: 'Manage Clients', icon: Users, requiredRole: ['Admin', 'Manager', 'Employee'] },
-  { href: '/events', label: 'Events', icon: PartyPopper, requiredRole: ['Admin', 'Manager', 'Employee'] },
-  { href: '/rentals/calendar', label: 'Event Calendar', icon: CalendarDays, requiredRole: ['Admin', 'Manager', 'Technician', 'Employee'] },
-  { href: '/quotes', label: 'Manage Quotes', icon: FileText, requiredRole: ['Admin', 'Manager', 'Employee'] },
-  { href: '/profile', label: 'Profile', icon: User, requiredRole: ['Admin', 'Manager', 'Technician', 'Employee', 'Viewer'] },
-];
-
-const adminItems = [
-  { href: '/admin/users', label: 'User Management', icon: Shield },
-  { href: '/admin/customization', label: 'Customization', icon: Palette },
-  { href: '/admin/settings', label: 'System Settings', icon: Settings },
-];
+import { navItems as baseNavItems, adminItems as baseAdminItems } from '@/components/layout/navConfig';
 
 export function AppSidebarNav() {
   const pathname = usePathname();
   const { currentUser, isDataLoaded } = useAppContext();
-  const { state: sidebarState, isMobile } = useSidebar();
+  const { state: sidebarState, isMobile, toggleSidebar } = useSidebar();
+
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!isMobile) return;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartX.current = e.touches[0].clientX;
+      touchStartY.current = e.touches[0].clientY;
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (touchStartX.current === null || touchStartY.current === null) return;
+
+      const touchEndX = e.changedTouches[0].clientX;
+      const touchEndY = e.changedTouches[0].clientY;
+      const deltaX = touchEndX - touchStartX.current;
+      const deltaY = Math.abs(touchEndY - touchStartY.current);
+
+      // Swipe right to open, left to close, if horizontal swipe is significant
+      if (Math.abs(deltaX) > 50 && deltaY < 100) {
+        if (deltaX > 0 && sidebarState === 'collapsed') {
+          toggleSidebar();
+        } else if (deltaX < 0 && sidebarState === 'expanded') {
+          toggleSidebar();
+        }
+      }
+
+      touchStartX.current = null;
+      touchStartY.current = null;
+    };
+
+    document.addEventListener('touchstart', handleTouchStart);
+    document.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [isMobile, sidebarState, toggleSidebar]);
 
   // Use useMemo to prevent recalculation on every render
   const visibleNavItems = useMemo(() => {
     const userRole = currentUser?.role || 'Viewer';
-    return navItems.filter(item => item.requiredRole.includes(userRole));
+    return baseNavItems.filter(item => item.requiredRole.includes(userRole));
   }, [currentUser?.role]);
 
   if (!isDataLoaded) {
       return (
         <SidebarMenu>
-          {navItems.map((item, index) => (
+          {baseNavItems.map((item, index) => (
              <SidebarMenuItem key={`loading-${index}`}>
                 <div className="peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm opacity-50">
                     <item.icon className="h-5 w-5" />
@@ -52,69 +78,158 @@ export function AppSidebarNav() {
       )
   }
 
+  const isCollapsed = sidebarState === 'collapsed';
+
   return (
-    <>
-      <SidebarMenu>
-        {visibleNavItems.map((item) => {
-          const isActive = (item.href === '/dashboard' && (pathname === '/' || pathname === '/dashboard')) ||
-                          (item.href !== '/dashboard' && pathname.startsWith(item.href));
+    <TooltipProvider>
+      <>
+        <SidebarMenu>
+          {visibleNavItems.map((item) => {
+            const hasSub = item.subItems && item.subItems.length > 0;
+            const isParentActive = item.href ? ((item.href === '/dashboard' && (pathname === '/' || pathname === '/dashboard')) || (item.href !== '/dashboard' && pathname.startsWith(item.href))) : false;
+            const isSubActive = hasSub && item.subItems!.some(sub => pathname.startsWith(sub.href));
+            const parentActive = isParentActive || isSubActive;
+            const linkClass = cn(
+              "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
+              "h-8 text-sm sidebar-hover glass"
+            );
 
-          return (
-            <SidebarMenuItem key={item.href}>
-              <Link
-                href={item.href}
-                data-sidebar="menu-button"
-                data-size="default"
-                data-active={isActive}
-                className={cn(
-                  "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
-                  "h-8 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                )}
-              >
-                <item.icon className="h-5 w-5" />
-                <span>{item.label}</span>
-              </Link>
-            </SidebarMenuItem>
-          );
-        })}
-      </SidebarMenu>
-
-      {currentUser?.role === 'Admin' && (
-        <>
-          <div className="px-3 py-2">
-            <div className="h-px bg-sidebar-border"></div>
-          </div>
-
-          <SidebarGroup>
-            <SidebarGroupLabel className="text-xs font-medium text-sidebar-foreground/70 px-2 pb-2">
-              Administration
-            </SidebarGroupLabel>
-            <SidebarMenu>
-              {adminItems.map((item) => {
-                const isActive = pathname.startsWith(item.href);
-
+            const renderMenuItem = (content: React.ReactNode, label: string, href?: string) => {
+              if (isCollapsed) {
                 return (
-                  <SidebarMenuItem key={item.href}>
-                    <Link
-                      href={item.href}
-                      data-sidebar="menu-button"
-                      data-size="default"
-                      data-active={isActive}
-                      className={cn(
-                        "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
-                        "h-8 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                      )}
-                    >
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link
+                        href={href || '#'}
+                        data-sidebar="menu-button"
+                        data-size="default"
+                        data-active={parentActive}
+                        className={linkClass}
+                      >
+                        {content}
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="w-48">
+                      <p>{label}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              }
+              return (
+                <Link
+                  href={href || '#'}
+                  data-sidebar="menu-button"
+                  data-size="default"
+                  data-active={parentActive}
+                  className={linkClass}
+                >
+                  {content}
+                </Link>
+              );
+            };
+
+            return (
+              <SidebarMenuItem key={item.href || item.label}>
+                {item.href ? (
+                  renderMenuItem(
+                    <>
                       <item.icon className="h-5 w-5" />
                       <span>{item.label}</span>
-                    </Link>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroup>
-        </>
-      )}
-    </>
+                    </>,
+                    item.label,
+                    item.href
+                  )
+                ) : (
+                  renderMenuItem(
+                    <>
+                      <item.icon className="h-5 w-5" />
+                      <span>{item.label}</span>
+                    </>,
+                    item.label
+                  )
+                )}
+                {hasSub && item.subItems && (
+                  <SidebarMenuSub>
+                    {item.subItems.map((sub) => {
+                      const isSubActive = pathname.startsWith(sub.href);
+                      return (
+                        <SidebarMenuSubItem key={sub.href}>
+                          {renderMenuItem(
+                            <span>{sub.label}</span>,
+                            sub.label,
+                            sub.href
+                          )}
+                        </SidebarMenuSubItem>
+                      );
+                    })}
+                  </SidebarMenuSub>
+                )}
+              </SidebarMenuItem>
+            );
+          })}
+        </SidebarMenu>
+
+  {currentUser?.role === 'Admin' && (
+          <>
+            <div className="px-3 py-2">
+              <div className="h-px bg-sidebar-border"></div>
+            </div>
+
+            <SidebarGroup>
+              <SidebarGroupLabel className="text-xs font-medium text-sidebar-foreground/70 px-2 pb-2">
+                Administration
+              </SidebarGroupLabel>
+              <SidebarMenu>
+                {baseAdminItems.map((item) => {
+                  const href = item.href ?? '#';
+                  const isActive = href !== '#' ? pathname.startsWith(href) : false;
+
+                  return (
+                    <SidebarMenuItem key={href}>
+                      {isCollapsed ? (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Link
+                              href={href}
+                              data-sidebar="menu-button"
+                              data-size="default"
+                              data-active={isActive}
+                              className={cn(
+                                "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
+                                "h-8 text-sm sidebar-hover glass"
+                              )}
+                            >
+                              <item.icon className="h-5 w-5" />
+                              <span>{item.label}</span>
+                            </Link>
+                          </TooltipTrigger>
+                          <TooltipContent side="right" className="w-48">
+                            <p>{item.label}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      ) : (
+                        <Link
+                          href={href}
+                          data-sidebar="menu-button"
+                          data-size="default"
+                          data-active={isActive}
+                          className={cn(
+                            "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
+                            "h-8 text-sm sidebar-hover glass"
+                          )}
+                        >
+                          <item.icon className="h-5 w-5" />
+                          <span>{item.label}</span>
+                        </Link>
+                      )}
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroup>
+          </>
+        )}
+      </>
+    </TooltipProvider>
   );
 }

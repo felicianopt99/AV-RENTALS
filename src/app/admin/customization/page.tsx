@@ -1,84 +1,114 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2, Save, Settings, ArrowLeft, RotateCcw, Palette, Building, Lock, Eye, Upload, Image as ImageIcon } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Slider } from '@/components/ui/slider';
-import { Upload, Image, Palette, Settings, Save, Eye, RotateCcw, Loader2, Building, Lock } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsList, TabsContent, TabsTrigger } from '@/components/ui/tabs';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import LightRays from '@/components/LightRays';
 
-interface CustomizationSettings {
-  companyName?: string;
-  companyTagline?: string;
-  contactEmail?: string;
-  contactPhone?: string;
-  useTextLogo?: boolean;
-  primaryColor?: string;
-  secondaryColor?: string;
-  accentColor?: string;
-  darkMode?: boolean;
-  logoUrl?: string;
-  faviconUrl?: string;
-  customCSS?: string;
-  footerText?: string;
-  version?: number;
-  // Login page settings
-  loginBackgroundType?: 'gradient' | 'solid' | 'image';
-  loginBackgroundColor1?: string;
-  loginBackgroundColor2?: string;
-  loginBackgroundImage?: string;
-  loginCardOpacity?: number;
-  loginCardBlur?: boolean;
-  loginCardPosition?: 'center' | 'left' | 'right';
-  loginCardWidth?: number;
-  loginCardBorderRadius?: number;
-  loginCardShadow?: string;
-  loginLogoUrl?: string;
-  loginLogoSize?: number;
-  loginWelcomeMessage?: string;
-  loginWelcomeSubtitle?: string;
-  loginFooterText?: string;
-  loginShowCompanyName?: boolean;
-  loginFormSpacing?: number;
-  loginButtonStyle?: 'default' | 'rounded' | 'pill';
-  loginInputStyle?: 'default' | 'rounded' | 'underline';
-  loginAnimations?: boolean;
-}
+const customizationSchema = z.object({
+  // Branding
+  companyName: z.string().min(1),
+  companyTagline: z.string().optional(),
+  contactEmail: z.string().email().optional(),
+  contactPhone: z.string().optional(),
+  useTextLogo: z.boolean().optional(),
+  logoUrl: z.string().optional(),
+  faviconUrl: z.string().optional(),
 
-export default function CustomizationPage() {
+  // Theme
+  primaryColor: z.string().optional(),
+  secondaryColor: z.string().optional(),
+  accentColor: z.string().optional(),
+  darkMode: z.boolean().optional(),
+  
+  // Login Page General
+  loginBackgroundType: z.enum(['gradient', 'solid', 'image', 'lightrays']),
+  loginBackgroundColor1: z.string().optional(),
+  loginBackgroundColor2: z.string().optional(),
+  loginBackgroundImage: z.string().optional(),
+  loginCardOpacity: z.number().min(0).max(1),
+  loginCardBlur: z.boolean(),
+  loginCardPosition: z.enum(['center', 'left', 'right']),
+  loginCardWidth: z.number().min(300).max(600),
+  loginCardBorderRadius: z.number().min(0).max(24),
+  loginCardShadow: z.enum(['none', 'small', 'medium', 'large', 'xl']),
+  loginLogoUrl: z.string().optional(),
+  loginLogoSize: z.number().min(40).max(120),
+  loginWelcomeMessage: z.string(),
+  loginWelcomeSubtitle: z.string(),
+  loginFooterText: z.string().optional(),
+  loginShowCompanyName: z.boolean(),
+  loginFormSpacing: z.number().min(8).max(32),
+  loginButtonStyle: z.enum(['default', 'rounded', 'pill']),
+  loginInputStyle: z.enum(['default', 'rounded', 'underline']),
+  loginAnimations: z.boolean(),
+  
+  // LightRays Background Settings
+  loginLightRaysOrigin: z.enum(['top-center', 'top-left', 'top-right', 'right', 'left', 'bottom-center', 'bottom-right', 'bottom-left']),
+  loginLightRaysColor: z.string(),
+  loginLightRaysSpeed: z.number().min(0).max(5),
+  loginLightRaysSpread: z.number().min(0).max(2),
+  loginLightRaysLength: z.number().min(0).max(3),
+  loginLightRaysPulsating: z.boolean(),
+  loginLightRaysFadeDistance: z.number().min(0).max(2),
+  loginLightRaysSaturation: z.number().min(0).max(2),
+  loginLightRaysFollowMouse: z.boolean(),
+  loginLightRaysMouseInfluence: z.number().min(0).max(1),
+  loginLightRaysNoiseAmount: z.number().min(0).max(1),
+  loginLightRaysDistortion: z.number().min(0).max(0.5),
+
+  // Advanced
+  customCSS: z.string().optional(),
+  footerText: z.string().optional(),
+  version: z.number().optional(),
+});
+
+type CustomizationSettings = z.infer<typeof customizationSchema>;
+
+type CustomizationFormValues = z.infer<typeof customizationSchema>;
+
+export default function AdminCustomizationPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [settings, setSettings] = useState<CustomizationFormValues | null>(null);
+  const [isSettingsLoaded, setIsSettingsLoaded] = useState(false);
+  const router = useRouter();
   const { toast } = useToast();
-  
-  // Loading and error states
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [version, setVersion] = useState(1);
-  
-  // Brand Settings
+
+  // Branding states
   const [companyName, setCompanyName] = useState('AV Rentals');
   const [companyTagline, setCompanyTagline] = useState('Professional Audio Visual Equipment Rental');
   const [contactEmail, setContactEmail] = useState('info@avrental.com');
   const [contactPhone, setContactPhone] = useState('+1 (555) 123-4567');
-  
-  // Logo Settings
   const [useTextLogo, setUseTextLogo] = useState(true);
-  
-  // Theme Settings
+
+  // Theme states
   const [primaryColor, setPrimaryColor] = useState('#3B82F6');
   const [secondaryColor, setSecondaryColor] = useState('#F3F4F6');
   const [accentColor, setAccentColor] = useState('#10B981');
   const [darkMode, setDarkMode] = useState(false);
-  
-  // Login Page Settings
-  const [loginBackgroundType, setLoginBackgroundType] = useState<'gradient' | 'solid' | 'image'>('gradient');
-  const [loginBackgroundColor1, setLoginBackgroundColor1] = useState('#0F1419'); // Dark background to match app
+
+  // Advanced states
+  const [version, setVersion] = useState(1);
+  const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Login states
+  const [loginBackgroundType, setLoginBackgroundType] = useState<'gradient' | 'solid' | 'image' | 'lightrays'>('gradient');
+
+  const [loginBackgroundColor1, setLoginBackgroundColor1] = useState('#0F1419');
   const [loginBackgroundColor2, setLoginBackgroundColor2] = useState('#1E293B'); // Slate-800
   const [loginBackgroundImage, setLoginBackgroundImage] = useState('');
   const [loginCardOpacity, setLoginCardOpacity] = useState(0.95);
@@ -86,7 +116,7 @@ export default function CustomizationPage() {
   const [loginCardPosition, setLoginCardPosition] = useState<'center' | 'left' | 'right'>('center');
   const [loginCardWidth, setLoginCardWidth] = useState(400);
   const [loginCardBorderRadius, setLoginCardBorderRadius] = useState(8);
-  const [loginCardShadow, setLoginCardShadow] = useState('large');
+  const [loginCardShadow, setLoginCardShadow] = useState<'none' | 'small' | 'medium' | 'large' | 'xl'>('large');
   const [loginLogoUrl, setLoginLogoUrl] = useState('');
   const [loginLogoSize, setLoginLogoSize] = useState(80);
   const [loginWelcomeMessage, setLoginWelcomeMessage] = useState('Welcome back');
@@ -97,6 +127,19 @@ export default function CustomizationPage() {
   const [loginButtonStyle, setLoginButtonStyle] = useState<'default' | 'rounded' | 'pill'>('default');
   const [loginInputStyle, setLoginInputStyle] = useState<'default' | 'rounded' | 'underline'>('default');
   const [loginAnimations, setLoginAnimations] = useState(true);
+  // LightRays Settings
+  const [loginLightRaysOrigin, setLoginLightRaysOrigin] = useState<'top-center' | 'top-left' | 'top-right' | 'right' | 'left' | 'bottom-center' | 'bottom-right' | 'bottom-left'>('top-center');
+  const [loginLightRaysColor, setLoginLightRaysColor] = useState('#00ffff');
+  const [loginLightRaysSpeed, setLoginLightRaysSpeed] = useState(1.5);
+  const [loginLightRaysSpread, setLoginLightRaysSpread] = useState(0.8);
+  const [loginLightRaysLength, setLoginLightRaysLength] = useState(1.2);
+  const [loginLightRaysPulsating, setLoginLightRaysPulsating] = useState(false);
+  const [loginLightRaysFadeDistance, setLoginLightRaysFadeDistance] = useState(1.0);
+  const [loginLightRaysSaturation, setLoginLightRaysSaturation] = useState(1.0);
+  const [loginLightRaysFollowMouse, setLoginLightRaysFollowMouse] = useState(true);
+  const [loginLightRaysMouseInfluence, setLoginLightRaysMouseInfluence] = useState(0.1);
+  const [loginLightRaysNoiseAmount, setLoginLightRaysNoiseAmount] = useState(0.1);
+  const [loginLightRaysDistortion, setLoginLightRaysDistortion] = useState(0.05);
   
   // Logo Settings
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -162,6 +205,18 @@ export default function CustomizationPage() {
       if (settings.loginButtonStyle) setLoginButtonStyle(settings.loginButtonStyle);
       if (settings.loginInputStyle) setLoginInputStyle(settings.loginInputStyle);
       if (settings.loginAnimations !== undefined) setLoginAnimations(settings.loginAnimations);
+      if (settings.loginLightRaysOrigin) setLoginLightRaysOrigin(settings.loginLightRaysOrigin);
+      if (settings.loginLightRaysColor) setLoginLightRaysColor(settings.loginLightRaysColor);
+      if (settings.loginLightRaysSpeed != null) setLoginLightRaysSpeed(settings.loginLightRaysSpeed);
+      if (settings.loginLightRaysSpread != null) setLoginLightRaysSpread(settings.loginLightRaysSpread);
+      if (settings.loginLightRaysLength != null) setLoginLightRaysLength(settings.loginLightRaysLength);
+      if (settings.loginLightRaysPulsating != null) setLoginLightRaysPulsating(settings.loginLightRaysPulsating);
+      if (settings.loginLightRaysFadeDistance != null) setLoginLightRaysFadeDistance(settings.loginLightRaysFadeDistance);
+      if (settings.loginLightRaysSaturation != null) setLoginLightRaysSaturation(settings.loginLightRaysSaturation);
+      if (settings.loginLightRaysFollowMouse != null) setLoginLightRaysFollowMouse(settings.loginLightRaysFollowMouse);
+      if (settings.loginLightRaysMouseInfluence != null) setLoginLightRaysMouseInfluence(settings.loginLightRaysMouseInfluence);
+      if (settings.loginLightRaysNoiseAmount != null) setLoginLightRaysNoiseAmount(settings.loginLightRaysNoiseAmount);
+      if (settings.loginLightRaysDistortion != null) setLoginLightRaysDistortion(settings.loginLightRaysDistortion);
       if (settings.loginWelcomeMessage) setLoginWelcomeMessage(settings.loginWelcomeMessage);
       if (settings.loginFooterText) setLoginFooterText(settings.loginFooterText);
       
@@ -219,6 +274,18 @@ export default function CustomizationPage() {
         loginButtonStyle,
         loginInputStyle,
         loginAnimations,
+        loginLightRaysOrigin,
+        loginLightRaysColor,
+        loginLightRaysSpeed,
+        loginLightRaysSpread,
+        loginLightRaysLength,
+        loginLightRaysPulsating,
+        loginLightRaysFadeDistance,
+        loginLightRaysSaturation,
+        loginLightRaysFollowMouse,
+        loginLightRaysMouseInfluence,
+        loginLightRaysNoiseAmount,
+        loginLightRaysDistortion,
       };
       
       const response = await fetch('/api/customization', {
@@ -287,6 +354,29 @@ export default function CustomizationPage() {
         setLoginBackgroundImage(e.target?.result as string);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  // Generate background styles
+  const getBackgroundStyle = () => {
+    switch (loginBackgroundType) {
+      case 'solid':
+        return {
+          background: loginBackgroundColor1 || '#0F1419',
+        };
+      case 'image':
+        return {
+          background: loginBackgroundImage ? `url(${loginBackgroundImage}) cover center no-repeat` : undefined,
+        };
+      case 'lightrays':
+        return {
+          background: '#0a0a0a', // Dark base for light rays
+        };
+      case 'gradient':
+      default:
+        return {
+          background: `linear-gradient(135deg, ${loginBackgroundColor1 || '#0F1419'} 0%, ${loginBackgroundColor2 || '#1E293B'} 100%)`,
+        };
     }
   };
 
@@ -577,7 +667,7 @@ export default function CustomizationPage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Image className="h-5 w-5" />
+                    <ImageIcon className="h-5 w-5" />
                     Background Settings
                   </CardTitle>
                   <CardDescription>
@@ -589,7 +679,7 @@ export default function CustomizationPage() {
                     <Label>Background Type</Label>
                     <RadioGroup
                       value={loginBackgroundType}
-                      onValueChange={(value: 'gradient' | 'solid' | 'image') => setLoginBackgroundType(value)}
+  onValueChange={(value: 'gradient' | 'solid' | 'image' | 'lightrays') => setLoginBackgroundType(value)}
                       className="flex flex-col space-y-2"
                     >
                       <div className="flex items-center space-x-2">
@@ -603,6 +693,10 @@ export default function CustomizationPage() {
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="image" id="image" />
                         <Label htmlFor="image">Background Image</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="lightrays" id="lightrays" />
+                        <Label htmlFor="lightrays">LightRays</Label>
                       </div>
                     </RadioGroup>
                   </div>
@@ -692,6 +786,161 @@ export default function CustomizationPage() {
                       </div>
                     </div>
                   )}
+
+                  {loginBackgroundType === 'lightrays' && (
+                    <div className="space-y-4">
+                      <Label>LightRays Settings</Label>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Origin</Label>
+                          <Select value={loginLightRaysOrigin} onValueChange={(value: any) => setLoginLightRaysOrigin(value)}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="top-center">Top Center</SelectItem>
+                              <SelectItem value="top-left">Top Left</SelectItem>
+                              <SelectItem value="top-right">Top Right</SelectItem>
+                              <SelectItem value="right">Right</SelectItem>
+                              <SelectItem value="left">Left</SelectItem>
+                              <SelectItem value="bottom-center">Bottom Center</SelectItem>
+                              <SelectItem value="bottom-right">Bottom Right</SelectItem>
+                              <SelectItem value="bottom-left">Bottom Left</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Color</Label>
+                          <div className="flex gap-2">
+                            <Input
+                              type="color"
+                              value={loginLightRaysColor}
+                              onChange={(e) => setLoginLightRaysColor(e.target.value)}
+                              className="w-16 h-10 p-1 border rounded"
+                            />
+                            <Input
+                              value={loginLightRaysColor}
+                              onChange={(e) => setLoginLightRaysColor(e.target.value)}
+                              placeholder="#00ffff"
+                              className="flex-1"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Speed: {loginLightRaysSpeed}</Label>
+                          <Slider
+                            value={[loginLightRaysSpeed]}
+                            onValueChange={([value]) => setLoginLightRaysSpeed(value)}
+                            max={5}
+                            min={0}
+                            step={0.1}
+                            className="w-full"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Spread: {loginLightRaysSpread}</Label>
+                          <Slider
+                            value={[loginLightRaysSpread]}
+                            onValueChange={([value]) => setLoginLightRaysSpread(value)}
+                            max={2}
+                            min={0}
+                            step={0.1}
+                            className="w-full"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Length: {loginLightRaysLength}</Label>
+                          <Slider
+                            value={[loginLightRaysLength]}
+                            onValueChange={([value]) => setLoginLightRaysLength(value)}
+                            max={3}
+                            min={0}
+                            step={0.1}
+                            className="w-full"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Fade Distance: {loginLightRaysFadeDistance}</Label>
+                          <Slider
+                            value={[loginLightRaysFadeDistance]}
+                            onValueChange={([value]) => setLoginLightRaysFadeDistance(value)}
+                            max={2}
+                            min={0}
+                            step={0.1}
+                            className="w-full"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Saturation: {loginLightRaysSaturation}</Label>
+                          <Slider
+                            value={[loginLightRaysSaturation]}
+                            onValueChange={([value]) => setLoginLightRaysSaturation(value)}
+                            max={2}
+                            min={0}
+                            step={0.1}
+                            className="w-full"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Mouse Influence: {loginLightRaysMouseInfluence}</Label>
+                          <Slider
+                            value={[loginLightRaysMouseInfluence]}
+                            onValueChange={([value]) => setLoginLightRaysMouseInfluence(value)}
+                            max={1}
+                            min={0}
+                            step={0.01}
+                            className="w-full"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Noise Amount: {loginLightRaysNoiseAmount}</Label>
+                          <Slider
+                            value={[loginLightRaysNoiseAmount]}
+                            onValueChange={([value]) => setLoginLightRaysNoiseAmount(value)}
+                            max={1}
+                            min={0}
+                            step={0.01}
+                            className="w-full"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Distortion: {loginLightRaysDistortion}</Label>
+                          <Slider
+                            value={[loginLightRaysDistortion]}
+                            onValueChange={([value]) => setLoginLightRaysDistortion(value)}
+                            max={0.5}
+                            min={0}
+                            step={0.01}
+                            className="w-full"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="pulsating"
+                          checked={loginLightRaysPulsating}
+                          onCheckedChange={setLoginLightRaysPulsating}
+                        />
+                        <Label htmlFor="pulsating">Pulsating</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="follow-mouse"
+                          checked={loginLightRaysFollowMouse}
+                          onCheckedChange={setLoginLightRaysFollowMouse}
+                        />
+                        <Label htmlFor="follow-mouse">Follow Mouse</Label>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -750,7 +999,7 @@ export default function CustomizationPage() {
 
                     <div className="space-y-2">
                       <Label>Shadow Style</Label>
-                      <Select value={loginCardShadow} onValueChange={setLoginCardShadow}>
+                      <Select value={loginCardShadow} onValueChange={(value) => setLoginCardShadow(value as 'none' | 'small' | 'medium' | 'large' | 'xl')}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -932,32 +1181,43 @@ export default function CustomizationPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div 
+                  <div
                     className={`relative w-full h-[500px] rounded-lg overflow-hidden border transition-all duration-300 ${
                       loginAnimations ? 'hover:scale-[1.02]' : ''
                     }`}
-                    style={{
-                      background: loginBackgroundType === 'gradient' 
-                        ? `linear-gradient(135deg, ${loginBackgroundColor1} 0%, ${loginBackgroundColor2} 100%)`
-                        : loginBackgroundType === 'solid'
-                        ? loginBackgroundColor1
-                        : loginBackgroundImage
-                        ? `url(${loginBackgroundImage})`
-                        : 'linear-gradient(135deg, #0F1419 0%, #1E293B 100%)',
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                    }}
+                    style={getBackgroundStyle()}
                   >
                     {/* Background overlay for image */}
                     {loginBackgroundType === 'image' && (
                       <div className="absolute inset-0 bg-black bg-opacity-40" />
                     )}
+
+                    {/* LightRays background */}
+                    {loginBackgroundType === 'lightrays' && (
+                      <div className="absolute inset-0 z-0">
+                        <LightRays
+                          raysOrigin={loginLightRaysOrigin}
+                          raysColor={loginLightRaysColor}
+                          raysSpeed={loginLightRaysSpeed}
+                          lightSpread={loginLightRaysSpread}
+                          rayLength={loginLightRaysLength}
+                          pulsating={loginLightRaysPulsating}
+                          fadeDistance={loginLightRaysFadeDistance}
+                          saturation={loginLightRaysSaturation}
+                          followMouse={loginLightRaysFollowMouse}
+                          mouseInfluence={loginLightRaysMouseInfluence}
+                          noiseAmount={loginLightRaysNoiseAmount}
+                          distortion={loginLightRaysDistortion}
+                          className="w-full h-full"
+                        />
+                      </div>
+                    )}
                     
                     {/* Login Card Preview */}
-                    <div 
-                      className={`absolute inset-0 flex p-4 ${
-                        loginCardPosition === 'left' 
-                          ? 'justify-start items-center' 
+                    <div
+                      className={`absolute inset-0 flex p-4 z-10 ${
+                        loginCardPosition === 'left'
+                          ? 'justify-start items-center'
                           : loginCardPosition === 'right'
                           ? 'justify-end items-center'
                           : 'justify-center items-center'
@@ -1190,7 +1450,7 @@ export default function CustomizationPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Image className="h-5 w-5" />
+                  <ImageIcon className="h-5 w-5" />
                   Company Logo (Fallback)
                 </CardTitle>
                 <CardDescription>
@@ -1231,7 +1491,7 @@ export default function CustomizationPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Image className="h-5 w-5" />
+                  <ImageIcon className="h-5 w-5" />
                   Favicon
                 </CardTitle>
                 <CardDescription>

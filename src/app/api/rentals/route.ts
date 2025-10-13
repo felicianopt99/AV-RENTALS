@@ -4,8 +4,19 @@ import { z } from 'zod'
 
 const RentalSchema = z.object({
   eventId: z.string(),
-  equipmentId: z.string(),
-  quantityRented: z.number().min(1),
+  equipment: z.array(
+    z.object({
+      equipmentId: z.string(),
+      quantity: z.number().min(1),
+    })
+  ).min(1),
+  notes: z.string().optional(),
+})
+
+const SingleRentalUpdateSchema = z.object({
+  eventId: z.string().optional(),
+  equipmentId: z.string().optional(),
+  quantityRented: z.number().min(1).optional(),
   prepStatus: z.enum(['pending', 'checked-out', 'checked-in']).optional(),
 })
 
@@ -36,31 +47,60 @@ export async function GET() {
   }
 }
 
-// POST /api/rentals - Create new rental
+// POST /api/rentals - Create new rentals
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const validatedData = RentalSchema.parse(body)
-    
-    const rental = await prisma.rental.create({
-      data: validatedData,
-      include: {
-        event: {
-          include: {
-            client: true,
-          }
-        },
-        equipment: true,
-      },
+
+    // Check if event exists
+    const event = await prisma.event.findUnique({
+      where: { id: validatedData.eventId },
     })
-    
-    return NextResponse.json(rental, { status: 201 })
+    if (!event) {
+      return NextResponse.json({ error: 'Event not found' }, { status: 404 })
+    }
+
+    const rentals = []
+    for (const item of validatedData.equipment) {
+      // Check if equipment exists
+      const equipment = await prisma.equipmentItem.findUnique({
+        where: { id: item.equipmentId },
+      })
+      if (!equipment) {
+        return NextResponse.json({ error: `Equipment ${item.equipmentId} not found` }, { status: 404 })
+      }
+
+      const rental = await prisma.rental.create({
+        data: {
+          eventId: validatedData.eventId,
+          equipmentId: item.equipmentId,
+          quantityRented: item.quantity,
+        },
+        include: {
+          event: {
+            include: {
+              client: true,
+            }
+          },
+          equipment: {
+            include: {
+              category: true,
+              subcategory: true,
+            }
+          },
+        },
+      })
+      rentals.push(rental)
+    }
+
+    return NextResponse.json(rentals, { status: 201 })
   } catch (error) {
-    console.error('Error creating rental:', error)
+    console.error('Error creating rentals:', error)
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Invalid data', details: error.errors }, { status: 400 })
     }
-    return NextResponse.json({ error: 'Failed to create rental' }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to create rentals' }, { status: 500 })
   }
 }
 
@@ -74,7 +114,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Rental ID is required' }, { status: 400 })
     }
     
-    const validatedData = RentalSchema.partial().parse(updateData)
+    const validatedData = SingleRentalUpdateSchema.parse(updateData)
     
     const rental = await prisma.rental.update({
       where: { id },

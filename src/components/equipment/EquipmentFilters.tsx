@@ -62,8 +62,8 @@ export function EquipmentFilters({
   );
 
   return (
-    <div className="mb-8 p-6 bg-card rounded-xl shadow-lg border border-border/50">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-4 items-end">
+    <div className="mb-4 md:mb-8 p-3 md:p-6 bg-card rounded-xl shadow-lg border border-border/50">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-3 md:gap-x-6 gap-y-3 md:gap-y-4 items-end">
         <div>
           <label htmlFor="search" className="block text-sm font-medium text-muted-foreground mb-1.5">Search Equipment</label>
           <div className="relative">
@@ -170,7 +170,7 @@ export function EquipmentFilters({
           </Select>
         </div>
 
-        <Button onClick={clearFilters} variant="outline" className="w-full md:w-auto h-11 text-base font-medium">
+        <Button onClick={clearFilters} variant="outline" className="w-full h-11 text-base font-medium">
           <X className="mr-2 h-4 w-4" /> Clear Filters
         </Button>
       </div>

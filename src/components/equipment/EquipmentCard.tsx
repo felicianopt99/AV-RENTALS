@@ -45,68 +45,109 @@ export function EquipmentCard({ item, category, subcategory, onEdit, onDelete }:
 
   return (
     <>
-      <Card className="flex flex-col overflow-hidden shadow-lg hover:shadow-primary/20 transition-all duration-300 ease-in-out transform hover:-translate-y-1 bg-card border border-border/50 rounded-lg">
+      <Card
+        className={
+          "group flex flex-col overflow-hidden h-full rounded-lg sm:rounded-2xl md:rounded-3xl border border-border/40 bg-card/80 card-gradient glass-card transition-all duration-300 ease-out " +
+          "hover:shadow-2xl hover:shadow-primary/10 active:scale-[0.99]"
+        }
+        aria-label={item.name}
+      >
         <CardHeader className="p-0">
-          <div className="relative w-full aspect-[16/10] rounded-t-lg overflow-hidden">
-            <Image 
-              src={item.imageUrl || `https://placehold.co/600x400.png`} 
-              alt={item.name} 
+          <div className="relative w-full aspect-[16/10] overflow-hidden">
+            <Image
+              src={item.imageUrl || `https://placehold.co/600x400.png`}
+              alt={item.name}
               fill
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
               className="object-contain"
               data-ai-hint="equipment audiovisual"
             />
+            {/* top overlay for status */}
+            <div className="absolute left-2 top-2">
+              <Badge
+                variant="outline"
+                className={"px-2 py-0.5 text-[10px] sm:text-xs rounded-full " + getStatusColor(item.status)}
+              >
+                {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+              </Badge>
+            </div>
+            {/* bottom overlay for price per day when applicable */}
+            {item.dailyRate > 0 && (
+              <div className="absolute right-2 bottom-2">
+                <div className="rounded-full bg-background/80 backdrop-blur px-2 py-0.5 text-[10px] sm:text-xs border border-border/50">
+                  €{item.dailyRate.toFixed(2)} / day
+                </div>
+              </div>
+            )}
           </div>
         </CardHeader>
-        <CardContent className="p-5 flex-grow flex flex-col">
-          <div className="mb-2">
-            <CardTitle className="text-xl font-semibold line-clamp-2">{item.name}</CardTitle>
+        <CardContent className="p-3 sm:p-4 md:p-5 flex-grow flex flex-col">
+          <div className="mb-1.5 sm:mb-2">
+            <CardTitle className="text-base sm:text-lg md:text-xl font-semibold leading-tight line-clamp-2">
+              {item.name}
+            </CardTitle>
             {itemCategory && (
-              <div className="flex items-center text-xs text-muted-foreground mt-1.5">
-                <CategoryIconMapper iconName={itemCategory.icon} className="w-3.5 h-3.5 mr-1.5" />
+              <div className="flex items-center text-[10px] sm:text-xs text-muted-foreground mt-1">
+                <CategoryIconMapper iconName={itemCategory.icon} className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1 sm:mr-1.5 flex-shrink-0" />
                 <span className="truncate">{itemCategory.name} {subcategory ? `> ${subcategory.name}` : ''}</span>
               </div>
             )}
           </div>
-          <CardDescription className="text-sm text-muted-foreground mb-3 flex-grow max-h-20 overflow-y-auto scrollbar-thin">
+          <CardDescription className="text-xs sm:text-sm text-muted-foreground/90 mb-2 sm:mb-3 flex-grow line-clamp-3 sm:line-clamp-4">
             {item.description}
           </CardDescription>
-          <div className="space-y-1.5 text-xs text-muted-foreground/80 mt-auto">
-            <p><span className="font-medium">Location:</span> {item.location}</p>
-            <p><span className="font-medium">Available:</span> {item.quantity}</p>
+          <div className="grid grid-cols-2 gap-2 text-[10px] sm:text-xs text-muted-foreground/80 mt-auto">
+            <div className="truncate"><span className="font-medium text-foreground/80">Location:</span> {item.location}</div>
+            <div className="text-right"><span className="font-medium text-foreground/80">Available:</span> {item.quantity}</div>
           </div>
         </CardContent>
-        <CardFooter className="p-4 flex justify-between items-center border-t border-border/50">
-          <Badge variant="outline" className={`py-1 px-2.5 text-xs ${getStatusColor(item.status)}`}>{item.status.charAt(0).toUpperCase() + item.status.slice(1)}</Badge>
-          <div className="flex gap-1">
-            <Button variant="ghost" size="sm" onClick={() => setIsQrCodeOpen(true)} aria-label="Show QR code" className="text-muted-foreground hover:text-primary">
-                <QrCode className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => onEdit(item)} aria-label="Edit item" className="text-muted-foreground hover:text-primary">
-              <Pencil className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => onDelete(item.id)} aria-label="Delete item" className="text-muted-foreground hover:text-destructive">
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
+        <CardFooter className="p-2.5 sm:p-3 md:p-4 flex justify-end items-center gap-0.5 sm:gap-1 border-t border-border/40">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsQrCodeOpen(true)}
+            aria-label="Show QR code"
+            className="text-muted-foreground hover:text-primary h-7 w-7 sm:h-8 sm:w-8 p-0"
+            title="Show QR code"
+          >
+            <QrCode className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onEdit(item)}
+            aria-label="Edit item"
+            className="text-muted-foreground hover:text-primary h-7 w-7 sm:h-8 sm:w-8 p-0"
+            title="Edit"
+          >
+            <Pencil className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onDelete(item.id)}
+            aria-label="Delete item"
+            className="text-muted-foreground hover:text-destructive h-7 w-7 sm:h-8 sm:w-8 p-0"
+            title="Delete"
+          >
+            <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          </Button>
         </CardFooter>
       </Card>
 
       <Dialog open={isQrCodeOpen} onOpenChange={setIsQrCodeOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md w-[90vw]">
           <DialogHeader>
-            <DialogTitle>QR Code for {item.name}</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-base sm:text-lg">{item.name}</DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm">
               Scan this code to quickly access the equipment details page.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex items-center justify-center p-4 bg-white rounded-lg">
-            {qrCodeUrl && <QRCode value={qrCodeUrl} size={256} />}
+          <div className="flex items-center justify-center p-3 sm:p-4 bg-card rounded-lg border border-border/40">
+            {qrCodeUrl && <QRCode value={qrCodeUrl} size={200} className="w-full max-w-[256px] h-auto" />}
           </div>
         </DialogContent>
       </Dialog>
     </>
   );
 }
-
-    

@@ -1,4 +1,4 @@
-
+ 
 
 "use client";
 
@@ -144,8 +144,8 @@ export function InventoryGridView() {
 
   if (!isDataLoaded) {
     return (
-        <div className="flex flex-col h-full">
-            <div className="flex-grow flex items-center justify-center p-4 md:p-6">
+      <div className="flex flex-col">
+        <div className="flex-grow flex items-center justify-center p-4 md:p-6">
                 <p className="text-lg text-muted-foreground">Loading inventory data...</p>
             </div>
         </div>
@@ -176,11 +176,11 @@ export function InventoryGridView() {
         locations={locations}
       />
 
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <label className="text-sm font-medium">Sort by:</label>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4 md:mb-6 gap-3 sm:gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+          <label className="text-xs sm:text-sm font-medium">Sort by:</label>
           <Select value={sortBy} onValueChange={(value) => setSortBy(value as typeof sortBy)}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-full sm:w-36 md:w-40 text-xs sm:text-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -191,9 +191,10 @@ export function InventoryGridView() {
               <SelectItem value="location">Location</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" size="sm" onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}>
-            <ArrowUpDown className="h-4 w-4 mr-2" />
-            {sortOrder === 'asc' ? 'Ascending' : 'Descending'}
+          <Button variant="outline" size="sm" onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} className="w-full sm:w-auto text-xs sm:text-sm">
+            <ArrowUpDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+            <span className="hidden xs:inline">{sortOrder === 'asc' ? 'Ascending' : 'Descending'}</span>
+            <span className="xs:hidden">{sortOrder === 'asc' ? 'Asc' : 'Desc'}</span>
           </Button>
         </div>
       </div>
@@ -209,11 +210,11 @@ export function InventoryGridView() {
             {groupedEquipment.length > 0 && (
               <div className="space-y-12">
                 {groupedEquipment.map(([categoryName, items]) => (
-                  <section key={categoryName} className="px-2 md:px-0">
-                  <h2 className="text-3xl font-bold mb-6 pb-2 border-b border-border/70 text-primary">
+                  <section key={categoryName} className="px-1 sm:px-2 md:px-0">
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 pb-2 border-b border-border/70 text-primary">
                       {categoryName}
                   </h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-8">
+          <div className="grid [grid-template-columns:repeat(auto-fill,minmax(180px,1fr))] gap-3 sm:gap-4 md:gap-6">
                       {items.map(item => (
                       <EquipmentCard
                           key={item.id}
@@ -231,11 +232,11 @@ export function InventoryGridView() {
             )}
             
             {consumableItems.length > 0 && (
-                <section className="px-2 md:px-0">
-                    <h2 className="text-3xl font-bold mb-6 pb-2 border-b border-border/70 text-primary flex items-center">
-                        <Box className="mr-3 h-8 w-8" /> Consumables
+                <section className="px-1 sm:px-2 md:px-0">
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 pb-2 border-b border-border/70 text-primary flex items-center">
+                        <Box className="mr-2 sm:mr-3 h-6 w-6 sm:h-8 sm:w-8" /> Consumables
                     </h2>
-                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-8">
+              <div className="grid [grid-template-columns:repeat(auto-fill,minmax(180px,1fr))] gap-3 sm:gap-4 md:gap-6">
                         {consumableItems.map(item => (
                             <EquipmentCard
                                 key={item.id}
@@ -254,31 +255,33 @@ export function InventoryGridView() {
       )}
 
       {regularEquipment.length > itemsPerPage && (
-        <div className="flex items-center justify-between mt-6">
-          <div className="text-sm text-muted-foreground">
-            Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, regularEquipment.length)} of {regularEquipment.length} equipment items
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 mt-4 sm:mt-6">
+          <div className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
+            Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, regularEquipment.length)} of {regularEquipment.length} items
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1 sm:space-x-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
+              className="text-xs sm:text-sm h-8 sm:h-9"
             >
-              <ChevronLeft className="h-4 w-4" />
-              Previous
+              <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden xs:inline ml-1">Previous</span>
             </Button>
-            <span className="px-3 py-1 text-sm">
-              Page {currentPage} of {totalPages}
+            <span className="px-2 sm:px-3 py-1 text-xs sm:text-sm whitespace-nowrap">
+              {currentPage} / {totalPages}
             </span>
             <Button
               variant="outline"
               size="sm"
               onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
               disabled={currentPage === totalPages}
+              className="text-xs sm:text-sm h-8 sm:h-9"
             >
-              Next
-              <ChevronRight className="h-4 w-4" />
+              <span className="hidden xs:inline mr-1">Next</span>
+              <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </Button>
           </div>
         </div>
@@ -305,5 +308,3 @@ export function InventoryGridView() {
     </>
   );
 }
-
-    

@@ -1,4 +1,4 @@
- 
+  
 
 "use client";
 
@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import type { Rental, EquipmentItem, Event } from '@/types';
 import { useAppContext, useAppDispatch } from '@/contexts/AppContext';
 import { format, isWithinInterval, startOfDay, endOfDay, parseISO } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
@@ -32,6 +33,11 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 
+import Papa from 'papaparse';
+import jsPDF from 'jspdf';
+import { createEvents } from 'ics';
+import { CalendarExport } from './CalendarExport';
+
 interface RentalCalendarViewProps {
   searchQuery: string;
   filters: { equipment?: string; client?: string; category?: string };
@@ -42,24 +48,158 @@ export function RentalCalendarView({ searchQuery, filters }: RentalCalendarViewP
   const { rentals, equipment, events, isDataLoaded, clients, categories } = useAppContext();
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [tooltip, setTooltip] = useState<{ visible: boolean; content: string; x: number; y: number }>({ visible: false, content: '', x: 0, y: 0 });
+  const [isMobile, setIsMobile] = useState(false);
+  const [showMobileEventsList, setShowMobileEventsList] = useState(false);
   const calendarRef = useRef<any>(null);
 
   useEffect(() => {
     // Set initial date to today
     setSelectedDate(new Date());
+    
+    // Check if mobile
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  useEffect(() => {
+    let hammer: any = null;
+    
+    const setupSwipeGestures = async () => {
+      if (calendarRef.current && typeof window !== 'undefined') {
+        const { default: Hammer } = await import('hammerjs');
+        const api = calendarRef.current.getApi();
+        hammer = new Hammer(api.el);
+        hammer.on('swipeleft', () => api.next());
+        hammer.on('swiperight', () => api.prev());
+      }
+    };
+
+    setupSwipeGestures();
+
+    return () => {
+      if (hammer) {
+        hammer.destroy();
+      }
+    };
+  }, [calendarRef.current]);
 
 
 
   const handleDateClick = (info: any) => {
     setSelectedDate(info.date);
+    if (isMobile) {
+      setShowMobileEventsList(true);
+    }
   };
 
   const handleDatesSet = (info: any) => {
     setSelectedDate(info.start);
+  };
+
+  const handleEventMouseEnter = (info: any) => {
+    const event = info.event;
+    const extendedProps = event.extendedProps;
+    const client = clients.find(c => c.id === extendedProps.event.clientId);
+    const content = `
+      <div>
+        <strong>${event.title}</strong><br/>
+        Client: ${client?.name || 'Unknown'}<br/>
+        Dates: ${format(new Date(extendedProps.event.startDate), 'MMM dd')} - ${format(new Date(extendedProps.event.endDate), 'MMM dd')}<br/>
+        Rentals: ${extendedProps.rentals.length} items
+      </div>
+    `;
+    setTooltip({
+      visible: true,
+      content,
+      x: info.jsEvent.pageX,
+      y: info.jsEvent.pageY,
+    });
+  };
+
+  const handleEventMouseLeave = () => {
+    setTooltip({ visible: false, content: '', x: 0, y: 0 });
+  };
+
+  const handleEventDrop = (info: any) => {
+    const event = info.event;
+    const newStart = event.start;
+    const newEnd = event.end;
+    const eventId = event.id;
+    const originalEvent = events.find(e => e.id === eventId);
+    if (!originalEvent) return;
+    const updatedEvent = { ...originalEvent, startDate: newStart.toISOString(), endDate: newEnd.toISOString() };
+    dispatch.updateEvent(updatedEvent);
+    toast({ title: 'Event Rescheduled', description: `Event moved to ${format(newStart, 'PPP')} - ${format(newEnd, 'PPP')}` });
+  };
+
+  const handleExportCSV = () => {
+    const data = eventsWithRentals.map(event => ({
+      Name: event.name,
+      Client: clients.find(c => c.id === event.clientId)?.name || 'Unknown',
+      Start: event.startDate,
+      End: event.endDate,
+      Rentals: event.rentals.length,
+    }));
+    const csv = Papa.unparse(data);
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'events.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    doc.text('Events List', 10, 10);
+    let y = 20;
+    eventsWithRentals.forEach(event => {
+      doc.text(`${event.name} - ${event.startDate} to ${event.endDate}`, 10, y);
+      y += 10;
+      if (y > 280) {
+        doc.addPage();
+        y = 20;
+      }
+    });
+    doc.save('events.pdf');
+  };
+
+  const handleExportICS = () => {
+    const eventsForICS = eventsWithRentals.map(event => {
+      const start = new Date(event.startDate);
+      const end = new Date(event.endDate);
+      return {
+        title: event.name,
+        start: [start.getFullYear(), start.getMonth() + 1, start.getDate()] as [number, number, number],
+        end: [end.getFullYear(), end.getMonth() + 1, end.getDate()] as [number, number, number],
+        description: `Client: ${clients.find(c => c.id === event.clientId)?.name || 'Unknown'}`,
+      };
+    });
+    const { error, value } = createEvents(eventsForICS);
+    if (error) {
+      console.error(error);
+      return;
+    }
+    if (value) {
+      const blob = new Blob([value], { type: 'text/calendar' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'events.ics';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
   };
 
   const dayCellClassNames = (arg: any) => {
@@ -240,7 +380,7 @@ export function RentalCalendarView({ searchQuery, filters }: RentalCalendarViewP
 
   if (!isDataLoaded || selectedDate === undefined) {
     return (
-        <div className="flex flex-col h-screen">
+        <div className="flex flex-col">
             <div className="flex-grow flex items-center justify-center">
                 <p className="text-lg text-muted-foreground">Loading calendar data...</p>
             </div>
@@ -252,15 +392,138 @@ export function RentalCalendarView({ searchQuery, filters }: RentalCalendarViewP
 
   return (
     <>
-      <div className="grid md:grid-cols-4 gap-6 h-full">
-        <div className="md:col-span-3">
+      {tooltip.visible && (
+        <div
+          className="fixed z-50 bg-background shadow-lg border rounded-md p-3 max-w-xs text-sm pointer-events-none"
+          style={{ left: tooltip.x + 10, top: tooltip.y - 10 }}
+          dangerouslySetInnerHTML={{ __html: tooltip.content }}
+        />
+      )}
+      <div className={`grid gap-4 md:gap-6 h-full ${isMobile ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-4'}`}>
+        <div className={isMobile ? 'col-span-1' : 'lg:col-span-3'}>
           <Card className="shadow-lg h-full">
-            <CardHeader>
-              <CardTitle>Equipment Rental Calendar</CardTitle>
-              <CardDescription>Click on an event to view details. Select a date to see active rentals. Dates with rentals are highlighted. Dates with conflicts are marked in red.</CardDescription>
+            <CardHeader className="flex flex-col space-y-3 p-3 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                <div className="flex-1">
+                  <CardTitle className="text-lg sm:text-xl">Equipment Rental Calendar</CardTitle>
+                  <CardDescription className="text-sm mt-1">
+                    {isMobile ? 'Tap events for details. Swipe to navigate.' : 'Click on an event to view details. Select a date to see active rentals. Dates with rentals are highlighted. Dates with conflicts are marked in red.'}
+                  </CardDescription>
+                </div>
+                {!isMobile && (
+                  <div className="flex-shrink-0">
+                    <CalendarExport onExportCSV={handleExportCSV} onExportPDF={handleExportPDF} onExportICS={handleExportICS} />
+                  </div>
+                )}
+              </div>
+              {isMobile && (
+                <div className="flex justify-center">
+                  <CalendarExport onExportCSV={handleExportCSV} onExportPDF={handleExportPDF} onExportICS={handleExportICS} />
+                </div>
+              )}
             </CardHeader>
-            <CardContent className="p-0 h-[600px]">
-              <div className="h-full">
+            <CardContent className={`p-1 sm:p-4 ${isMobile ? 'h-[400px]' : 'h-[500px] sm:h-[600px] lg:h-[700px]'}`}>
+              <style jsx>{`
+                .fc .fc-button {
+                  background-color: hsl(var(--primary));
+                  border-color: hsl(var(--primary));
+                  color: hsl(var(--primary-foreground));
+                }
+                .fc .fc-button:hover {
+                  background-color: hsl(var(--primary) / 0.8);
+                }
+                .fc .fc-today-button {
+                  background-color: hsl(var(--muted));
+                }
+                .fc .fc-header-toolbar {
+                  margin-bottom: 1rem;
+                  padding: 0.5rem;
+                }
+                .fc-event {
+                  border-radius: 4px;
+                  font-size: 0.875rem;
+                }
+                .fc .fc-daygrid-day-frame {
+                  min-height: 80px;
+                }
+                
+                @media (max-width: 768px) {
+                  .fc .fc-header-toolbar {
+                    flex-direction: column;
+                    gap: 0.5rem;
+                    margin-bottom: 0.5rem;
+                    padding: 0.25rem;
+                  }
+                  .fc .fc-toolbar-chunk {
+                    display: flex;
+                    flex-wrap: wrap;
+                    justify-content: center;
+                    gap: 0.25rem;
+                  }
+                  .fc .fc-button {
+                    padding: 6px 10px;
+                    font-size: 12px;
+                    min-width: 60px;
+                  }
+                  .fc .fc-toolbar-title {
+                    font-size: 1.1rem;
+                    margin: 0;
+                    text-align: center;
+                  }
+                  .fc-event {
+                    min-height: 32px;
+                    font-size: 11px;
+                    padding: 2px 4px;
+                    line-height: 1.2;
+                  }
+                  .fc .fc-daygrid-day-frame {
+                    min-height: 60px;
+                  }
+                  .fc .fc-daygrid-day-number {
+                    font-size: 0.875rem;
+                    padding: 4px;
+                  }
+                  .fc .fc-col-header-cell {
+                    padding: 8px 4px;
+                  }
+                  .fc .fc-daygrid-event {
+                    margin: 1px 2px;
+                  }
+                  .fc .fc-more-link {
+                    font-size: 11px;
+                    padding: 1px 4px;
+                  }
+                }
+                
+                @media (max-width: 480px) {
+                  .fc .fc-button {
+                    padding: 4px 8px;
+                    font-size: 11px;
+                    min-width: 50px;
+                  }
+                  .fc .fc-toolbar-title {
+                    font-size: 1rem;
+                  }
+                  .fc .fc-daygrid-day-frame {
+                    min-height: 50px;
+                  }
+                  .fc-event {
+                    font-size: 10px;
+                    min-height: 28px;
+                  }
+                }
+              `}</style>
+              <div className="h-full relative">
+                {/* Mobile floating button to show events */}
+                {isMobile && selectedDate && eventsForSelectedDate.length > 0 && (
+                  <Button
+                    onClick={() => setShowMobileEventsList(true)}
+                    className="absolute top-2 right-2 z-10 h-8 px-3 text-xs shadow-lg"
+                    size="sm"
+                  >
+                    {eventsForSelectedDate.length} event{eventsForSelectedDate.length !== 1 ? 's' : ''}
+                  </Button>
+                )}
                 <FullCalendar
                   ref={calendarRef}
                   plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, multiMonthPlugin]}
@@ -270,20 +533,33 @@ export function RentalCalendarView({ searchQuery, filters }: RentalCalendarViewP
                   dateClick={handleDateClick}
                   datesSet={handleDatesSet}
                   dayCellClassNames={dayCellClassNames}
-                  headerToolbar={{
+                  eventMouseEnter={isMobile ? undefined : handleEventMouseEnter}
+                  eventMouseLeave={isMobile ? undefined : handleEventMouseLeave}
+                  eventDrop={isMobile ? undefined : handleEventDrop}
+                  headerToolbar={isMobile ? {
+                    left: 'prev',
+                    center: 'title',
+                    right: 'next'
+                  } : {
                     left: 'prev,next today',
                     center: 'title',
-                    right: 'dayGridMonth,timeGridWeek,timeGridDay,multiMonthYear'
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
                   }}
-                  height="100%"
+                  footerToolbar={isMobile ? {
+                    left: 'today',
+                    center: '',
+                    right: 'dayGridMonth'
+                  } : undefined}
+                  height={isMobile ? 'auto' : '100%'}
+                  aspectRatio={isMobile ? 1 : 1.35}
                   eventDisplay="block"
                   slotMinTime="06:00:00"
                   slotMaxTime="22:00:00"
                   allDaySlot={false}
-                  editable={false}
+                  editable={!isMobile}
                   selectable={true}
                   selectMirror={true}
-                  dayMaxEvents={true}
+                  dayMaxEvents={isMobile ? 2 : 3}
                   weekends={true}
                   nowIndicator={true}
                   eventTimeFormat={{
@@ -291,40 +567,69 @@ export function RentalCalendarView({ searchQuery, filters }: RentalCalendarViewP
                     minute: '2-digit',
                     hour12: false
                   }}
-                  dayHeaderFormat={{ weekday: 'short' }}
-                  titleFormat={{
+                  dayHeaderFormat={isMobile ? { weekday: 'narrow' } : { weekday: 'short' }}
+                  titleFormat={isMobile ? {
+                    month: 'short',
+                    year: '2-digit'
+                  } : {
                     month: 'long',
                     year: 'numeric'
                   }}
                   buttonText={{
                     today: 'Today',
-                    month: 'Month',
+                    month: isMobile ? 'Month' : 'Month',
                     week: 'Week',
-                    day: 'Day',
-                    year: 'Year'
+                    day: 'Day'
                   }}
-                  views={{
-                    timeGridWeek: { dayHeaderFormat: { weekday: 'short', month: 'numeric', day: 'numeric' } },
-                    multiMonthYear: { titleFormat: { year: 'numeric' } }
+                  views={isMobile ? {
+                    dayGridMonth: { 
+                      dayHeaderFormat: { weekday: 'narrow' },
+                      dayMaxEvents: 2,
+                      moreLinkClick: 'popover',
+                      fixedWeekCount: false
+                    }
+                  } : {
+                    dayGridMonth: {
+                      dayMaxEvents: 3
+                    },
+                    timeGridWeek: { 
+                      dayHeaderFormat: { weekday: 'short', month: 'numeric', day: 'numeric' } 
+                    },
+                    multiMonthYear: { 
+                      titleFormat: { year: 'numeric' } 
+                    }
                   }}
                 />
               </div>
             </CardContent>
           </Card>
           {conflicts.length > 0 && (
-            <Card className="mt-6 shadow-lg bg-destructive/10 border-destructive/30">
-              <CardHeader>
-                <CardTitle className="text-destructive flex items-center">
-                  <AlertTriangle className="mr-2 h-5 w-5" /> Potential Overbooking Conflicts
+            <Card className="mt-4 md:mt-6 shadow-lg bg-destructive/10 border-destructive/30">
+              <CardHeader className="p-3 md:p-6">
+                <CardTitle className="text-destructive flex items-center text-sm md:text-base">
+                  <AlertTriangle className="mr-2 h-4 w-4 md:h-5 md:w-5 flex-shrink-0" /> 
+                  Potential Overbooking Conflicts
                 </CardTitle>
-                <CardDescription>Overview of all detected overbookings in the schedule.</CardDescription>
+                <CardDescription className="text-xs md:text-sm">
+                  Overview of all detected overbookings in the schedule.
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-40">
-                  <ul className="space-y-1 text-sm">
+              <CardContent className="p-3 md:p-6 pt-0">
+                <ScrollArea className={`${isMobile ? 'h-32' : 'h-40'}`}>
+                  <ul className="space-y-2 text-xs md:text-sm">
                     {conflicts.map((conflict, index) => (
-                      <li key={index}>
-                        {format(conflict.date, "PPP")}: <strong>{conflict.equipmentName}</strong> overbooked (Rented: {conflict.count} / Available: {conflict.available})
+                      <li key={index} className="p-2 bg-background/50 rounded border-l-2 border-destructive">
+                        <div className="flex flex-col space-y-1">
+                          <span className="font-medium">
+                            {format(conflict.date, isMobile ? "MMM dd" : "PPP")}
+                          </span>
+                          <span>
+                            <strong>{conflict.equipmentName}</strong> overbooked
+                          </span>
+                          <span className="text-muted-foreground">
+                            Rented: {conflict.count} / Available: {conflict.available}
+                          </span>
+                        </div>
                       </li>
                     ))}
                   </ul>
@@ -334,58 +639,127 @@ export function RentalCalendarView({ searchQuery, filters }: RentalCalendarViewP
           )}
         </div>
 
-        <div className={`${isCollapsed ? 'md:col-span-0 hidden md:block' : 'md:col-span-1'}`}>
-          <Card className="shadow-lg h-full">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-sm">
-                Events for {selectedDate ? format(selectedDate, "PPP") : 'No Date Selected'}
-              </CardTitle>
-              <Button variant="ghost" size="sm" onClick={() => setIsCollapsed(!isCollapsed)}>
-                {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-              </Button>
-            </CardHeader>
-            {!isCollapsed && (
-              <CardContent>
-                {eventsForSelectedDate.length > 0 ? (
-                  <ScrollArea className="h-80 lg:h-[calc(100vh-380px)]">
-                    <ul className="space-y-3">
-                      {eventsForSelectedDate.map(event => {
-                        const client = clients.find(c => c.id === event.clientId);
-                        const clientName = client?.name || 'Unknown Client';
-                        const totalRentals = event.rentals.length;
-                        const totalQuantity = event.rentals.reduce((sum: number, r: any) => sum + r.quantityRented, 0);
+        {!isMobile && (
+          <div className={`${isCollapsed ? 'lg:col-span-0 hidden lg:block' : 'lg:col-span-1'}`}>
+            <Card className="shadow-lg h-full">
+              <CardHeader className="flex flex-row items-center justify-between p-4">
+                <CardTitle className="text-sm lg:text-base">
+                  Events for {selectedDate ? format(selectedDate, "MMM dd") : 'No Date Selected'}
+                </CardTitle>
+                <Button variant="ghost" size="sm" onClick={() => setIsCollapsed(!isCollapsed)}>
+                  {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                </Button>
+              </CardHeader>
+              {!isCollapsed && (
+                <CardContent className="p-4">
+                  {eventsForSelectedDate.length > 0 ? (
+                    <ScrollArea className="h-80 lg:h-96 xl:h-[min(500px,calc(100vh-400px))]">
+                      <ul className="space-y-3">
+                        {eventsForSelectedDate.map(event => {
+                          const client = clients.find(c => c.id === event.clientId);
+                          const clientName = client?.name || 'Unknown Client';
+                          const totalRentals = event.rentals.length;
+                          const totalQuantity = event.rentals.reduce((sum: number, r: any) => sum + r.quantityRented, 0);
 
-                        return (
-                          <li
-                            key={event.id}
-                            className="p-3 border rounded-md bg-card-foreground/5 group transition-colors hover:bg-muted"
-                          >
-                            <div className="flex justify-between items-start">
-                              <div className="flex-grow">
-                                <p className="font-semibold">{event.name}</p>
-                                <p className="text-xs text-muted-foreground">Client: {clientName}</p>
-                                <p className="text-xs text-muted-foreground">Rentals: {totalRentals} items, Qty: {totalQuantity}</p>
-                                <p className="text-xs text-muted-foreground">Dates: {format(new Date(event.startDate), 'MMM dd')} - {format(new Date(event.endDate), 'MMM dd')}</p>
+                          return (
+                            <li
+                              key={event.id}
+                              className="p-3 border rounded-md bg-card-foreground/5 group transition-colors hover:bg-muted"
+                            >
+                              <div className="flex flex-col gap-2">
+                                <div className="flex-grow">
+                                  <p className="font-semibold text-sm">{event.name}</p>
+                                  <p className="text-xs text-muted-foreground">Client: {clientName}</p>
+                                  <p className="text-xs text-muted-foreground">Items: {totalRentals}, Qty: {totalQuantity}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {format(new Date(event.startDate), 'MMM dd')} - {format(new Date(event.endDate), 'MMM dd')}
+                                  </p>
+                                </div>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={() => setSelectedEvent(event)}
+                                  className="self-start"
+                                >
+                                  View Details
+                                </Button>
                               </div>
-                              <Button variant="outline" size="sm" onClick={() => setSelectedEvent(event)}>
-                                View Details
-                              </Button>
-                            </div>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </ScrollArea>
-                ) : (
-                  <p className="text-muted-foreground">
-                    {selectedDate ? "No events scheduled for this date." : "Select a date to see events."}
-                  </p>
-                )}
-              </CardContent>
-            )}
-          </Card>
-        </div>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </ScrollArea>
+                  ) : (
+                    <p className="text-muted-foreground text-sm">
+                      {selectedDate ? "No events scheduled for this date." : "Select a date to see events."}
+                    </p>
+                  )}
+                </CardContent>
+              )}
+            </Card>
+          </div>
+        )}
       </div>
+
+      {/* Mobile Events List Dialog */}
+      {isMobile && showMobileEventsList && (
+        <Dialog open={showMobileEventsList} onOpenChange={setShowMobileEventsList}>
+          <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-lg">
+                Events for {selectedDate ? format(selectedDate, "PPP") : 'Selected Date'}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              {eventsForSelectedDate.length > 0 ? (
+                <ScrollArea className="h-60">
+                  <ul className="space-y-3">
+                    {eventsForSelectedDate.map(event => {
+                      const client = clients.find(c => c.id === event.clientId);
+                      const clientName = client?.name || 'Unknown Client';
+                      const totalRentals = event.rentals.length;
+                      const totalQuantity = event.rentals.reduce((sum: number, r: any) => sum + r.quantityRented, 0);
+
+                      return (
+                        <li
+                          key={event.id}
+                          className="p-3 border rounded-md bg-card-foreground/5 transition-colors"
+                        >
+                          <div className="space-y-2">
+                            <div>
+                              <p className="font-semibold text-sm">{event.name}</p>
+                              <p className="text-xs text-muted-foreground">Client: {clientName}</p>
+                              <p className="text-xs text-muted-foreground">Items: {totalRentals}, Qty: {totalQuantity}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {format(new Date(event.startDate), 'MMM dd')} - {format(new Date(event.endDate), 'MMM dd')}
+                              </p>
+                            </div>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => {
+                                setSelectedEvent(event);
+                                setShowMobileEventsList(false);
+                              }}
+                              className="w-full"
+                            >
+                              View Details
+                            </Button>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </ScrollArea>
+              ) : (
+                <p className="text-muted-foreground text-center py-8">
+                  No events scheduled for this date.
+                </p>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {selectedEvent && (
         <Dialog open={true} onOpenChange={() => setSelectedEvent(null)}>
@@ -444,5 +818,3 @@ export function RentalCalendarView({ searchQuery, filters }: RentalCalendarViewP
     </>
   );
 }
-
-    

@@ -7,7 +7,7 @@ import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import type { Event, Rental, EquipmentItem, Client } from '@/types';
 import { useAppContext, useAppDispatch } from '@/contexts/AppContext';
-import { AppHeader } from '@/components/layout/AppHeader';
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { PlusCircle, Edit, Trash2, PackageSearch, ListChecks } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { EventFormDialog } from '@/components/events/EventFormDialog';
 import { AddEquipmentToEventDialog } from '@/components/events/AddEquipmentToEventDialog';
 import {
@@ -34,6 +35,7 @@ export default function EventDetailsPage() {
   const { events, clients, rentals, equipment, isDataLoaded } = useAppContext();
   const { deleteRental, deleteEvent } = useAppDispatch();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const [event, setEvent] = useState<Event | null>(null);
   const [client, setClient] = useState<Client | null>(null);
@@ -102,8 +104,7 @@ export default function EventDetailsPage() {
 
   if (loading || !isDataLoaded) {
     return (
-        <div className="flex flex-col h-screen">
-            <AppHeader title="Event Details" />
+        <div className="flex flex-col min-h-screen">
             <div className="flex-grow flex items-center justify-center p-4 md:p-6">
                 <p className="text-lg text-muted-foreground">Loading event data...</p>
             </div>
@@ -113,8 +114,8 @@ export default function EventDetailsPage() {
 
   if (!event) {
     return (
-        <div className="flex flex-col h-screen">
-            <AppHeader title="Error" />
+        <div className="flex flex-col min-h-screen">
+            
             <div className="flex-grow flex items-center justify-center p-4 md:p-6">
                 <p className="text-lg text-destructive">Event not found or could not be loaded.</p>
             </div>
@@ -124,7 +125,7 @@ export default function EventDetailsPage() {
 
   return (
       <div className="flex flex-col h-full">
-          <AppHeader title="Event Details" />
+          
           <div className="flex-1 overflow-y-auto p-4 md:p-6">
             <Card className="max-w-4xl mx-auto shadow-xl">
               <CardHeader>
@@ -138,7 +139,7 @@ export default function EventDetailsPage() {
                         </CardDescription>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-2 flex-shrink-0">
-                      <Button variant="default" onClick={() => router.push(`/rentals/${event.id}/prep`)}><ListChecks className="mr-2 h-4 w-4" /> Prepare Event</Button>
+                      <Button variant="outline" onClick={() => router.push(`/rentals/${event.id}/prep`)}><ListChecks className="mr-2 h-4 w-4" /> Prepare Event</Button>
                       <Button variant="outline" onClick={() => setIsEditFormOpen(true)}><Edit className="mr-2 h-4 w-4" /> Edit Event</Button>
                     </div>
                 </div>
@@ -152,35 +153,62 @@ export default function EventDetailsPage() {
                 <h3 className="text-xl font-semibold mb-4">Rented Equipment</h3>
                 <div className="border rounded-md">
                      {eventRentals.length > 0 ? (
-                        <Table>
-                            <TableHeader>
-                            <TableRow>
-                                <TableHead>Equipment</TableHead>
-                                <TableHead>Quantity</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
-                            </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                            {eventRentals.map((rental, index) => (
-                                <TableRow key={`${rental.id}-${index}`}>
-                                <TableCell className="font-medium">{rental.equipment?.name || 'N/A'}</TableCell>
-                                <TableCell>{rental.quantityRented}</TableCell>
-                                <TableCell>
-                                    <Badge variant={rental.equipment?.status === 'good' ? 'default' : 'destructive'}>
-                                    {rental.equipment?.status || 'Unknown'}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    <Button variant="ghost" size="icon" onClick={() => setRentalToDelete(rental)}>
-                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                    </Button>
-                                </TableCell>
-                                </TableRow>
-                            ))}
-                            </TableBody>
-                        </Table>
-                    ) : (
+                       <>
+                         {/* Mobile Card View */}
+                         {isMobile ? (
+                           <div className="space-y-2 p-3">
+                             {eventRentals.map((rental, index) => (
+                               <div key={`${rental.id}-${index}`} className="p-3 rounded-2xl bg-background/50 hover:bg-muted/30 transition-colors border-0">
+                                 <div className="flex items-center justify-between">
+                                   <div className="flex-1 min-w-0">
+                                     <h4 className="font-medium text-sm truncate">{rental.equipment?.name || 'N/A'}</h4>
+                                     <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+                                       <span>Qty: {rental.quantityRented}</span>
+                                       <span>•</span>
+                                       <div className={`w-2 h-2 rounded-full ${rental.equipment?.status === 'good' ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                                       <span>{rental.equipment?.status || 'Unknown'}</span>
+                                     </div>
+                                   </div>
+                                   <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setRentalToDelete(rental)}>
+                                     <Trash2 className="h-3 w-3 text-destructive" />
+                                   </Button>
+                                 </div>
+                               </div>
+                             ))}
+                           </div>
+                         ) : (
+                           /* Desktop Table View */
+                           <Table>
+                             <TableHeader>
+                               <TableRow>
+                                 <TableHead>Equipment</TableHead>
+                                 <TableHead>Quantity</TableHead>
+                                 <TableHead>Status</TableHead>
+                                 <TableHead className="text-right">Actions</TableHead>
+                               </TableRow>
+                             </TableHeader>
+                             <TableBody>
+                               {eventRentals.map((rental, index) => (
+                                 <TableRow key={`${rental.id}-${index}`}>
+                                   <TableCell className="font-medium">{rental.equipment?.name || 'N/A'}</TableCell>
+                                   <TableCell>{rental.quantityRented}</TableCell>
+                                   <TableCell>
+                                     <Badge variant={rental.equipment?.status === 'good' ? 'secondary' : 'destructive'}>
+                                       {rental.equipment?.status || 'Unknown'}
+                                     </Badge>
+                                   </TableCell>
+                                   <TableCell className="text-right">
+                                     <Button variant="ghost" size="icon" onClick={() => setRentalToDelete(rental)}>
+                                       <Trash2 className="h-4 w-4 text-destructive" />
+                                     </Button>
+                                   </TableCell>
+                                 </TableRow>
+                               ))}
+                             </TableBody>
+                           </Table>
+                         )}
+                       </>
+                     ) : (
                         <div className="text-center py-12 text-muted-foreground flex flex-col items-center">
                             <PackageSearch className="w-16 h-16 mb-4 text-primary/50" />
                             <p className="text-lg mb-1">No equipment rented for this event yet.</p>

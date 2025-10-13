@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback } from 'react';
 import type { EquipmentItem, Category, Subcategory } from '@/types';
 import { useAppContext, useAppDispatch } from '@/contexts/AppContext';
 import { EquipmentFilters } from '@/components/equipment/EquipmentFilters';
-import { SearchSlash, Download, ArrowUpDown } from 'lucide-react';
+import { SearchSlash, Download, ArrowUpDown, Edit, Trash2, Eye, Package, MapPin, DollarSign, Hash, CheckCircle, XCircle, AlertCircle, MoreHorizontal } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import {
   Table,
@@ -15,9 +15,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { EQUIPMENT_STATUSES } from '@/lib/constants';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,6 +38,7 @@ export function InventoryListView() {
   const { equipment, categories, subcategories, rentals, events, isDataLoaded } = useAppContext();
   const { deleteEquipmentItem } = useAppDispatch();
   const router = useRouter();
+  const isMobile = useIsMobile();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -44,7 +50,7 @@ export function InventoryListView() {
   const [sortBy, setSortBy] = useState<'name' | 'quantity' | 'status' | 'dailyRate' | 'location'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = isMobile ? 8 : 10;
   const [itemToDelete, setItemToDelete] = useState<EquipmentItem | null>(null);
 
   const { toast } = useToast();
@@ -175,9 +181,50 @@ export function InventoryListView() {
     }
   }, [itemToDelete, deleteEquipmentItem, toast]);
 
+  const getStatusConfig = useCallback((status: string) => {
+    switch (status) {
+      case 'good':
+        return {
+          color: 'bg-green-500/20 text-green-700 border-green-500/30 dark:text-green-400',
+          icon: CheckCircle,
+          label: 'Good'
+        };
+      case 'damaged':
+        return {
+          color: 'bg-red-500/20 text-red-700 border-red-500/30 dark:text-red-400',
+          icon: XCircle,
+          label: 'Damaged'
+        };
+      case 'maintenance':
+        return {
+          color: 'bg-yellow-500/20 text-yellow-700 border-yellow-500/30 dark:text-yellow-400',
+          icon: AlertCircle,
+          label: 'Maintenance'
+        };
+      default:
+        return {
+          color: 'bg-gray-500/20 text-gray-700 border-gray-500/30 dark:text-gray-400',
+          icon: AlertCircle,
+          label: status
+        };
+    }
+  }, []);
+
+  const getAvailabilityConfig = useCallback((isRented: boolean) => {
+    return isRented
+      ? {
+          color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+          label: 'Rented'
+        }
+      : {
+          color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+          label: 'Available'
+        };
+  }, []);
+
   if (!isDataLoaded) {
     return (
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col">
         <div className="flex-grow flex items-center justify-center p-4 md:p-6">
           <p className="text-lg text-muted-foreground">Loading inventory data...</p>
         </div>
@@ -186,6 +233,72 @@ export function InventoryListView() {
   }
 
   const noItemsFound = filteredEquipment.length === 0;
+
+  const renderEquipmentCard = (item: EquipmentItem) => {
+    const category = categories.find(c => c.id === item.categoryId);
+    const subcategory = subcategories.find(s => s.id === item.subcategoryId);
+    const isRented = isCurrentlyRented(item.id);
+    const statusConfig = getStatusConfig(item.status);
+    const availabilityConfig = getAvailabilityConfig(isRented);
+    const StatusIcon = statusConfig.icon;
+
+    return (
+      <Card key={item.id} className="p-3 hover:bg-muted/30 transition-colors border-0 shadow-none bg-background/50 rounded-2xl">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center space-x-3 flex-1 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center flex-shrink-0">
+              <Package className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-medium text-sm truncate">{item.name}</h3>
+              <p className="text-xs text-muted-foreground truncate mt-0.5">{item.description}</p>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-xs text-muted-foreground">{category?.name || 'Uncategorized'}</span>
+                <span className="text-xs text-muted-foreground">•</span>
+                <span className="text-xs text-muted-foreground">{item.location}</span>
+              </div>
+            </div>
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground">
+                <MoreHorizontal className="h-3 w-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => router.push(`/equipment/${item.id}`)}>
+                <Eye className="mr-2 h-3 w-3" />
+                View
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push(`/equipment/${item.id}/edit`)}>
+                <Edit className="mr-2 h-3 w-3" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => openDeleteConfirmDialog(item)}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="mr-2 h-3 w-3" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        
+        <div className="flex items-center justify-between mt-3 pt-2 border-t border-border/50">
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <span>Qty: {item.quantity}</span>
+            <span>•</span>
+            <span>${item.dailyRate.toFixed(2)}/day</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className={`w-2 h-2 rounded-full ${statusConfig.color.includes('green') ? 'bg-green-500' : statusConfig.color.includes('red') ? 'bg-red-500' : 'bg-yellow-500'}`}></div>
+            <span className="text-xs text-muted-foreground">{availabilityConfig.label}</span>
+          </div>
+        </div>
+      </Card>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -209,11 +322,11 @@ export function InventoryListView() {
         locations={locations}
       />
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
           <label className="text-sm font-medium">Sort by:</label>
           <Select value={sortBy} onValueChange={(value) => setSortBy(value as typeof sortBy)}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-full sm:w-40">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -224,12 +337,12 @@ export function InventoryListView() {
               <SelectItem value="location">Location</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" size="sm" onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}>
+          <Button variant="outline" size="sm" onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} className="w-full sm:w-auto">
             <ArrowUpDown className="h-4 w-4 mr-2" />
             {sortOrder === 'asc' ? 'Ascending' : 'Descending'}
           </Button>
         </div>
-        <Button onClick={exportToCSV} variant="outline">
+        <Button onClick={exportToCSV} variant="outline" className="w-full sm:w-auto">
           <Download className="h-4 w-4 mr-2" />
           Export CSV
         </Button>
@@ -243,64 +356,138 @@ export function InventoryListView() {
         </div>
       ) : (
         <>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Subcategory</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Quantity</TableHead>
-                  <TableHead>Daily Rate</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Availability</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedEquipment.map((item) => {
-                  const category = categories.find(c => c.id === item.categoryId);
-                  const subcategory = subcategories.find(s => s.id === item.subcategoryId);
-                  const availability = isCurrentlyRented(item.id) ? 'Rented' : 'Available';
-                  return (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-medium">{item.name}</TableCell>
-                      <TableCell>{item.description}</TableCell>
-                      <TableCell>{category?.name || 'Uncategorized'}</TableCell>
-                      <TableCell>{subcategory?.name || '-'}</TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          item.status === 'good' ? 'bg-green-100 text-green-800' :
-                          item.status === 'damaged' ? 'bg-red-100 text-red-800' :
-                          'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {item.status}
-                        </span>
-                      </TableCell>
-                      <TableCell>{item.location}</TableCell>
-                      <TableCell>{item.quantity}</TableCell>
-                      <TableCell>${item.dailyRate.toFixed(2)}</TableCell>
-                      <TableCell>{item.type}</TableCell>
-                      <TableCell>{availability}</TableCell>
-                      <TableCell className="space-x-2">
-                        <Button variant="outline" size="sm" onClick={() => router.push(`/equipment/${item.id}/edit`)}>
-                          Edit
-                        </Button>
-                        <Button variant="destructive" size="sm" onClick={() => openDeleteConfirmDialog(item)}>
-                          Delete
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
+          {/* Mobile Card Layout */}
+          {isMobile ? (
+            <div className="grid gap-4">
+              {paginatedEquipment.map(renderEquipmentCard)}
+            </div>
+          ) : (
+            /* Desktop Table Layout */
+            <div className="rounded-md border overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="min-w-[180px] font-semibold">Equipment</TableHead>
+                    <TableHead className="min-w-[200px] font-semibold">Details</TableHead>
+                    <TableHead className="min-w-[120px] font-semibold">Category</TableHead>
+                    <TableHead className="min-w-[100px] font-semibold">Status</TableHead>
+                    <TableHead className="min-w-[100px] font-semibold">Location</TableHead>
+                    <TableHead className="min-w-[80px] font-semibold">Qty</TableHead>
+                    <TableHead className="min-w-[100px] font-semibold">Rate/Day</TableHead>
+                    <TableHead className="min-w-[100px] font-semibold">Availability</TableHead>
+                    <TableHead className="min-w-[120px] font-semibold text-center">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedEquipment.map((item) => {
+                    const category = categories.find(c => c.id === item.categoryId);
+                    const subcategory = subcategories.find(s => s.id === item.subcategoryId);
+                    const isRented = isCurrentlyRented(item.id);
+                    const statusConfig = getStatusConfig(item.status);
+                    const availabilityConfig = getAvailabilityConfig(isRented);
+                    const StatusIcon = statusConfig.icon;
 
-          <div className="flex items-center justify-between">
+                    return (
+                      <TableRow key={item.id} className="hover:bg-muted/50 transition-colors">
+                        <TableCell>
+                          <div className="flex items-center space-x-3">
+                            <Avatar className="h-10 w-10">
+                              <AvatarImage src={item.imageUrl} alt={item.name} />
+                              <AvatarFallback className="bg-primary/10 text-primary">
+                                <Package className="h-4 w-4" />
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <div className="font-medium">{item.name}</div>
+                              <div className="text-xs text-muted-foreground">{item.type}</div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="max-w-[200px]">
+                            <p className="text-sm truncate" title={item.description}>
+                              {item.description}
+                            </p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-1">
+                            <Badge variant="outline" className="text-xs">
+                              {category?.name || 'Uncategorized'}
+                            </Badge>
+                            {subcategory && (
+                              <Badge variant="secondary" className="text-xs block w-fit">
+                                {subcategory.name}
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={`${statusConfig.color} border flex items-center space-x-1 w-fit`}>
+                            <StatusIcon className="h-3 w-3" />
+                            <span>{statusConfig.label}</span>
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-1 text-sm">
+                            <MapPin className="h-3 w-3 text-muted-foreground" />
+                            <span>{item.location}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-1 text-sm font-medium">
+                            <Hash className="h-3 w-3 text-muted-foreground" />
+                            <span>{item.quantity}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-1 text-sm font-medium">
+                            <DollarSign className="h-3 w-3 text-muted-foreground" />
+                            <span>{item.dailyRate.toFixed(2)}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={availabilityConfig.color}>
+                            {availabilityConfig.label}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center justify-center space-x-1">
+                            <Button 
+                              variant="accentGhost" 
+                              size="icon" 
+                              onClick={() => router.push(`/equipment/${item.id}`)}
+                              className="h-8 w-8"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="accentGhost" 
+                              size="icon" 
+                              onClick={() => router.push(`/equipment/${item.id}/edit`)}
+                              className="h-8 w-8"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => openDeleteConfirmDialog(item)}
+                              className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="text-sm text-muted-foreground">
               Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredEquipment.length)} of {filteredEquipment.length} items
             </div>
@@ -310,6 +497,7 @@ export function InventoryListView() {
                 size="sm"
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
+                className="w-full sm:w-auto"
               >
                 Previous
               </Button>
@@ -321,6 +509,7 @@ export function InventoryListView() {
                 size="sm"
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
+                className="w-full sm:w-auto"
               >
                 Next
               </Button>

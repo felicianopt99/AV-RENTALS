@@ -167,7 +167,7 @@ export default function EventDetailsPage() {
                                 <TableCell className="font-medium">{rental.equipment?.name || 'N/A'}</TableCell>
                                 <TableCell>{rental.quantityRented}</TableCell>
                                 <TableCell>
-                                    <Badge variant={rental.equipment?.status === 'good' ? 'default' : 'destructive'}>
+                                    <Badge variant={rental.equipment?.status === 'good' ? 'secondary' : 'destructive'}>
                                     {rental.equipment?.status || 'Unknown'}
                                     </Badge>
                                 </TableCell>

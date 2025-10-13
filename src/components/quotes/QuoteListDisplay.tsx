@@ -40,6 +40,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { QuoteForm } from '@/components/quotes/QuoteForm';
 
 export function QuoteListDisplay() {
   const { quotes, isDataLoaded } = useAppContext();
@@ -50,6 +52,7 @@ export function QuoteListDisplay() {
   const [quoteToDelete, setQuoteToDelete] = useState<Quote | null>(null);
   const [quoteToApprove, setQuoteToApprove] = useState<Quote | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   const openDeleteDialog = useCallback((quote: Quote) => {
     setQuoteToDelete(quote);
@@ -104,7 +107,7 @@ export function QuoteListDisplay() {
 
   if (!isDataLoaded) {
     return (
-        <div className="flex flex-col h-[calc(100vh-150px)]"> {/* Adjust height as needed */}
+        <div className="flex flex-col"> {/* Adjust height as needed */}
             <div className="flex-grow flex items-center justify-center">
                 <p className="text-lg text-muted-foreground">Loading quote data...</p>
             </div>
@@ -113,13 +116,11 @@ export function QuoteListDisplay() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-semibold">Quotes</h2>
-        <Button asChild>
-          <Link href="/quotes/new">
-            <PlusCircle className="mr-2 h-4 w-4" /> Create New Quote
-          </Link>
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <h2 className="text-xl md:text-2xl font-semibold">Quotes</h2>
+        <Button onClick={() => setIsCreateDialogOpen(true)} className="w-full sm:w-auto">
+          <PlusCircle className="mr-2 h-4 w-4" /> Create New Quote
         </Button>
       </div>
       <Card className="shadow-lg overflow-hidden"> {/* Added overflow-hidden here */}
@@ -156,61 +157,110 @@ export function QuoteListDisplay() {
               )}
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Number</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Start Date</TableHead>
-                  <TableHead>End Date</TableHead>
-                  <TableHead>Total</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredQuotes.map((quote) => (
-                  <TableRow key={quote.id}>
-                    <TableCell className="font-medium">{quote.quoteNumber}</TableCell>
-                    <TableCell>{quote.name}</TableCell>
-                    <TableCell>{quote.clientName || '-'}</TableCell>
-                    <TableCell>{format(new Date(quote.startDate), 'PP')}</TableCell>
-                    <TableCell>{format(new Date(quote.endDate), 'PP')}</TableCell>
-                    <TableCell>€{quote.totalAmount.toFixed(2)}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={`py-1 px-2.5 text-xs ${getStatusColor(quote.status)}`}>
-                        {quote.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => router.push(`/quotes/${quote.id}`)}>
-                            <Edit className="mr-2 h-4 w-4" /> View / Edit
+          <>
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-3">
+              {filteredQuotes.map((quote) => (
+                <Card key={quote.id} className="p-3 shadow-none border-0 bg-background/50 hover:bg-muted/30 transition-colors">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-grow min-w-0">
+                      <h3 className="font-medium text-sm">{quote.quoteNumber}</h3>
+                      {quote.name && <p className="text-xs text-muted-foreground truncate mt-0.5">{quote.name}</p>}
+                      <div className="flex items-center gap-2 mt-1">
+                        {quote.clientName && <span className="text-xs text-muted-foreground truncate">{quote.clientName}</span>}
+                        <span className="text-xs text-muted-foreground">•</span>
+                        <span className="text-xs text-muted-foreground">€{quote.totalAmount.toFixed(2)}</span>
+                      </div>
+                      <div className="flex items-center justify-between mt-2">
+                        <span className="text-xs text-muted-foreground">{format(new Date(quote.startDate), 'PP')}</span>
+                        <div className={`w-2 h-2 rounded-full ${quote.status === 'Accepted' ? 'bg-green-500' : quote.status === 'Sent' ? 'bg-blue-500' : 'bg-yellow-500'}`}></div>
+                      </div>
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-7 w-7 p-0 text-muted-foreground">
+                          <span className="sr-only">Open menu</span>
+                          <MoreHorizontal className="h-3 w-3" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => router.push(`/quotes/${quote.id}`)}>
+                          <Edit className="mr-2 h-4 w-4" /> View / Edit
+                        </DropdownMenuItem>
+                        {quote.status !== "Accepted" && quote.status !== "Declined" && quote.status !== "Archived" && (
+                          <DropdownMenuItem onClick={() => openApproveDialog(quote)}>
+                            <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" /> Approve & Create Event
                           </DropdownMenuItem>
-                          {quote.status !== "Accepted" && quote.status !== "Declined" && quote.status !== "Archived" && (
-                            <DropdownMenuItem onClick={() => openApproveDialog(quote)}>
-                              <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" /> Approve & Create Event
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => openDeleteDialog(quote)} className="text-destructive focus:text-destructive focus:bg-destructive/10">
-                            <Trash2 className="mr-2 h-4 w-4" /> Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+                        )}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => openDeleteDialog(quote)} className="text-destructive focus:text-destructive focus:bg-destructive/10">
+                          <Trash2 className="mr-2 h-4 w-4" /> Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </Card>
+              ))}
+            </div>
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Number</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Client</TableHead>
+                    <TableHead>Start Date</TableHead>
+                    <TableHead>End Date</TableHead>
+                    <TableHead>Total</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredQuotes.map((quote) => (
+                    <TableRow key={quote.id}>
+                      <TableCell className="font-medium">{quote.quoteNumber}</TableCell>
+                      <TableCell>{quote.name}</TableCell>
+                      <TableCell>{quote.clientName || '-'}</TableCell>
+                      <TableCell>{format(new Date(quote.startDate), 'PP')}</TableCell>
+                      <TableCell>{format(new Date(quote.endDate), 'PP')}</TableCell>
+                      <TableCell>€{quote.totalAmount.toFixed(2)}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={`py-1 px-2.5 text-xs ${getStatusColor(quote.status)}`}>
+                          {quote.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="accentGhost" className="h-8 w-8 p-0">
+                              <span className="sr-only">Open menu</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => router.push(`/quotes/${quote.id}`)}>
+                              <Edit className="mr-2 h-4 w-4" /> View / Edit
+                            </DropdownMenuItem>
+                            {quote.status !== "Accepted" && quote.status !== "Declined" && quote.status !== "Archived" && (
+                              <DropdownMenuItem onClick={() => openApproveDialog(quote)}>
+                                <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" /> Approve & Create Event
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => openDeleteDialog(quote)} className="text-destructive focus:text-destructive focus:bg-destructive/10">
+                              <Trash2 className="mr-2 h-4 w-4" /> Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </>
           )}
         </CardContent>
       </Card>
@@ -254,6 +304,15 @@ export function QuoteListDisplay() {
           </AlertDialogContent>
         </AlertDialog>
       )}
+
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create New Quote</DialogTitle>
+          </DialogHeader>
+          <QuoteForm onSubmitSuccess={() => setIsCreateDialogOpen(false)} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

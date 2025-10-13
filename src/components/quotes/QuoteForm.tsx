@@ -35,6 +35,20 @@ import { Separator } from "../ui/separator";
 const QUOTE_STATUSES: QuoteStatus[] = ['Draft', 'Sent', 'Accepted', 'Declined', 'Archived'];
 const MANUAL_CLIENT_ENTRY_VALUE = "__manual_client__";
 
+const loadDraft = () => {
+  if (typeof window !== 'undefined') {
+    const draft = localStorage.getItem('quoteDraft');
+    return draft ? JSON.parse(draft) : {};
+  }
+  return {};
+};
+
+const saveDraft = (data: any) => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('quoteDraft', JSON.stringify(data));
+  }
+};
+
 const quoteItemSchema = z.object({
   id: z.string().optional(), // For existing items
   equipmentId: z.string().min(1, "Equipment is required."),
@@ -68,9 +82,10 @@ type QuoteFormValues = z.infer<typeof quoteFormSchema>;
 
 interface QuoteFormProps {
   initialData?: Quote;
+  onSubmitSuccess?: () => void;
 }
 
-export function QuoteForm({ initialData }: QuoteFormProps) {
+export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
   const { equipment, clients, isDataLoaded } = useAppContext();
   const { addQuote, updateQuote } = useAppDispatch();
   const router = useRouter();
@@ -80,6 +95,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
 
   const form = useForm<QuoteFormValues>({
     resolver: zodResolver(quoteFormSchema),
+    mode: 'onChange',
     defaultValues: initialData ? {
       ...initialData,
       startDate: new Date(initialData.startDate),
@@ -98,23 +114,24 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
       discountAmount: initialData.discountAmount || 0,
       discountType: initialData.discountType || 'fixed',
       taxRate: (initialData.taxRate || 0) * 100, // Convert decimal to percentage for display/editing
-    } : {
-      name: "",
-      location: "",
-      clientId: MANUAL_CLIENT_ENTRY_VALUE,
-      clientName: "",
-      clientEmail: "",
-      clientPhone: "",
-      clientAddress: "",
-      startDate: new Date(),
-      endDate: addDays(new Date(), 1),
-      items: [],
-      notes: "",
-      status: "Draft",
-      discountAmount: 0,
-      discountType: 'fixed',
-      taxRate: 0, // Default to 0%
-    },
+  } : {
+    ...loadDraft(),
+    name: "",
+    location: "",
+    clientId: MANUAL_CLIENT_ENTRY_VALUE,
+    clientName: "",
+    clientEmail: "",
+    clientPhone: "",
+    clientAddress: "",
+    startDate: new Date(),
+    endDate: addDays(new Date(), 1),
+    items: [],
+    notes: "",
+    status: "Draft",
+    discountAmount: 0,
+    discountType: 'fixed',
+    taxRate: 0, // Default to 0%
+  },
   });
 
   const { fields, append, remove } = useFieldArray({
@@ -195,11 +212,19 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
       const selectedEqId = form.watch(`items.${index}.equipmentId`);
       const currentUnitPrice = form.watch(`items.${index}.unitPrice`);
       const eq = equipment.find(e => e.id === selectedEqId);
-      if (eq && eq.dailyRate !== currentUnitPrice && !form.getFieldState(`items.${index}.unitPrice`).isDirty) { 
+      if (eq && eq.dailyRate !== currentUnitPrice && !form.getFieldState(`items.${index}.unitPrice`).isDirty) {
         form.setValue(`items.${index}.unitPrice`, eq.dailyRate, { shouldValidate: true, shouldDirty: true });
       }
     });
   }, [fields, equipment, form]);
+
+  // Auto-save draft
+  useEffect(() => {
+    const subscription = form.watch((value) => {
+      saveDraft(value);
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
 
 
   function onSubmit(data: QuoteFormValues) {
@@ -245,7 +270,12 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
       } else {
         const newQuoteId = addQuote(quoteData);
         toast({ title: "Quote Created", description: `Quote "${data.name}" has been successfully created.` });
-        router.push(`/quotes/${newQuoteId}`);
+        localStorage.removeItem('quoteDraft'); // Clear draft after successful submit
+        if (onSubmitSuccess) {
+          onSubmitSuccess();
+        } else {
+          router.push(`/quotes/${newQuoteId}`);
+        }
       }
     } catch (error) {
         toast({ variant: "destructive", title: "Error", description: "Failed to save quote. Please try again."});
@@ -260,7 +290,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
             <FormField
               control={form.control}
               name="name"
@@ -279,7 +309,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
                 <FormItem>
                   <FormLabel>Status</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl><SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger></FormControl>
+                    <FormControl><SelectTrigger className="w-full"><SelectValue placeholder="Select status" /></SelectTrigger></FormControl>
                     <SelectContent>
                       {QUOTE_STATUSES.map(status => (
                         <SelectItem key={status} value={status}>{status}</SelectItem>
@@ -312,19 +342,19 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Select Existing Client (Optional)</FormLabel>
-              <Select 
+              <Select
                 onValueChange={(value) => {
-                  field.onChange(value); 
+                  field.onChange(value);
                   if (value === MANUAL_CLIENT_ENTRY_VALUE || value === "") {
                     form.setValue("clientName", "");
                     form.setValue("clientEmail", "");
                     form.setValue("clientPhone", "");
                     form.setValue("clientAddress", "");
                   }
-                }} 
+                }}
                 value={field.value || MANUAL_CLIENT_ENTRY_VALUE}
               >
-                <FormControl><SelectTrigger><SelectValue placeholder="Select existing client..." /></SelectTrigger></FormControl>
+                <FormControl><SelectTrigger className="w-full"><SelectValue placeholder="Select existing client..." /></SelectTrigger></FormControl>
                 <SelectContent>
                   <SelectItem value={MANUAL_CLIENT_ENTRY_VALUE}>-- None (Enter Manually) --</SelectItem>
                   {clients.map(client => (
@@ -336,7 +366,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
             </FormItem>
           )}
         />
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
             <FormField control={form.control} name="clientName" render={({ field }) => (
                 <FormItem><FormLabel>Client Name</FormLabel><FormControl><Input placeholder="Client's Full Name or Company" {...field} disabled={!!watchClientId && watchClientId !== MANUAL_CLIENT_ENTRY_VALUE} /></FormControl><FormMessage /></FormItem>
             )} />
@@ -353,17 +383,17 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
 
         <Separator />
         <h3 className="text-lg font-medium">Quote Period</h3>
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
           <FormField control={form.control} name="startDate" render={({ field }) => (
             <FormItem className="flex flex-col"><FormLabel>Start Date</FormLabel><Popover><PopoverTrigger asChild>
-            <FormControl><Button variant={"outline"} className={cn("pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
+            <FormControl><Button variant={"outline"} className={cn("pl-3 text-left font-normal w-full", !field.value && "text-muted-foreground")}>
                 {field.value ? format(field.value, "PPP") : <span>Pick a date</span>} <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
             </Button></FormControl></PopoverTrigger><PopoverContent className="w-auto p-0" align="start">
             <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus /></PopoverContent></Popover><FormMessage /></FormItem>
           )} />
           <FormField control={form.control} name="endDate" render={({ field }) => (
             <FormItem className="flex flex-col"><FormLabel>End Date</FormLabel><Popover><PopoverTrigger asChild>
-            <FormControl><Button variant={"outline"} className={cn("pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
+            <FormControl><Button variant={"outline"} className={cn("pl-3 text-left font-normal w-full", !field.value && "text-muted-foreground")}>
                 {field.value ? format(field.value, "PPP") : <span>Pick a date</span>} <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
             </Button></FormControl></PopoverTrigger><PopoverContent className="w-auto p-0" align="start">
             <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={(date) => date < (form.getValues("startDate") || new Date(0))} initialFocus /></PopoverContent></Popover><FormMessage /></FormItem>
@@ -379,7 +409,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
               <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 text-destructive hover:bg-destructive/10" onClick={() => remove(index)}>
                 <X className="h-4 w-4" />
               </Button>
-              <div className="grid md:grid-cols-3 gap-4 items-end">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                 <FormField control={form.control} name={`items.${index}.equipmentId`} render={({ field: itemField }) => (
                   <FormItem><FormLabel>Equipment</FormLabel>
                     <Select onValueChange={(value) => {
@@ -389,7 +419,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
                             form.setValue(`items.${index}.unitPrice`, selectedEq.dailyRate, { shouldValidate: true, shouldDirty: true });
                         }
                     }} defaultValue={itemField.value}>
-                      <FormControl><SelectTrigger><SelectValue placeholder="Select equipment" /></SelectTrigger></FormControl>
+                      <FormControl><SelectTrigger className="w-full"><SelectValue placeholder="Select equipment" /></SelectTrigger></FormControl>
                       <SelectContent>
                         {rentableEquipment.map(eq => (
                           <SelectItem key={eq.id} value={eq.id}>{eq.name} (Rate: €{eq.dailyRate.toFixed(2)})</SelectItem>
@@ -418,11 +448,11 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
         
         <Separator />
         <h3 className="text-lg font-medium">Financial Summary</h3>
-        <div className="grid md:grid-cols-3 gap-8 items-end">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 items-end">
             <FormField control={form.control} name="discountType" render={({ field }) => (
                 <FormItem><FormLabel>Discount Type</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                    <FormControl><SelectTrigger className="w-full"><SelectValue /></SelectTrigger></FormControl>
                     <SelectContent><SelectItem value="fixed">Fixed (€)</SelectItem><SelectItem value="percentage">Percentage (%)</SelectItem></SelectContent>
                 </Select><FormMessage /></FormItem>
             )} />
@@ -441,13 +471,13 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
                 </FormItem>
             )} />
         </div>
-        <Card className="p-4 bg-muted/30">
+        <Card className="p-4 bg-muted/30" aria-live="polite" aria-label="Financial summary">
             <div className="space-y-1 text-sm">
                 <div className="flex justify-between"><span>Subtotal:</span><span>€{subTotal.toFixed(2)}</span></div>
                 <div className="flex justify-between">
                     <span>Discount:</span>
                     <span>
-                        {watchDiscountType === 'percentage' 
+                        {watchDiscountType === 'percentage'
                             ? `(${watchDiscountAmount.toFixed(2)}%) - €${(subTotal * (watchDiscountAmount / 100)).toFixed(2)}`
                             : `- €${watchDiscountAmount.toFixed(2)}`}
                     </span>

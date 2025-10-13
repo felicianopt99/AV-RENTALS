@@ -127,7 +127,7 @@ export function AddEquipmentToEventDialog({ isOpen, onOpenChange, event, onSubmi
                   <FormLabel>Equipment</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select equipment to add" />
                       </SelectTrigger>
                     </FormControl>

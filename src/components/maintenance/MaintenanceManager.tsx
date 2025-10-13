@@ -13,10 +13,12 @@ import { MaintenanceLogDialog } from './MaintenanceLogDialog';
 import { MaintenanceRequestDialog } from './MaintenanceRequestDialog';
 import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export function MaintenanceManager() {
   const { equipment, isDataLoaded } = useAppContext();
   const router = useRouter();
+  const isMobile = useIsMobile();
 
   const [isLogDialogOpen, setIsLogDialogOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -64,39 +66,71 @@ export function MaintenanceManager() {
               <p className="text-sm">All equipment is in good condition.</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Equipment</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Maintenance History</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {itemsInMaintenance.map(item => (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-medium">{item.name}</TableCell>
-                    <TableCell>
-                      <Badge variant={item.status === 'damaged' ? 'destructive' : 'default'}>
-                        {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{item.location}</TableCell>
-                    <TableCell>{item.maintenanceHistory?.length || 0} Entries</TableCell>
-                    <TableCell className="text-right space-x-2">
-                       <Button variant="outline" size="sm" onClick={() => handleAddLogClick(item)}>
-                        <PlusCircle className="mr-2 h-4 w-4" /> Add Log
-                      </Button>
-                       <Button variant="ghost" size="sm" onClick={() => router.push(`/equipment/${item.id}/edit`)}>
-                        <Edit className="mr-2 h-4 w-4" /> Edit Item
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <>
+              {/* Mobile Card View */}
+              {isMobile ? (
+                <div className="space-y-3">
+                  {itemsInMaintenance.map(item => (
+                    <div key={item.id} className="p-3 rounded-2xl bg-background/50 hover:bg-muted/30 transition-colors border-0">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-sm truncate">{item.name}</h4>
+                          <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+                            <span>{item.location}</span>
+                            <span>•</span>
+                            <span>{item.maintenanceHistory?.length || 0} entries</span>
+                          </div>
+                        </div>
+                        <div className={`w-2 h-2 rounded-full ${item.status === 'damaged' ? 'bg-red-500' : 'bg-yellow-500'}`}></div>
+                      </div>
+                      <div className="flex gap-2 pt-2 border-t border-gray-200/50 dark:border-gray-700/50">
+                        <Button variant="ghost" size="sm" onClick={() => handleAddLogClick(item)} className="flex-1 h-7 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100/50 dark:hover:bg-gray-800/50">
+                          <PlusCircle className="mr-1 h-3 w-3" /> Log
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => router.push(`/equipment/${item.id}/edit`)} className="flex-1 h-7 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100/50 dark:hover:bg-gray-800/50">
+                          <Edit className="mr-1 h-3 w-3" /> Edit
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                /* Desktop Table View */
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Equipment</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Location</TableHead>
+                      <TableHead>Maintenance History</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {itemsInMaintenance.map(item => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-medium">{item.name}</TableCell>
+                        <TableCell>
+                          <Badge variant={item.status === 'damaged' ? 'destructive' : 'secondary'}>
+                            {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{item.location}</TableCell>
+                        <TableCell>{item.maintenanceHistory?.length || 0} Entries</TableCell>
+                        <TableCell className="text-right space-x-2">
+                          <Button variant="accentGhost" size="sm" onClick={() => handleAddLogClick(item)}>
+                            <PlusCircle className="mr-2 h-4 w-4" /> Add Log
+                          </Button>
+                          <Button variant="accentGhost" size="sm" onClick={() => router.push(`/equipment/${item.id}/edit`)}>
+                            <Edit className="mr-2 h-4 w-4" /> Edit Item
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </>
           )}
         </CardContent>
       </Card>

@@ -7,6 +7,18 @@ export default {
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
+  	screens: {
+  		'xs': '475px',
+  		'sm': '640px',
+  		'md': '768px',  
+  		'lg': '1024px',
+  		'xl': '1280px',
+  		'2xl': '1536px',
+  		// Mobile-specific breakpoints
+  		'mobile': { 'max': '767px' },
+  		'tablet': { 'min': '768px', 'max': '1023px' },
+  		'desktop': { 'min': '1024px' },
+  	},
   	extend: {
   		colors: {
   			background: 'hsl(var(--background))',
@@ -86,6 +98,21 @@ export default {
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
   			'accordion-up': 'accordion-up 0.2s ease-out'
+  		},
+  		// Mobile-optimized spacing and sizing
+  		spacing: {
+  			'safe-top': 'env(safe-area-inset-top)',
+  			'safe-bottom': 'env(safe-area-inset-bottom)',
+  			'safe-left': 'env(safe-area-inset-left)',
+  			'safe-right': 'env(safe-area-inset-right)',
+  		},
+  		minHeight: {
+  			'screen-safe': '100dvh',
+  			'screen-mobile': 'calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom))',
+  		},
+  		height: {
+  			'screen-safe': '100dvh',
+  			'screen-mobile': 'calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom))',
   		}
   	}
   },

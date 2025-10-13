@@ -35,6 +35,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  notifications Notification[]
   @@index([username])
   @@index([role])
   @@index([isActive])
@@ -288,7 +289,21 @@ model CustomizationSettings {
   loginButtonStyle        String @default("default") // "default", "rounded", "pill"
   loginInputStyle         String @default("default") // "default", "rounded", "underline"
   loginAnimations         Boolean @default(true) // Enable login page animations
-  
+
+  // LightRays Background Settings
+  loginLightRaysOrigin       String? // 'top-center', 'top-left', etc.
+  loginLightRaysColor        String? // Color for light rays
+  loginLightRaysSpeed        Float? // Speed of animation
+  loginLightRaysSpread       Float? // Spread of rays
+  loginLightRaysLength       Float? // Length of rays
+  loginLightRaysPulsating    Boolean @default(false) // Pulsating effect
+  loginLightRaysFadeDistance Float? // Fade distance
+  loginLightRaysSaturation   Float? // Saturation
+  loginLightRaysFollowMouse  Boolean @default(true) // Follow mouse
+  loginLightRaysMouseInfluence Float? // Mouse influence
+  loginLightRaysNoiseAmount  Float? // Noise amount
+  loginLightRaysDistortion   Float? // Distortion
+
   // Advanced
   customCSS       String?
   footerText      String?
@@ -380,5 +395,27 @@ model DataSyncEvent {
   
   @@index([entityType])
   @@index([processed])
+  @@index([createdAt])
+}
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String   // Recipient user ID
+  type      String   // 'event_reminder', 'conflict_alert', 'maintenance_due', etc.
+  title     String
+  message   String
+  priority  String   @default("medium") // 'low', 'medium', 'high'
+  isRead    Boolean  @default(false)
+  entityType String? // Related entity: 'Event', 'Rental', 'Equipment', etc.
+  entityId  String?  // ID of related entity
+  actionUrl String?  // URL to navigate for action
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([isRead])
+  @@index([type])
   @@index([createdAt])
 }

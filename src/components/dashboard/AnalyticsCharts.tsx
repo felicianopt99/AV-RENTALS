@@ -23,7 +23,11 @@ const revenueChartConfig = {
 export function RevenueChart({ data }: { data: { month: string; revenue: number }[] }) {
   return (
     <ChartContainer config={revenueChartConfig} className="min-h-[200px] w-full">
-      <BarChart accessibilityLayer data={data} margin={{ top: 20, left: -20, right: 20 }}>
+      <BarChart
+        accessibilityLayer
+        data={data}
+        margin={{ top: 20, left: -20, right: 20, bottom: 20 }}
+      >
         <CartesianGrid vertical={false} />
         <XAxis
           dataKey="month"
@@ -31,16 +35,22 @@ export function RevenueChart({ data }: { data: { month: string; revenue: number 
           tickMargin={10}
           axisLine={false}
           tickFormatter={(value) => value.slice(0, 3)}
+          className="text-xs sm:text-sm"
         />
-         <YAxis 
+         <YAxis
             tickFormatter={(value) => `€${Number(value) / 1000}k`}
             tickLine={false}
             axisLine={false}
+            className="text-xs sm:text-sm"
         />
         <ChartTooltip
           cursor={false}
-          content={<ChartTooltipContent 
-            formatter={(value) => `€${Number(value).toFixed(2)}`}
+          content={<ChartTooltipContent
+            formatter={(value, name, props) => [
+              `€${Number(value).toLocaleString()}`,
+              `Revenue for ${props.payload.month}`
+            ]}
+            labelFormatter={(label) => `Month: ${label}`}
             indicator="dot"
             />}
         />
@@ -49,7 +59,7 @@ export function RevenueChart({ data }: { data: { month: string; revenue: number 
                 dataKey="revenue"
                 position="top"
                 offset={8}
-                className="fill-foreground text-xs"
+                className="fill-foreground text-xs hidden sm:block"
                 formatter={(value: number) => `€${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
             />
         </Bar>
@@ -69,7 +79,12 @@ const topClientsChartConfig = {
 export function TopClientsChart({ data }: { data: { name: string; revenue: number }[] }) {
   return (
     <ChartContainer config={topClientsChartConfig} className="min-h-[300px] w-full">
-      <BarChart accessibilityLayer data={data} layout="vertical" margin={{ left: 10 }}>
+      <BarChart
+        accessibilityLayer
+        data={data}
+        layout="vertical"
+        margin={{ left: 10, right: 10, top: 10, bottom: 10 }}
+      >
         <CartesianGrid horizontal={false} />
         <YAxis
           dataKey="name"
@@ -78,16 +93,27 @@ export function TopClientsChart({ data }: { data: { name: string; revenue: numbe
           tickMargin={10}
           axisLine={false}
           width={120}
+          className="text-xs sm:text-sm"
           tickFormatter={(value) => (value.length > 15 ? `${value.substring(0, 15)}...` : value)}
         />
         <XAxis type="number" hide />
-        <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" formatter={(value) => `€${Number(value).toFixed(2)}`} />} />
+        <ChartTooltip
+          cursor={false}
+          content={<ChartTooltipContent
+            indicator="dot"
+            formatter={(value, name, props) => [
+              `€${Number(value).toLocaleString()}`,
+              `Revenue from ${props.payload.name}`
+            ]}
+            labelFormatter={() => 'Client Revenue'}
+          />}
+        />
         <Bar dataKey="revenue" layout="vertical" fill="var(--color-revenue)" radius={4}>
            <LabelList
                 dataKey="revenue"
                 position="right"
                 offset={8}
-                className="fill-foreground text-xs"
+                className="fill-foreground text-xs hidden md:block"
                 formatter={(value: number) => `€${value.toLocaleString()}`}
             />
         </Bar>

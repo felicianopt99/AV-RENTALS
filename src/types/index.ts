@@ -1,5 +1,3 @@
-
-
 // User and Role types for authentication and permissions
 export type UserRole = 'Admin' | 'Manager' | 'Technician' | 'Employee' | 'Viewer';
 
@@ -123,6 +121,7 @@ export interface Event {
   startDate: Date;
   endDate: Date;
   assignedTo?: string;
+  date: Date; // Added date property for event filtering
 }
 
 export interface Rental {
@@ -168,6 +167,21 @@ export interface Quote {
   totalAmount: number;
   status: QuoteStatus;
   notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Notification {
+  id: string;
+  userId: string;
+  type: string;
+  title: string;
+  message: string;
+  priority: 'low' | 'medium' | 'high';
+  isRead: boolean;
+  entityType?: string;
+  entityId?: string;
+  actionUrl?: string;
   createdAt: Date;
   updatedAt: Date;
 }

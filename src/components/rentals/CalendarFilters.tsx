@@ -47,24 +47,29 @@ export function CalendarFilters({
   };
 
   return (
-    <div className="flex flex-col sm:flex-row gap-4 p-4 bg-card rounded-lg shadow-sm">
-      <div className="flex-1 flex items-center space-x-2">
-        <Search className="h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search rentals..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-          className="max-w-sm"
-        />
-        <Button variant="outline" size="sm" onClick={handleSearch}>
-          Search
-        </Button>
+    <div className="flex flex-col gap-3 p-3 md:p-4 bg-card/50 rounded-xl border border-border/30 backdrop-blur-sm">
+      {/* Search Section */}
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+        <div className="flex-1 flex items-center space-x-2">
+          <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+          <Input
+            placeholder="Search rentals..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+            className="flex-1 border-border/40 bg-background/50"
+          />
+          <Button variant="default" size="sm" onClick={handleSearch} className="flex-shrink-0">
+            Search
+          </Button>
+        </div>
       </div>
-      <div className="flex items-center space-x-4">
-        <div className="flex items-center space-x-2">
+      
+      {/* Filters Section */}
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 flex-1">
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-32">
+            <SelectTrigger className="w-full border-border/40 bg-background/50">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
             <SelectContent>
@@ -75,10 +80,9 @@ export function CalendarFilters({
               ))}
             </SelectContent>
           </Select>
-        </div>
-        <div className="flex items-center space-x-2">
+          
           <Select value={equipmentFilter} onValueChange={setEquipmentFilter}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-full border-border/40 bg-background/50">
               <SelectValue placeholder="Equipment" />
             </SelectTrigger>
             <SelectContent>
@@ -89,10 +93,9 @@ export function CalendarFilters({
               ))}
             </SelectContent>
           </Select>
-        </div>
-        <div className="flex items-center space-x-2">
+          
           <Select value={clientFilter} onValueChange={setClientFilter}>
-            <SelectTrigger className="w-32">
+            <SelectTrigger className="w-full border-border/40 bg-background/50">
               <SelectValue placeholder="Client" />
             </SelectTrigger>
             <SelectContent>
@@ -104,12 +107,15 @@ export function CalendarFilters({
             </SelectContent>
           </Select>
         </div>
-        <Button variant="outline" size="sm" onClick={handleFilterChange}>
-          Filter
-        </Button>
-        <Button variant="ghost" size="sm" onClick={handleClear}>
-          <X className="h-4 w-4" />
-        </Button>
+        
+        <div className="flex gap-2 sm:flex-shrink-0">
+          <Button variant="outline" size="sm" onClick={handleFilterChange} className="flex-1 sm:flex-initial">
+            Filter
+          </Button>
+          <Button variant="ghost" size="sm" onClick={handleClear} className="flex-shrink-0">
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     </div>
   );

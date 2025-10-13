@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+  import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
 
@@ -28,7 +28,7 @@ const customizationSchema = z.object({
   faviconUrl: z.string().optional(),
   
   // Login Page Customization
-  loginBackgroundType: z.enum(['gradient', 'solid', 'image']).optional(),
+  loginBackgroundType: z.enum(['gradient', 'solid', 'image', 'lightrays']).optional(),
   loginBackgroundColor1: z.string().optional(),
   loginBackgroundColor2: z.string().optional(),
   loginBackgroundImage: z.string().optional(),
@@ -49,9 +49,24 @@ const customizationSchema = z.object({
   loginInputStyle: z.enum(['default', 'rounded', 'underline']).optional(),
   loginAnimations: z.boolean().optional(),
   
+  // LightRays Background Settings
+  loginLightRaysOrigin: z.enum(['top-center', 'top-left', 'top-right', 'right', 'left', 'bottom-center', 'bottom-right', 'bottom-left']).optional(),
+  loginLightRaysColor: z.string().optional(),
+  loginLightRaysSpeed: z.number().min(0).max(5).nullable().optional(),
+  loginLightRaysSpread: z.number().min(0).max(2).nullable().optional(),
+  loginLightRaysLength: z.number().min(0).max(3).nullable().optional(),
+  loginLightRaysPulsating: z.boolean().optional(),
+  loginLightRaysFadeDistance: z.number().min(0).max(2).nullable().optional(),
+  loginLightRaysSaturation: z.number().min(0).max(2).nullable().optional(),
+  loginLightRaysFollowMouse: z.boolean().optional(),
+  loginLightRaysMouseInfluence: z.number().min(0).max(1).nullable().optional(),
+  loginLightRaysNoiseAmount: z.number().min(0).max(1).nullable().optional(),
+  loginLightRaysDistortion: z.number().min(0).max(0.5).nullable().optional(),
+  
   // Advanced
   customCSS: z.string().optional(),
   footerText: z.string().optional(),
+  version: z.number().optional(),
   
   // System Settings
   systemName: z.string().optional(),

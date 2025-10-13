@@ -7,7 +7,7 @@ import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import type { Client, Event, Quote } from '@/types';
 import { useAppContext } from '@/contexts/AppContext';
-import { AppHeader } from '@/components/layout/AppHeader';
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -15,11 +15,13 @@ import { Badge } from '@/components/ui/badge';
 import { Edit, FileText, PartyPopper, DollarSign, Mail, Phone, MapPin, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function ClientDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const { clients, events, quotes, isDataLoaded, currentUser } = useAppContext();
+  const isMobile = useIsMobile();
 
   const [client, setClient] = useState<Client | null>(null);
   const [clientEvents, setClientEvents] = useState<Event[]>([]);
@@ -53,8 +55,8 @@ export default function ClientDetailsPage() {
 
   if (loading || !isDataLoaded) {
     return (
-      <div className="flex flex-col h-screen">
-        <AppHeader title="Client Details" />
+      <div className="flex flex-col min-h-screen">
+
         <div className="flex-grow flex items-center justify-center p-4 md:p-6">
           <p className="text-lg text-muted-foreground">Loading client data...</p>
         </div>
@@ -65,7 +67,7 @@ export default function ClientDetailsPage() {
   if (currentUser?.role !== 'Admin') {
     return (
       <div className="flex flex-col h-full">
-        <AppHeader title="Access Denied" />
+        
         <div className="flex-1 overflow-y-auto p-4 md:p-6 flex items-center justify-center">
             <Card className="max-w-lg w-full bg-destructive/10 border-destructive/30">
                 <CardHeader className="flex-row gap-4 items-center">
@@ -83,8 +85,8 @@ export default function ClientDetailsPage() {
 
   if (!client) {
     return (
-      <div className="flex flex-col h-screen">
-        <AppHeader title="Error" />
+      <div className="flex flex-col min-h-screen">
+        
         <div className="flex-grow flex items-center justify-center p-4 md:p-6">
           <p className="text-lg text-destructive">Client not found.</p>
         </div>
@@ -105,7 +107,7 @@ export default function ClientDetailsPage() {
 
   return (
     <div className="flex flex-col h-full">
-      <AppHeader title="Client Details" />
+      
       <div className="flex-1 overflow-y-auto p-4 md:p-6">
         <div className="max-w-6xl mx-auto space-y-6">
 
@@ -154,22 +156,45 @@ export default function ClientDetailsPage() {
             </CardHeader>
             <CardContent>
                 {clientEvents.length > 0 ? (
-                    <ScrollArea className="h-64">
-                    <Table>
-                        <TableHeader>
-                            <TableRow><TableHead>Event</TableHead><TableHead>Location</TableHead><TableHead>Date</TableHead></TableRow>
-                        </TableHeader>
-                        <TableBody>
+                  <>
+                    {/* Mobile Card View */}
+                    {isMobile ? (
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
                         {clientEvents.map(event => (
-                            <TableRow key={event.id} className="cursor-pointer" onClick={() => router.push(`/events/${event.id}`)}>
-                            <TableCell className="font-medium">{event.name}</TableCell>
-                            <TableCell>{event.location}</TableCell>
-                            <TableCell>{format(new Date(event.startDate), 'PP')}</TableCell>
-                            </TableRow>
+                          <div key={event.id} className="p-3 rounded-2xl bg-background/50 hover:bg-muted/30 transition-colors cursor-pointer border-0" onClick={() => router.push(`/events/${event.id}`)}>
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-medium text-sm truncate">{event.name}</h4>
+                                <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+                                  <span className="truncate">{event.location}</span>
+                                  <span>•</span>
+                                  <span>{format(new Date(event.startDate), 'MMM d')}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         ))}
-                        </TableBody>
-                    </Table>
-                    </ScrollArea>
+                      </div>
+                    ) : (
+                      /* Desktop Table View */
+                      <ScrollArea className="h-64">
+                        <Table>
+                          <TableHeader>
+                            <TableRow><TableHead>Event</TableHead><TableHead>Location</TableHead><TableHead>Date</TableHead></TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {clientEvents.map(event => (
+                              <TableRow key={event.id} className="cursor-pointer" onClick={() => router.push(`/events/${event.id}`)}>
+                                <TableCell className="font-medium">{event.name}</TableCell>
+                                <TableCell>{event.location}</TableCell>
+                                <TableCell>{format(new Date(event.startDate), 'PP')}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </ScrollArea>
+                    )}
+                  </>
                 ) : <p className="text-sm text-muted-foreground">No events found for this client.</p>}
             </CardContent>
           </Card>
@@ -180,25 +205,49 @@ export default function ClientDetailsPage() {
             </CardHeader>
             <CardContent>
                 {clientQuotes.length > 0 ? (
-                    <ScrollArea className="h-64">
-                    <Table>
-                        <TableHeader>
-                            <TableRow><TableHead>Number</TableHead><TableHead>Name</TableHead><TableHead>Total</TableHead><TableHead>Status</TableHead></TableRow>
-                        </TableHeader>
-                        <TableBody>
+                  <>
+                    {/* Mobile Card View */}
+                    {isMobile ? (
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
                         {clientQuotes.map(quote => (
-                            <TableRow key={quote.id} className="cursor-pointer" onClick={() => router.push(`/quotes/${quote.id}`)}>
-                            <TableCell className="font-medium">{quote.quoteNumber}</TableCell>
-                            <TableCell>{quote.name}</TableCell>
-                            <TableCell>€{quote.totalAmount.toFixed(2)}</TableCell>
-                            <TableCell>
-                                <Badge variant="outline" className={getStatusColor(quote.status)}>{quote.status}</Badge>
-                            </TableCell>
-                            </TableRow>
+                          <div key={quote.id} className="p-3 rounded-2xl bg-background/50 hover:bg-muted/30 transition-colors cursor-pointer border-0" onClick={() => router.push(`/quotes/${quote.id}`)}>
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-medium text-sm">{quote.quoteNumber}</h4>
+                                <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+                                  {quote.name && <span className="truncate">{quote.name}</span>}
+                                  <span>•</span>
+                                  <span>€{quote.totalAmount.toFixed(2)}</span>
+                                </div>
+                              </div>
+                              <div className={`w-2 h-2 rounded-full ${quote.status === 'Accepted' ? 'bg-green-500' : quote.status === 'Sent' ? 'bg-blue-500' : 'bg-yellow-500'}`}></div>
+                            </div>
+                          </div>
                         ))}
-                        </TableBody>
-                    </Table>
-                    </ScrollArea>
+                      </div>
+                    ) : (
+                      /* Desktop Table View */
+                      <ScrollArea className="h-64">
+                        <Table>
+                          <TableHeader>
+                            <TableRow><TableHead>Number</TableHead><TableHead>Name</TableHead><TableHead>Total</TableHead><TableHead>Status</TableHead></TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {clientQuotes.map(quote => (
+                              <TableRow key={quote.id} className="cursor-pointer" onClick={() => router.push(`/quotes/${quote.id}`)}>
+                                <TableCell className="font-medium">{quote.quoteNumber}</TableCell>
+                                <TableCell>{quote.name}</TableCell>
+                                <TableCell>€{quote.totalAmount.toFixed(2)}</TableCell>
+                                <TableCell>
+                                  <Badge variant="outline" className={getStatusColor(quote.status)}>{quote.status}</Badge>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </ScrollArea>
+                    )}
+                  </>
                 ) : <p className="text-sm text-muted-foreground">No quotes found for this client.</p>}
             </CardContent>
           </Card>

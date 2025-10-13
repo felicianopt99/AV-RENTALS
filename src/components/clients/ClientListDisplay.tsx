@@ -67,7 +67,7 @@ export function ClientListDisplay() {
 
   if (!isDataLoaded) {
     return (
-        <div className="flex flex-col h-[calc(100vh-150px)]"> {/* Adjust height as needed */}
+        <div className="flex flex-col"> {/* Adjust height as needed */}
             <div className="flex-grow flex items-center justify-center">
                 <p className="text-lg text-muted-foreground">Loading client data...</p>
             </div>
@@ -76,10 +76,10 @@ export function ClientListDisplay() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-semibold">Clients</h2>
-        <Button asChild>
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <h2 className="text-xl md:text-2xl font-semibold">Clients</h2>
+        <Button asChild className="w-full sm:w-auto">
           <Link href="/clients/new">
             <PlusCircle className="mr-2 h-4 w-4" /> Add New Client
           </Link>
@@ -119,50 +119,94 @@ export function ClientListDisplay() {
               )}
             </div>
           ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Contact Person</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredClients.map((client) => (
-                  <TableRow key={client.id} className="cursor-pointer" onClick={() => router.push(`/clients/${client.id}`)}>
-                    <TableCell className="font-medium">{client.name}</TableCell>
-                    <TableCell>{client.contactPerson || '-'}</TableCell>
-                    <TableCell>{client.email || '-'}</TableCell>
-                    <TableCell>{client.phone || '-'}</TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0" onClick={(e) => e.stopPropagation()}>
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={(e) => {e.stopPropagation(); router.push(`/clients/${client.id}`)}}>
-                            <Eye className="mr-2 h-4 w-4" /> View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={(e) => {e.stopPropagation(); router.push(`/clients/${client.id}/edit`)}}>
-                            <Edit className="mr-2 h-4 w-4" /> Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={(e) => {e.stopPropagation(); openDeleteDialog(client)}} className="text-destructive focus:text-destructive focus:bg-destructive/10">
-                            <Trash2 className="mr-2 h-4 w-4" /> Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+          <>
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-3">
+              {filteredClients.map((client) => (
+                <Card key={client.id} className="p-3 cursor-pointer hover:bg-muted/30 transition-colors shadow-none border-0 bg-background/50" onClick={() => router.push(`/clients/${client.id}`)}>
+                  <div className="flex justify-between items-start">
+                    <div className="flex-grow min-w-0">
+                      <h3 className="font-medium text-sm truncate">{client.name}</h3>
+                      {client.contactPerson && <p className="text-xs text-muted-foreground truncate mt-0.5">{client.contactPerson}</p>}
+                      <div className="flex items-center gap-2 mt-1">
+                        {client.email && <span className="text-xs text-muted-foreground truncate">{client.email}</span>}
+                        {client.phone && (
+                          <>
+                            <span className="text-xs text-muted-foreground">•</span>
+                            <span className="text-xs text-muted-foreground">{client.phone}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-7 w-7 p-0 text-muted-foreground" onClick={(e) => e.stopPropagation()}>
+                          <span className="sr-only">Open menu</span>
+                          <MoreHorizontal className="h-3 w-3" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={(e) => {e.stopPropagation(); router.push(`/clients/${client.id}`)}}>
+                          <Eye className="mr-2 h-4 w-4" /> View Details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => {e.stopPropagation(); router.push(`/clients/${client.id}/edit`)}}>
+                          <Edit className="mr-2 h-4 w-4" /> Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => {e.stopPropagation(); openDeleteDialog(client)}} className="text-destructive focus:text-destructive focus:bg-destructive/10">
+                          <Trash2 className="mr-2 h-4 w-4" /> Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </Card>
+              ))}
+            </div>
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Contact Person</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Phone</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {filteredClients.map((client) => (
+                    <TableRow key={client.id} className="cursor-pointer" onClick={() => router.push(`/clients/${client.id}`)}>
+                      <TableCell className="font-medium">{client.name}</TableCell>
+                      <TableCell>{client.contactPerson || '-'}</TableCell>
+                      <TableCell>{client.email || '-'}</TableCell>
+                      <TableCell>{client.phone || '-'}</TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="accentGhost" className="h-8 w-8 p-0" onClick={(e) => e.stopPropagation()}>
+                              <span className="sr-only">Open menu</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={(e) => {e.stopPropagation(); router.push(`/clients/${client.id}`)}}>
+                              <Eye className="mr-2 h-4 w-4" /> View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => {e.stopPropagation(); router.push(`/clients/${client.id}/edit`)}}>
+                              <Edit className="mr-2 h-4 w-4" /> Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => {e.stopPropagation(); openDeleteDialog(client)}} className="text-destructive focus:text-destructive focus:bg-destructive/10">
+                              <Trash2 className="mr-2 h-4 w-4" /> Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </>
           )}
         </CardContent>
       </Card>

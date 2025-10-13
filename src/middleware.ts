@@ -55,10 +55,12 @@ export function middleware(request: NextRequest) {
 
   // Redirect root to login if not authenticated, dashboard if authenticated
   if (pathname === '/') {
+    const isMobile = /mobile/i.test(request.headers.get('user-agent') || '');
     if (token) {
       try {
         jwt.verify(token, process.env.JWT_SECRET!);
-        return NextResponse.redirect(new URL('/dashboard', request.url));
+        const targetUrl = isMobile ? '/home' : '/dashboard';
+        return NextResponse.redirect(new URL(targetUrl, request.url));
       } catch (error) {
         const response = NextResponse.redirect(new URL('/login', request.url));
         response.cookies.delete('auth-token');

@@ -1,4 +1,4 @@
- "use client";
+"use client";
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -8,8 +8,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { User } from '@/types';
+import ProfileCard from '@/components/ProfileCard';
+import '../../components/ProfileCard.css';
 
 export default function ProfilePage() {
   const { currentUser, isDataLoaded } = useAppContext();
@@ -20,6 +23,7 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!isDataLoaded) return;
@@ -137,12 +141,24 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="container mx-auto py-8">
-      <Card className="max-w-2xl mx-auto">
-        <CardHeader>
-          <CardTitle>My Profile</CardTitle>
-        </CardHeader>
-        <CardContent>
+    <div className="container mx-auto py-8 flex flex-col items-center">
+      <ProfileCard
+        avatarUrl={photoPreview || ''}
+        name={profile?.name || 'User'}
+        title="Profile"
+        handle={profile?.username || ''}
+        status="Active"
+        contactText="Edit Profile"
+        onContactClick={() => setIsDialogOpen(true)}
+        enableTilt={true}
+        mobileTiltSensitivity={3}
+      />
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Profile</DialogTitle>
+            <DialogDescription>Update your profile information below.</DialogDescription>
+          </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Photo Upload */}
             <div className="flex items-center space-x-4">
@@ -240,8 +256,8 @@ export default function ProfilePage() {
               {saving ? 'Saving...' : 'Save Profile'}
             </Button>
           </form>
-        </CardContent>
-      </Card>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

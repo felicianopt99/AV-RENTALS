@@ -1,7 +1,11 @@
 
 "use client";
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import type { Category, Subcategory } from '@/types';
 import { useAppContext, useAppDispatch } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
@@ -26,6 +30,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage, FormDes
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { CategoryIconMapper } from '@/components/icons/CategoryIconMapper';
+import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 const NO_ICON_VALUE = "__no-icon__";
@@ -44,6 +49,73 @@ type SubcategoryFormData = z.infer<typeof subcategorySchema>;
 
 const availableIcons = ['Mic', 'Videotape', 'Zap', 'Cuboid', 'Speaker', 'Camera', 'Projector', 'Lightbulb', 'Drum', 'Cable', 'Settings', 'Layers', 'ListTree'];
 
+interface SortableCategoryItemProps {
+  category: Category;
+  onEdit: (category: Category) => void;
+  onDelete: (category: Category) => void;
+  onAddSubcategory: (parentId: string) => void;
+  subcategories: Subcategory[];
+  onEditSubcategory: (sub: Subcategory) => void;
+  onDeleteSubcategory: (sub: Subcategory) => void;
+}
+
+function SortableCategoryItem({ category, onEdit, onDelete, onAddSubcategory, subcategories, onEditSubcategory, onDeleteSubcategory }: SortableCategoryItemProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: category.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <Card ref={setNodeRef} style={style} className={`shadow-md transition-all duration-300 hover:shadow-lg group ${isDragging ? 'opacity-50' : ''}`}>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <div className="flex items-center">
+          <div {...attributes} {...listeners} className="cursor-grab mr-2">
+            <ListTree className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <CategoryIconMapper iconName={category.icon} className="h-5 w-5 mr-2 text-primary" />
+          <CardTitle className="text-lg">{category.name}</CardTitle>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="ghost" size="icon" onClick={() => onEdit(category)}>
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={() => onDelete(category)}>
+            <Trash2 className="h-4 w-4 text-destructive" />
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <CardDescription>Subcategories:</CardDescription>
+        {subcategories.filter(sub => sub.parentId === category.id).length > 0 ? (
+          <div className="mt-2 flex flex-wrap gap-2">
+            {subcategories.filter(sub => sub.parentId === category.id).map(sub => (
+              <div key={sub.id} className="group flex items-center gap-2 bg-muted px-3 py-1 rounded-md text-sm transition-all duration-200 hover:bg-muted/80">
+                <Badge variant="secondary" className="px-2">{sub.name}</Badge>
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                  <Button variant="ghost" size="sm" onClick={() => onEditSubcategory(sub)}>
+                    <Edit className="h-3 w-3" />
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => onDeleteSubcategory(sub)}>
+                    <Trash2 className="h-3 w-3 text-destructive" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground mt-1">No subcategories yet.</p>
+        )}
+      </CardContent>
+      <CardFooter>
+         <Button variant="outline" size="sm" onClick={() => onAddSubcategory(category.id)}>
+          <PlusCircle className="mr-1 h-3 w-3" /> Add Subcategory
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+}
 
 export function CategoryManager() {
   const { categories, subcategories } = useAppContext();
@@ -57,6 +129,33 @@ export function CategoryManager() {
 
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
   const [subcategoryToDelete, setSubcategoryToDelete] = useState<Subcategory | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const [orderedCategories, setOrderedCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    setOrderedCategories(categories);
+  }, [categories]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setOrderedCategories((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
 
   const categoryForm = useForm<CategoryFormData>({
     resolver: zodResolver(categorySchema),
@@ -141,69 +240,61 @@ export function CategoryManager() {
   }, [subcategoryToDelete, deleteSubcategory, toast]);
 
 
+  const filteredCategories = orderedCategories.filter(cat => cat.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-semibold">Manage Categories</h2>
-        <Button onClick={handleAddCategory}>
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <h2 className="text-xl md:text-2xl font-semibold">Categories</h2>
+        <Button onClick={handleAddCategory} className="w-full sm:w-auto">
           <PlusCircle className="mr-2 h-4 w-4" /> Add Category
         </Button>
       </div>
+      <div className="mb-4">
+        <Input
+          placeholder="Search categories..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="max-w-sm"
+        />
+      </div>
 
-      <ScrollArea className="h-[calc(100vh-18rem)]"> {/* Adjusted height for better responsiveness */}
+      <ScrollArea className="min-h-[400px] max-h-[calc(100vh-200px)] md:min-h-[500px]">
         <div className="space-y-4 pr-4">
-        {categories.length === 0 && (
-          <div className="text-center py-16 text-muted-foreground flex flex-col items-center">
-            <FolderPlus className="w-16 h-16 mb-4 text-primary/50" />
-            <p className="text-xl mb-1">No categories created yet.</p>
-            <p className="text-sm">Click "Add Category" to start organizing your equipment.</p>
-          </div>
-        )}
-        {categories.map(category => (
-          <Card key={category.id} className="shadow-md">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <div className="flex items-center">
-                <CategoryIconMapper iconName={category.icon} className="h-5 w-5 mr-2 text-primary" />
-                <CardTitle className="text-lg">{category.name}</CardTitle>
-              </div>
-              <div className="flex gap-2">
-                <Button variant="ghost" size="icon" onClick={() => handleEditCategory(category)}>
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon" onClick={() => openCategoryDeleteDialog(category)}>
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <CardDescription>Subcategories:</CardDescription>
-              {subcategories.filter(sub => sub.parentId === category.id).length > 0 ? (
-                <ul className="mt-2 space-y-1 list-disc list-inside text-sm">
-                  {subcategories.filter(sub => sub.parentId === category.id).map(sub => (
-                    <li key={sub.id} className="flex justify-between items-center group">
-                      <span>{sub.name}</span>
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button variant="ghost" size="sm" onClick={() => handleEditSubcategory(sub)}>
-                          <Edit className="h-3 w-3" />
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => openSubcategoryDeleteDialog(sub)}>
-                          <Trash2 className="h-3 w-3 text-destructive" />
-                        </Button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-xs text-muted-foreground mt-1">No subcategories yet.</p>
-              )}
-            </CardContent>
-            <CardFooter>
-               <Button variant="outline" size="sm" onClick={() => handleAddSubcategory(category.id)}>
-                <PlusCircle className="mr-1 h-3 w-3" /> Add Subcategory
+        {filteredCategories.length === 0 ? (
+          searchTerm ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <p className="text-lg mb-2">No categories found</p>
+              <p className="text-sm">Try adjusting your search terms.</p>
+            </div>
+          ) : (
+            <div className="text-center py-16 text-muted-foreground flex flex-col items-center">
+              <FolderPlus className="w-16 h-16 mb-4 text-primary/50" />
+              <p className="text-xl mb-1">No categories created yet.</p>
+              <p className="text-sm mb-4">Click "Add Category" to start organizing your equipment.</p>
+              <Button onClick={handleAddCategory} variant="outline">
+                <PlusCircle className="mr-2 h-4 w-4" /> Add Your First Category
               </Button>
-            </CardFooter>
-          </Card>
-        ))}
+            </div>
+          )
+        ) : (
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={filteredCategories.map(cat => cat.id)} strategy={verticalListSortingStrategy}>
+              {filteredCategories.map(category => (
+                <SortableCategoryItem
+                  key={category.id}
+                  category={category}
+                  onEdit={handleEditCategory}
+                  onDelete={openCategoryDeleteDialog}
+                  onAddSubcategory={handleAddSubcategory}
+                  subcategories={subcategories}
+                  onEditSubcategory={handleEditSubcategory}
+                  onDeleteSubcategory={openSubcategoryDeleteDialog}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
+        )}
         </div>
       </ScrollArea>
 

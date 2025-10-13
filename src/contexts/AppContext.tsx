@@ -31,6 +31,7 @@ interface AppContextState {
   isAuthenticated: boolean;
   isAuthLoading: boolean;
   error: string | null;
+  user: User | null; // Added user property
 }
 
 const AppContext = createContext<AppContextState | undefined>(undefined);
@@ -341,7 +342,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Event operations
-  const addEvent = useCallback(async (event: Omit<Event, 'id'>): Promise<string> => {
+  const addEvent = useCallback(async (event: Omit<Event, 'id'> & { date: Date }): Promise<string> => {
     try {
       const newEvent = await eventsAPI.create(event);
       setEvents(prev => [...prev, newEvent]);
@@ -458,7 +459,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         clientId: quote.clientId || '', 
         location: quote.location || `From Quote #${quote.quoteNumber}`, 
         startDate: quote.startDate, 
-        endDate: quote.endDate 
+        endDate: quote.endDate,
+        date: quote.startDate // Added date property
       });
       
       // Create rentals for each quote item
@@ -467,17 +469,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           eventId,
           equipmentId: item.equipmentId,
           quantityRented: item.quantity,
-          prepStatus: 'pending'
         });
       }
-      
-      // Update quote status
-      await updateQuote({ ...quote, status: 'Accepted' });
-      
-      return { success: true, message: `Quote "${quote.name || quote.quoteNumber}" approved. Event and rentals created.` };
+
+      return { success: true, message: 'Quote approved successfully.' };
     } catch (err) {
       console.error('Error approving quote:', err);
-      return { success: false, message: 'Failed to approve quote' };
+      throw err;
     }
   }, [addEvent, addRental, updateQuote]);
 
@@ -496,6 +494,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     isAuthenticated,
     isAuthLoading,
     error,
+    user: currentUser, // Set user property
   };
 
   const dispatchValue: AppContextDispatch = {

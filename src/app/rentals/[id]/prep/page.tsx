@@ -7,7 +7,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo } from 'react';
 import type { Rental, EquipmentItem, Event } from '@/types';
 import { useAppContext } from '@/contexts/AppContext';
-import { AppHeader } from '@/components/layout/AppHeader';
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -133,8 +133,7 @@ export default function RentalPrepPage() {
 
   if (loading || !isDataLoaded) {
     return (
-        <div className="flex flex-col h-screen">
-            <AppHeader title="Prepare Event" />
+        <div className="flex flex-col min-h-screen">
             <div className="flex-grow flex items-center justify-center p-4 md:p-6">
                 <p className="text-lg text-muted-foreground">Loading event data...</p>
             </div>
@@ -144,8 +143,7 @@ export default function RentalPrepPage() {
 
   if (!event) {
     return (
-        <div className="flex flex-col h-screen">
-            <AppHeader title="Prepare Event" />
+        <div className="flex flex-col min-h-screen">
             <div className="flex-grow flex items-center justify-center p-4 md:p-6">
                 <p className="text-lg text-destructive">Event not found.</p>
             </div>
@@ -161,7 +159,7 @@ export default function RentalPrepPage() {
   
   return (
     <div className="flex flex-col h-full">
-      <AppHeader title={`Prepare: ${event.name}`} />
+      
       <div className="flex-1 overflow-y-auto p-4 md:p-6">
         
         <Card className="mb-6 shadow-md">

@@ -259,7 +259,7 @@ export function EquipmentForm({ initialData, onSubmitSuccess }: EquipmentFormPro
             </FormItem>
           )}
         />
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
           <FormField
             control={form.control}
             name="categoryId"
@@ -268,7 +268,7 @@ export function EquipmentForm({ initialData, onSubmitSuccess }: EquipmentFormPro
                 <FormLabel>Category</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select a category" />
                     </SelectTrigger>
                   </FormControl>
@@ -288,16 +288,16 @@ export function EquipmentForm({ initialData, onSubmitSuccess }: EquipmentFormPro
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Subcategory (Optional)</FormLabel>
-                <Select 
-                  onValueChange={(value) => field.onChange(value === NO_SUBCATEGORY_VALUE ? "" : value)} 
-                  value={field.value || NO_SUBCATEGORY_VALUE} 
+                <Select
+                  onValueChange={(value) => field.onChange(value === NO_SUBCATEGORY_VALUE ? "" : value)}
+                  value={field.value || NO_SUBCATEGORY_VALUE}
                   disabled={availableSubcategories.length === 0 && !selectedCategoryId}
                 >
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder={
-                        !selectedCategoryId ? "Select a category first" : 
-                        availableSubcategories.length === 0 ? "No subcategories for selected category" : 
+                        !selectedCategoryId ? "Select a category first" :
+                        availableSubcategories.length === 0 ? "No subcategories for selected category" :
                         "Select a subcategory"
                       } />
                     </SelectTrigger>
@@ -314,7 +314,7 @@ export function EquipmentForm({ initialData, onSubmitSuccess }: EquipmentFormPro
             )}
           />
         </div>
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
           <FormField
             control={form.control}
             name="quantity"

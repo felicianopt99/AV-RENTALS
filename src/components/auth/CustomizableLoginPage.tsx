@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Lock, Building } from 'lucide-react';
+import LightRays from '@/components/LightRays';
 
 const loginSchema = z.object({
   username: z.string().min(1, 'Username is required'),
@@ -25,7 +26,7 @@ interface CustomizationSettings {
   useTextLogo?: boolean;
   logoUrl?: string;
   primaryColor?: string;
-  loginBackgroundType?: 'gradient' | 'solid' | 'image';
+  loginBackgroundType?: 'gradient' | 'solid' | 'image' | 'lightrays';
   loginBackgroundColor1?: string;
   loginBackgroundColor2?: string;
   loginBackgroundImage?: string;
@@ -45,6 +46,19 @@ interface CustomizationSettings {
   loginButtonStyle?: 'default' | 'rounded' | 'pill';
   loginInputStyle?: 'default' | 'rounded' | 'underline';
   loginAnimations?: boolean;
+  // LightRays Background Settings
+  loginLightRaysOrigin?: 'top-center' | 'top-left' | 'top-right' | 'right' | 'left' | 'bottom-center' | 'bottom-right' | 'bottom-left';
+  loginLightRaysColor?: string;
+  loginLightRaysSpeed?: number;
+  loginLightRaysSpread?: number;
+  loginLightRaysLength?: number;
+  loginLightRaysPulsating?: boolean;
+  loginLightRaysFadeDistance?: number;
+  loginLightRaysSaturation?: number;
+  loginLightRaysFollowMouse?: boolean;
+  loginLightRaysMouseInfluence?: number;
+  loginLightRaysNoiseAmount?: number;
+  loginLightRaysDistortion?: number;
 }
 
 export default function CustomizableLoginPage() {
@@ -140,6 +154,10 @@ export default function CustomizableLoginPage() {
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
         };
+      case 'lightrays':
+        return {
+          backgroundColor: '#0a0a0a', // Dark base for light rays
+        };
       case 'gradient':
       default:
         return {
@@ -220,7 +238,7 @@ export default function CustomizableLoginPage() {
 
   if (!isSettingsLoaded) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
@@ -228,12 +246,33 @@ export default function CustomizableLoginPage() {
 
   return (
     <div 
-      className="min-h-screen flex px-4 relative transition-all duration-300 items-center justify-center"
+      className="min-h-screen flex px-4 relative transition-all duration-300 items-center justify-center overflow-hidden"
       style={getBackgroundStyle()}
     >
+      {/* LightRays Background */}
+      {settings.loginBackgroundType === 'lightrays' && (
+        <div className="absolute inset-0 z-0">
+          <LightRays
+            raysOrigin={settings.loginLightRaysOrigin || 'top-center'}
+            raysColor={settings.loginLightRaysColor || '#00ffff'}
+            raysSpeed={settings.loginLightRaysSpeed || 1.5}
+            lightSpread={settings.loginLightRaysSpread || 0.8}
+            rayLength={settings.loginLightRaysLength || 1.2}
+            pulsating={settings.loginLightRaysPulsating || false}
+            fadeDistance={settings.loginLightRaysFadeDistance || 1.0}
+            saturation={settings.loginLightRaysSaturation || 1.0}
+            followMouse={settings.loginLightRaysFollowMouse || true}
+            mouseInfluence={settings.loginLightRaysMouseInfluence || 0.1}
+            noiseAmount={settings.loginLightRaysNoiseAmount || 0.1}
+            distortion={settings.loginLightRaysDistortion || 0.05}
+            className="w-full h-full"
+          />
+        </div>
+      )}
+
       {/* Background overlay for better contrast with image backgrounds */}
       {settings.loginBackgroundType === 'image' && (
-        <div className="absolute inset-0 bg-black bg-opacity-40" />
+        <div className="absolute inset-0 bg-black bg-opacity-40 z-5" />
       )}
       
       <div className={`relative z-10 w-full max-w-md ${getCardPositionClasses()}`}>
