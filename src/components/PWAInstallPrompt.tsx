@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, X } from 'lucide-react';
+import { useAppContext } from '@/contexts/AppContext';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -10,8 +11,17 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export function PWAInstallPrompt() {
+  const { currentUser } = useAppContext();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+  const [shownThisLogin, setShownThisLogin] = useState(false);
+
+  // Reset shownThisLogin when user logs in
+  useEffect(() => {
+    if (currentUser) {
+      setShownThisLogin(false);
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     // Register service worker
@@ -29,7 +39,17 @@ export function PWAInstallPrompt() {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      setShowInstallPrompt(true);
+      // Only show if not shown this login and not dismissed recently
+      const dismissedTime = localStorage.getItem('pwa-install-dismissed');
+      let dismissedRecently = false;
+      if (dismissedTime) {
+        const daysSinceDismissal = (Date.now() - parseInt(dismissedTime)) / (1000 * 60 * 60 * 24);
+        dismissedRecently = daysSinceDismissal < 7;
+      }
+      if (!shownThisLogin && !dismissedRecently) {
+        setShowInstallPrompt(true);
+        setShownThisLogin(true);
+      }
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -43,14 +63,14 @@ export function PWAInstallPrompt() {
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     };
-  }, []);
+  }, [shownThisLogin]);
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
 
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    
+
     if (outcome === 'accepted') {
       setDeferredPrompt(null);
       setShowInstallPrompt(false);
@@ -59,20 +79,9 @@ export function PWAInstallPrompt() {
 
   const handleDismiss = () => {
     setShowInstallPrompt(false);
-    // Store dismissal in localStorage to avoid showing again
+    // Store dismissal in localStorage to avoid showing again for 7 days
     localStorage.setItem('pwa-install-dismissed', Date.now().toString());
   };
-
-  // Don't show if dismissed recently (within 7 days)
-  useEffect(() => {
-    const dismissedTime = localStorage.getItem('pwa-install-dismissed');
-    if (dismissedTime) {
-      const daysSinceDismissal = (Date.now() - parseInt(dismissedTime)) / (1000 * 60 * 60 * 24);
-      if (daysSinceDismissal < 7) {
-        setShowInstallPrompt(false);
-      }
-    }
-  }, []);
 
   if (!showInstallPrompt || !deferredPrompt) return null;
 
