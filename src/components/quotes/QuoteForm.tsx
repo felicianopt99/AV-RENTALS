@@ -37,8 +37,22 @@ const MANUAL_CLIENT_ENTRY_VALUE = "__manual_client__";
 
 const loadDraft = () => {
   if (typeof window !== 'undefined') {
-    const draft = localStorage.getItem('quoteDraft');
-    return draft ? JSON.parse(draft) : {};
+    try {
+      const draft = localStorage.getItem('quoteDraft');
+      if (!draft || draft.trim() === '' || draft === 'undefined' || draft === 'null') {
+        return {};
+      }
+      return JSON.parse(draft);
+    } catch (error) {
+      console.warn('Error parsing quote draft from localStorage:', error);
+      // Clear the corrupted data
+      try {
+        localStorage.removeItem('quoteDraft');
+      } catch (clearError) {
+        console.warn('Error clearing corrupted quote draft:', clearError);
+      }
+      return {};
+    }
   }
   return {};
 };

@@ -124,20 +124,24 @@ export function BottomNav() {
   return (
     <nav
       className="pointer-events-none fixed inset-x-0 bottom-0 z-[9999] overflow-x-hidden"
-      style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
+      style={{ 
+        paddingBottom: 'max(env(safe-area-inset-bottom), 8px)',
+        paddingLeft: 'max(env(safe-area-inset-left), 8px)',
+        paddingRight: 'max(env(safe-area-inset-right), 8px)'
+      }}
       aria-label="Primary"
     >
       <div
         ref={navRef}
         className={cn(
-          // Make the bar centered and properly positioned
-          "pointer-events-auto w-[90%] max-w-sm mx-auto overflow-x-hidden",
+          // Make the bar properly responsive and fit to screen
+          "pointer-events-auto w-full max-w-[calc(100vw-16px)] mx-auto overflow-x-hidden",
           "rounded-2xl",
           "bg-white/80 dark:bg-black/80 backdrop-blur-xl",
           "shadow-[0_4px_20px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)]",
           "touch-pan-y"
         )}
-        style={{ marginBottom: '12px' }}
+        style={{ marginBottom: '8px' }}
       >
         <div className="flex justify-around items-end gap-0.5 px-3 py-2.5">
           {visibleNavItems.map((item, index) => {

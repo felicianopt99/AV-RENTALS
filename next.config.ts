@@ -28,6 +28,15 @@ const nextConfig: NextConfig = {
     // Remove console logs in production
     removeConsole: process.env.NODE_ENV === 'production',
   },
+  // Configure static asset handling to avoid conflicts
+  async rewrites() {
+    return [
+      {
+        source: '/favicon.ico',
+        destination: '/public/favicon.ico',
+      },
+    ];
+  },
 };
 
 export default nextConfig;

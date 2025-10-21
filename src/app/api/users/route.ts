@@ -33,6 +33,11 @@ const updateUserSchema = z.object({
   contactPhone: z.string().optional(),
   contactEmail: z.string().optional(),
   emergencyPhone: z.string().optional(),
+  // Team fields optional
+  isTeamMember: z.boolean().optional(),
+  teamTitle: z.string().optional(),
+  teamBio: z.string().optional(),
+  teamCoverPhoto: z.string().optional(),
 })
 
 // Helper function to get user from token
@@ -49,8 +54,17 @@ function getUserFromRequest(request: NextRequest): { userId: string; username: s
 }
 
 // GET /api/users - Get all users
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    // Authentication is optional for GET requests to allow team page to work
+    // But we'll log any auth issues for debugging
+    const user = getUserFromRequest(request);
+    if (!user) {
+      console.log('GET /api/users: No authentication token found, proceeding anyway');
+    } else {
+      console.log('GET /api/users: Authenticated as', user.username);
+    }
+
     const users = await prisma.user.findMany({
       select: {
         id: true,
@@ -65,6 +79,11 @@ export async function GET() {
         contactPhone: true,
         contactEmail: true,
         emergencyPhone: true,
+        // Team fields
+        isTeamMember: true,
+        teamTitle: true,
+        teamBio: true,
+        teamCoverPhoto: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -139,6 +158,11 @@ export async function POST(request: NextRequest) {
         contactPhone: true,
         contactEmail: true,
         emergencyPhone: true,
+        // Team fields
+        isTeamMember: true,
+        teamTitle: true,
+        teamBio: true,
+        teamCoverPhoto: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -195,6 +219,11 @@ export async function PUT(request: NextRequest) {
         contactPhone: true,
         contactEmail: true,
         emergencyPhone: true,
+        // Team fields
+        isTeamMember: true,
+        teamTitle: true,
+        teamBio: true,
+        teamCoverPhoto: true,
         createdAt: true,
         updatedAt: true,
       },

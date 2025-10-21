@@ -13,7 +13,12 @@ export function MobileLayout({ children }: { children: React.ReactNode }) {
     <MobileNavProvider>
       <div className="flex flex-col h-screen bg-white dark:bg-black text-gray-900 dark:text-gray-100 overflow-hidden relative">
         <AppHeader />
-        <main className="flex-1 overflow-y-auto overflow-x-hidden pb-[160px] md:pb-0 min-w-0 max-w-full bg-white dark:bg-black relative z-[1]">
+        <main 
+          className="flex-1 overflow-y-auto overflow-x-hidden min-w-0 max-w-full bg-white dark:bg-black relative z-[1]"
+          style={{ 
+            paddingBottom: 'max(calc(80px + env(safe-area-inset-bottom)), 100px)' 
+          }}
+        >
           <div className="page-container">
             <MobileWelcomeBar />
             {children}

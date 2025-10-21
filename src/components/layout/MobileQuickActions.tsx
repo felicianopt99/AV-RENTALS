@@ -27,7 +27,10 @@ export function MobileQuickActions() {
     <>
       {/* Floating Action Button */}
       <Button
-        className="fixed left-1/2 -translate-x-1/2 bottom-[calc(env(safe-area-inset-bottom)+72px)] h-14 w-14 rounded-full bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 shadow-xl shadow-gray-900/30 dark:shadow-gray-100/30 hover:scale-[1.03] active:scale-95 transition-transform z-[9998]"
+        className="fixed left-1/2 -translate-x-1/2 h-14 w-14 rounded-full bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 shadow-xl shadow-gray-900/30 dark:shadow-gray-100/30 hover:scale-[1.03] active:scale-95 transition-transform z-[9998]"
+        style={{ 
+          bottom: `max(calc(72px + env(safe-area-inset-bottom)), 80px)` 
+        }}
         onClick={() => setOpen(true)}
         size="icon"
       >

@@ -30,7 +30,7 @@ class EnhancedPrismaClient extends PrismaClient {
 
   // Enhanced transaction with optimistic locking
   async safeTransaction<T>(
-    operations: (tx: PrismaClient) => Promise<T>,
+    operations: (tx: Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$extends'>) => Promise<T>,
     maxRetries = 3
   ): Promise<T> {
     return this.withRetry(async () => {

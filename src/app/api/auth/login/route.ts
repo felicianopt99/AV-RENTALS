@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
+// @ts-ignore
 import jwt from 'jsonwebtoken';
 import { prisma } from '@/lib/db-enhanced';
 

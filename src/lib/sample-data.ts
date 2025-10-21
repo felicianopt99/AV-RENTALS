@@ -181,6 +181,7 @@ export const sampleEvents: Event[] = [
         location: 'Conference Hall A',
         startDate: new Date(new Date(today).setDate(today.getDate() - 5)),
         endDate: new Date(new Date(today).setDate(today.getDate() - 3)),
+        date: new Date(new Date(today).setDate(today.getDate() - 5)),
     },
     {
         id: 'event2',
@@ -189,6 +190,7 @@ export const sampleEvents: Event[] = [
         location: 'Hotel Ballroom',
         startDate: new Date(new Date(today).setDate(today.getDate() + 2)),
         endDate: new Date(new Date(today).setDate(today.getDate() + 4)),
+        date: new Date(new Date(today).setDate(today.getDate() + 2)),
     },
     {
         id: 'event3',
@@ -197,6 +199,7 @@ export const sampleEvents: Event[] = [
         location: 'Outdoor Stage',
         startDate: new Date(new Date(today).setDate(today.getDate() + 5)),
         endDate: new Date(new Date(today).setDate(today.getDate() + 7)),
+        date: new Date(new Date(today).setDate(today.getDate() + 5)),
     }
 ];
 

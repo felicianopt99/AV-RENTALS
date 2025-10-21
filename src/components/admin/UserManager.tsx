@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Shield, Eye, EyeOff } from 'lucide-react';
+import { Plus, Edit, Trash2, Shield, Eye, EyeOff, Users, Upload } from 'lucide-react';
 import type { User, UserRole, CreateUserData, UserFormValues } from '@/types';
 import { ROLE_DESCRIPTIONS } from '@/lib/permissions';
 
@@ -30,6 +30,9 @@ const updateUserSchema = z.object({
   password: z.string().min(6).optional().or(z.literal('')),
   role: z.enum(['Admin', 'Manager', 'Technician', 'Employee', 'Viewer']),
   isActive: z.boolean(),
+  isTeamMember: z.boolean(),
+  teamTitle: z.string().optional(),
+  teamBio: z.string().optional(),
 })
 
 type CreateUserFormValues = z.infer<typeof createUserSchema>;
@@ -44,9 +47,10 @@ export function UserManager({ currentUser }: UserManagerProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [uploadingCoverPhoto, setUploadingCoverPhoto] = useState<string | null>(null);
   const { toast } = useToast();
 
-    const createForm = useForm<CreateUserData>({
+  const createForm = useForm<CreateUserData>({
     resolver: zodResolver(createUserSchema),
     defaultValues: {
       name: '',
@@ -62,13 +66,33 @@ export function UserManager({ currentUser }: UserManagerProps) {
 
   const loadUsers = async () => {
     try {
-      const response = await fetch('/api/users');
+      console.log('Loading users...');
+      const response = await fetch('/api/users', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        cache: 'no-store',
+      });
+      
+      console.log('Users API response status:', response.status);
+      
       if (response.ok) {
         const usersData = await response.json();
+        console.log('Users loaded:', usersData);
         setUsers(usersData);
+      } else {
+        console.error('Failed to load users - Status:', response.status);
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
       }
     } catch (error) {
       console.error('Error loading users:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to load users. Please refresh the page.',
+      });
     } finally {
       setIsLoading(false);
     }
@@ -148,6 +172,116 @@ export function UserManager({ currentUser }: UserManagerProps) {
     }
   };
 
+  const toggleTeamMember = async (user: User) => {
+    try {
+      const response = await fetch('/api/users', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: user.id,
+          isTeamMember: !user.isTeamMember,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update team member status');
+      }
+
+      const updatedUser = await response.json();
+      setUsers(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u));
+      
+      toast({
+        title: 'Team member status updated',
+        description: `${user.name} ${updatedUser.isTeamMember ? 'added to' : 'removed from'} team.`,
+      });
+    } catch (error) {
+      console.error('Error updating team member status:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to update team member status',
+      });
+    }
+  };
+
+  const uploadCoverPhoto = async (file: File, userId: string) => {
+    setUploadingCoverPhoto(userId);
+    
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', 'team-cover');
+      formData.append('userId', userId);
+      
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload cover photo');
+      }
+
+      const { url } = await response.json();
+      
+      // Update user with new cover photo
+      const updateResponse = await fetch('/api/users', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: userId,
+          teamCoverPhoto: url,
+        }),
+      });
+
+      if (!updateResponse.ok) {
+        throw new Error('Failed to update user cover photo');
+      }
+
+      const updatedUser = await updateResponse.json();
+      setUsers(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u));
+      
+      toast({
+        title: 'Cover photo updated',
+        description: 'Team cover photo has been uploaded successfully.',
+      });
+    } catch (error) {
+      console.error('Error uploading cover photo:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to upload cover photo',
+      });
+    } finally {
+      setUploadingCoverPhoto(null);
+    }
+  };
+
+  const handleCoverPhotoUpload = (event: React.ChangeEvent<HTMLInputElement>, userId: string) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast({
+          variant: 'destructive',
+          title: 'File too large',
+          description: 'Please select an image smaller than 5MB.',
+        });
+        return;
+      }
+      
+      if (!file.type.startsWith('image/')) {
+        toast({
+          variant: 'destructive',
+          title: 'Invalid file type',
+          description: 'Please select an image file.',
+        });
+        return;
+      }
+      
+      uploadCoverPhoto(file, userId);
+    }
+  };
+
   const onDeleteUser = async (user: User) => {
     if (user.id === currentUser.id) {
       toast({
@@ -193,6 +327,9 @@ export function UserManager({ currentUser }: UserManagerProps) {
       password: '',
       role: user.role,
       isActive: user.isActive,
+      isTeamMember: user.isTeamMember || false,
+      teamTitle: user.teamTitle || '',
+      teamBio: user.teamBio || '',
     });
   };
 
@@ -339,9 +476,45 @@ export function UserManager({ currentUser }: UserManagerProps) {
                       {user.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </div>
+                  {user.isTeamMember && (
+                    <div className="flex items-center space-x-2">
+                      <Users className="w-4 h-4 text-blue-500" />
+                      <span className="text-sm text-blue-600">Team Member</span>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="flex items-center space-x-2">
+                  <Button
+                    variant={user.isTeamMember ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => toggleTeamMember(user)}
+                  >
+                    <Users className="w-4 h-4 mr-1" />
+                    {user.isTeamMember ? 'Remove from Team' : 'Add to Team'}
+                  </Button>
+                  
+                  {user.isTeamMember && (
+                    <div className="relative">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleCoverPhotoUpload(e, user.id)}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        disabled={uploadingCoverPhoto === user.id}
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={uploadingCoverPhoto === user.id}
+                        className="pointer-events-none"
+                      >
+                        <Upload className="w-4 h-4 mr-1" />
+                        {uploadingCoverPhoto === user.id ? 'Uploading...' : 'Cover Photo'}
+                      </Button>
+                    </div>
+                  )}
+                  
                   <Button
                     variant="outline"
                     size="sm"

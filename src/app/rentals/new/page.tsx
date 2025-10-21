@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { RentalForm } from '@/components/rentals/RentalForm';
@@ -9,7 +9,7 @@ import { format, parse } from 'date-fns';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
-export default function NewRentalPage() {
+function NewRentalContent() {
   const searchParams = useSearchParams();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
@@ -53,5 +53,13 @@ export default function NewRentalPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function NewRentalPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <NewRentalContent />
+    </Suspense>
   );
 }

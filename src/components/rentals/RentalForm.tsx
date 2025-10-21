@@ -204,7 +204,7 @@ export function RentalForm({ initialDate, onSuccess }: RentalFormProps) {
                   <Calendar
                     mode="single"
                     selected={endDate}
-                    onSelect={setEndDate}
+                    onSelect={(date) => date && setEndDate(date)}
                     initialFocus
                   />
                 </PopoverContent>

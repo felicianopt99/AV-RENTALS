@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
       validatedData.imageUrl = await downloadImage(validatedData.imageUrl);
     }
 
-    const equipment = await prisma.$transaction(async (tx: typeof prisma) => {
+    const equipment = await prisma.$transaction(async (tx) => {
       const newEquipment = await tx.equipmentItem.create({
         data: {
           ...validatedData,
@@ -261,7 +261,7 @@ export async function DELETE(request: NextRequest) {
       include: { category: true, subcategory: true }
     })
     
-    await prisma.$transaction(async (tx: typeof prisma) => {
+    await prisma.$transaction(async (tx) => {
       await tx.equipmentItem.delete({
         where: { id },
       })
@@ -269,7 +269,7 @@ export async function DELETE(request: NextRequest) {
 
     // Emit real-time update
     if (equipment) {
-      await emitDataChange('EquipmentItem', 'DELETE', { id, ...equipment }, user.userId)
+      await emitDataChange('EquipmentItem', 'DELETE', { ...equipment }, user.userId)
     }
     
     return NextResponse.json({ success: true })

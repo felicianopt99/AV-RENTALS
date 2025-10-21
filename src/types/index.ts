@@ -17,6 +17,11 @@ export interface User {
   contactPhone?: string;
   contactEmail?: string;
   emergencyPhone?: string;
+  // Team member fields
+  isTeamMember?: boolean;
+  teamTitle?: string;
+  teamBio?: string;
+  teamCoverPhoto?: string;
   createdBy?: string;
   updatedBy?: string;
   createdAt: Date;

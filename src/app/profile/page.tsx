@@ -38,11 +38,22 @@ export default function ProfilePage() {
     try {
       const response = await fetch('/api/users/profile', { credentials: 'include' });
       if (response.ok) {
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new Error('Expected JSON response but received different content type');
+        }
+        
         const data = await response.json();
         setProfile(data);
         setPhotoPreview(data.photoUrl || null);
       } else {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (jsonError) {
+          errorData = { error: `HTTP ${response.status}: ${response.statusText}` };
+        }
         toast({
           title: 'Error',
           description: errorData.error || 'Failed to load profile',
@@ -51,9 +62,17 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
+      let errorMessage = 'Failed to load profile';
+      
+      if (error instanceof SyntaxError && error.message.includes('JSON')) {
+        errorMessage = 'Invalid response from server';
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: 'Error',
-        description: 'Failed to load profile',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {

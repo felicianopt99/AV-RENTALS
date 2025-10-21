@@ -89,7 +89,10 @@ export function EventFormDialog({ isOpen, onOpenChange, initialData, onSubmitSuc
         toast({ title: "Event Updated", description: `Event "${data.name}" has been updated.` });
         if (onSubmitSuccess) onSubmitSuccess();
       } else {
-        const newEventId = await addEvent(data);
+        const newEventId = await addEvent({ 
+          ...data, 
+          date: data.startDate // Use startDate as the date property
+        });
         toast({ title: "Event Created", description: `Event "${data.name}" has been created.` });
         if (onSubmitSuccess) onSubmitSuccess(newEventId);
       }

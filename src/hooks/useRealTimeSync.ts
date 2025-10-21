@@ -49,8 +49,26 @@ export function useRealTimeSync(options: UseRealTimeSyncOptions) {
       // Join user room if we have user context
       const user = localStorage.getItem('currentUser')
       if (user) {
-        const userData = JSON.parse(user)
-        newSocket.emit('join-user-room', userData.id)
+        try {
+          // Check if the user data is valid JSON
+          if (user.trim() === '' || user === 'undefined' || user === 'null') {
+            console.warn('Invalid user data in localStorage, skipping user room join');
+            return;
+          }
+          
+          const userData = JSON.parse(user)
+          if (userData && userData.id) {
+            newSocket.emit('join-user-room', userData.id)
+          }
+        } catch (parseError) {
+          console.warn('Error parsing user data from localStorage:', parseError);
+          // Clear the corrupted data
+          try {
+            localStorage.removeItem('currentUser');
+          } catch (clearError) {
+            console.warn('Error clearing corrupted user data:', clearError);
+          }
+        }
       }
     })
 

@@ -28,6 +28,12 @@ model User {
   contactEmail     String?
   emergencyPhone   String?
 
+  // Team member fields
+  isTeamMember     Boolean @default(false)
+  teamTitle        String?
+  teamBio          String?
+  teamCoverPhoto   String?
+
   // Audit fields
   createdBy String?
   updatedBy String?
@@ -39,6 +45,7 @@ model User {
   @@index([username])
   @@index([role])
   @@index([isActive])
+  @@index([isTeamMember])
 }
 
 model Category {

@@ -9,6 +9,7 @@ import { Bell, UserCircle, LogOut, User } from 'lucide-react';
 import { useAppContext, useAppDispatch } from '@/contexts/AppContext';
 import { useToast } from '@/hooks/use-toast';
 import { Notification } from '@/types';
+import { ClientOnly, useIsClient } from '@/hooks/useIsClient';
 
 interface AppHeaderProps {
   title?: string;
@@ -21,24 +22,33 @@ export function AppHeader({ title, children, className }: AppHeaderProps) {
   const { logout } = useAppDispatch();
   const router = useRouter();
   const { toast } = useToast();
-  const [isClient, setIsClient] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  const isClient = useIsClient();
 
   useEffect(() => {
     if (isAuthenticated && currentUser) {
-      fetch(`/api/notifications?userId=${currentUser.id}&limit=20`)
-        .then(res => res.json())
+      fetch(`/api/notifications?userId=${currentUser.id}&limit=20`, {
+        credentials: 'include'
+      })
+        .then(res => {
+          if (!res.ok) {
+            throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+          }
+          return res.json();
+        })
         .then(data => {
           const notifs = (data.notifications || []) as Notification[];
           setNotifications(notifs);
           setUnreadCount(notifs.filter(n => !n.isRead).length);
         })
-        .catch(err => console.error('Failed to fetch notifications', err));
+        .catch(err => {
+          console.error('Failed to fetch notifications:', err);
+          // Don't show error to user, just log it
+          if (err.message.includes('NetworkError') || err.message === 'Failed to fetch') {
+            console.warn('Network error when fetching notifications - this is likely temporary');
+          }
+        });
     }
   }, [isAuthenticated, currentUser]);
 
@@ -64,10 +74,14 @@ export function AppHeader({ title, children, className }: AppHeaderProps) {
 
   const markNotificationAsRead = async (notificationId: string) => {
     try {
-      await fetch(`/api/notifications/${notificationId}/read`, {
+      const response = await fetch(`/api/notifications/${notificationId}/read`, {
         method: 'POST',
         credentials: 'include',
       });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
       
       setNotifications(prev => prev.map(n => 
         n.id === notificationId ? { ...n, isRead: true } : n
@@ -75,51 +89,106 @@ export function AppHeader({ title, children, className }: AppHeaderProps) {
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error) {
       console.error('Failed to mark notification as read:', error);
+      if (error instanceof TypeError && (error.message === 'Failed to fetch' || error.message.includes('NetworkError'))) {
+        // Silently fail on network errors - don't show error to user
+        console.warn('Network error when marking notification as read - this is likely temporary');
+      }
     }
   };
 
   return (
-    <header className={`sticky top-0 z-[9999] flex h-14 items-center justify-between bg-white/80 dark:bg-black/80 backdrop-blur-lg px-4 pt-[env(safe-area-inset-top)] ${className}`}>
-      {/* Left side - Profile */}
-      {isClient && isAuthenticated ? (
-        <div className="flex items-center gap-1 flex-1 justify-start">
-          {/* Profile Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-colors">
-                <UserCircle className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-                <span className="sr-only">Profile menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56 z-[99999] bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-gray-200/20 dark:border-gray-700/20" align="start">
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none text-gray-900 dark:text-gray-100">{currentUser?.name}</p>
-                  <p className="text-xs leading-none text-gray-500 dark:text-gray-400">
-                    {currentUser?.username}
-                  </p>
-                  <Badge 
-                    variant="outline" 
-                    className="w-fit mt-1 text-xs bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700"
-                  >
-                    {currentUser?.role}
-                  </Badge>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator className="bg-gray-200/50 dark:bg-gray-700/50" />
-              <DropdownMenuItem onClick={() => router.push('/profile')} className="text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
-                <User className="mr-2 h-4 w-4" />
-                Profile
-              </DropdownMenuItem>
-              <DropdownMenuSeparator className="bg-gray-200/50 dark:bg-gray-700/50" />
-              <DropdownMenuItem onClick={handleLogout} className="text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
-                <LogOut className="mr-2 h-4 w-4" />
-                Logout
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      ) : null}
+        <header className={`sticky top-0 z-[9999] flex h-14 items-center justify-between bg-white/80 dark:bg-black/80 backdrop-blur-lg px-4 pt-[env(safe-area-inset-top)] ${className}`}>
+      {/* Left side - Profile (only on mobile) - Always render container for consistent layout */}
+      <div className="flex items-center gap-1 flex-1 justify-start">
+        <ClientOnly>
+          {isAuthenticated && (
+            <div className="md:hidden">
+              {/* Profile Dropdown - Mobile Only */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-colors">
+                    <UserCircle className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                    <span className="sr-only">Profile menu</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56 z-[99999] bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-gray-200/20 dark:border-gray-700/20" align="start">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none text-gray-900 dark:text-gray-100">{currentUser?.name}</p>
+                      <p className="text-xs leading-none text-gray-500 dark:text-gray-400">
+                        {currentUser?.username}
+                      </p>
+                      <Badge 
+                        variant="outline" 
+                        className="w-fit mt-1 text-xs bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700"
+                      >
+                        {currentUser?.role}
+                      </Badge>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-gray-200/50 dark:bg-gray-700/50" />
+                  <DropdownMenuItem onClick={() => router.push('/profile')} className="text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
+                    <User className="mr-2 h-4 w-4" />
+                    Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-gray-200/50 dark:bg-gray-700/50" />
+                  <DropdownMenuItem onClick={handleLogout} className="text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
+        </ClientOnly>
+      </div>
+
+      {/* Center - Title */}
+      <div className="flex-1 flex justify-center">
+        <h1 className="text-base font-medium truncate text-gray-900 dark:text-gray-100">{title}</h1>
+      </div>
+      {/* Left side - Profile (only on mobile) - Always render container for consistent layout */}
+      <div className="flex items-center gap-1 flex-1 justify-start">
+        {isClient && isAuthenticated && (
+          <div className="md:hidden">
+            {/* Profile Dropdown - Mobile Only */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-colors">
+                  <UserCircle className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                  <span className="sr-only">Profile menu</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56 z-[99999] bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-gray-200/20 dark:border-gray-700/20" align="start">
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none text-gray-900 dark:text-gray-100">{currentUser?.name}</p>
+                    <p className="text-xs leading-none text-gray-500 dark:text-gray-400">
+                      {currentUser?.username}
+                    </p>
+                    <Badge 
+                      variant="outline" 
+                      className="w-fit mt-1 text-xs bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700"
+                    >
+                      {currentUser?.role}
+                    </Badge>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-gray-200/50 dark:bg-gray-700/50" />
+                <DropdownMenuItem onClick={() => router.push('/profile')} className="text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
+                  <User className="mr-2 h-4 w-4" />
+                  Profile
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-gray-200/50 dark:bg-gray-700/50" />
+                <DropdownMenuItem onClick={handleLogout} className="text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
+      </div>
 
       {/* Center - Title */}
       <div className="flex-1 flex justify-center">
@@ -129,52 +198,53 @@ export function AppHeader({ title, children, className }: AppHeaderProps) {
       {/* Custom children content */}
       {children && <div className="flex items-center gap-3 absolute left-1/2 transform -translate-x-1/2">{children}</div>}
       
-      {/* Right side - Notifications */}
-      {isClient && isAuthenticated ? (
-        <div className="flex items-center gap-1 flex-1 justify-end">
-          {/* Notifications Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-colors">
-                <Bell className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-                {unreadCount > 0 && (
-                  <Badge className="absolute -top-0.5 -right-0.5 h-5 w-5 rounded-full p-0 text-[10px] bg-red-500 text-white flex items-center justify-center font-medium border-2 border-white dark:border-black">
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </Badge>
-                )}
-                <span className="sr-only">Notifications</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-80 max-h-96 overflow-y-auto z-[99999] bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-gray-200/20 dark:border-gray-700/20" align="end">
-              <DropdownMenuLabel className="text-gray-900 dark:text-gray-100">Notifications</DropdownMenuLabel>
-              <DropdownMenuSeparator className="bg-gray-200/50 dark:bg-gray-700/50" />
-              {notifications.length === 0 ? (
-                <div className="p-4 text-center text-gray-500 dark:text-gray-400">
-                  No notifications
-                </div>
-              ) : (
-                notifications.map((notification) => (
-                  <DropdownMenuItem 
-                    key={notification.id} 
-                    className="flex items-start p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
-                    onClick={() => !notification.isRead && markNotificationAsRead(notification.id)}
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm text-gray-900 dark:text-gray-100">{notification.title}</span>
-                        {!notification.isRead && (
-                          <div className="w-2 h-2 bg-red-500 rounded-full" />
-                        )}
+      {/* Right side - Notifications (always visible when authenticated) - Always render container for consistent layout */}
+      <div className="flex items-center gap-1 flex-1 justify-end">
+        <ClientOnly>
+          {isAuthenticated && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-colors">
+                  <Bell className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                  {unreadCount > 0 && (
+                    <Badge className="absolute -top-0.5 -right-0.5 h-5 w-5 rounded-full p-0 text-[10px] bg-red-500 text-white flex items-center justify-center font-medium border-2 border-white dark:border-black">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </Badge>
+                  )}
+                  <span className="sr-only">Notifications</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-80 max-h-96 overflow-y-auto z-[99999] bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-gray-200/20 dark:border-gray-700/20" align="end">
+                <DropdownMenuLabel className="text-gray-900 dark:text-gray-100">Notifications</DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-gray-200/50 dark:bg-gray-700/50" />
+                {notifications.length === 0 ? (
+                  <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+                    No notifications
+                  </div>
+                ) : (
+                  notifications.map((notification) => (
+                    <DropdownMenuItem 
+                      key={notification.id} 
+                      className="flex items-start p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
+                      onClick={() => !notification.isRead && markNotificationAsRead(notification.id)}
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm text-gray-900 dark:text-gray-100">{notification.title}</span>
+                          {!notification.isRead && (
+                            <div className="w-2 h-2 bg-red-500 rounded-full" />
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{notification.message}</p>
                       </div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{notification.message}</p>
-                    </div>
-                  </DropdownMenuItem>
-                ))
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      ) : null}
+                    </DropdownMenuItem>
+                  ))
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </ClientOnly>
+      </div>
     </header>
   );
 }

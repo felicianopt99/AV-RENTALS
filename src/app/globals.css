@@ -572,19 +572,29 @@ header[class*="sticky"] button:hover {
     display: flex !important;
     align-items: flex-end !important;
     justify-content: center !important;
-    padding: 0 16px 24px 16px !important;
-    min-height: 80px !important;
+    padding: 0 8px !important;
+    min-height: auto !important;
   }
   
-  /* Force the navigation container to be properly centered */
+  /* Force the navigation container to be properly responsive */
   nav[aria-label="Primary"] > div {
     position: relative !important;
-    width: min(92%, 400px) !important;
+    width: 100% !important;
+    max-width: calc(100vw - 16px) !important;
     margin: 0 auto !important;
     bottom: auto !important;
     left: auto !important;
     right: auto !important;
     transform: none !important;
+  }
+  
+  /* Ensure proper safe area handling for different devices */
+  @supports (padding: max(0px)) {
+    nav[aria-label="Primary"] {
+      padding-left: max(env(safe-area-inset-left), 8px) !important;
+      padding-right: max(env(safe-area-inset-right), 8px) !important;
+      padding-bottom: max(env(safe-area-inset-bottom), 8px) !important;
+    }
   }
   
   /* Ensure Swiper components don't interfere with bottom navigation */

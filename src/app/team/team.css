@@ -1,0 +1,194 @@
+/* Team page specific styles */
+.team-page {
+  padding: 2rem 1rem;
+  min-height: 100vh;
+}
+
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.team-card-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+/* Override ProfileCard styles for team page */
+.team-page .pc-card {
+  width: 220px !important;
+  max-width: 220px !important;
+  height: 280px !important;
+  max-height: 280px !important;
+  margin: 0 auto;
+  position: relative !important;
+  display: block !important;
+  z-index: 1 !important;
+  transform: none !important;
+}
+
+.team-page .pc-card-wrapper {
+  position: static !important;
+  width: 220px !important;
+  height: 280px !important;
+  margin: 0 auto;
+}
+
+.team-card-container .pc-card {
+  width: 220px !important;
+  max-width: 220px !important;
+  height: 280px !important;
+  max-height: 280px !important;
+  margin: 0 auto;
+  position: relative !important;
+  display: block !important;
+  z-index: 1 !important;
+}
+
+.team-card-container .pc-details h3 {
+  font-size: 1.125rem !important;
+  margin-bottom: 0.25rem;
+}
+
+.team-card-container .pc-details p {
+  font-size: 0.75rem !important;
+  top: -6px !important;
+}
+
+.team-card-container .pc-user-info {
+  bottom: 12px !important;
+  left: 12px !important;
+  right: 12px !important;
+  padding: 8px 10px !important;
+}
+
+.team-card-container .pc-mini-avatar {
+  width: 28px !important;
+  height: 28px !important;
+}
+
+.team-card-container .pc-contact-btn {
+  font-size: 0.75rem !important;
+  padding: 4px 8px !important;
+}
+
+.team-card-container .pc-handle {
+  font-size: 0.875rem !important;
+}
+
+.team-card-container .pc-status {
+  font-size: 0.75rem !important;
+}
+
+.team-card-container .pc-contact-btn {
+  padding: 6px 12px !important;
+  font-size: 0.75rem !important;
+}
+
+/* Responsive adjustments for team page */
+@media (max-width: 768px) {
+  .team-grid {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+  }
+  
+  .team-card-container .pc-card {
+    width: 240px !important;
+    max-width: 240px !important;
+    height: 310px !important;
+    max-height: 310px !important;
+  }
+  
+  .team-card-container .pc-details h3 {
+    font-size: 1.25rem !important;
+  }
+  
+  .team-card-container .pc-details p {
+    font-size: 0.8125rem !important;
+  }
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .team-grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    padding: 1rem 0.5rem;
+  }
+  
+  .team-page .pc-card,
+  .team-card-container .pc-card {
+    width: 180px !important;
+    max-width: 180px !important;
+    height: 220px !important;
+    max-height: 220px !important;
+  }
+  
+  .team-page .pc-card-wrapper {
+    width: 180px !important;
+    height: 220px !important;
+  }
+  
+  .team-card-container .pc-details h3 {
+    font-size: 1rem !important;
+  }
+  
+  .team-card-container .pc-details p {
+    font-size: 0.6875rem !important;
+  }
+  
+  .team-card-container .pc-mini-avatar {
+    width: 24px !important;
+    height: 24px !important;
+  }
+
+  .team-card-container .pc-contact-btn {
+    font-size: 0.6875rem !important;
+    padding: 3px 6px !important;
+  }
+}
+
+/* Large screen adjustments */
+@media (min-width: 1200px) {
+  .team-grid {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    max-width: 1600px;
+  }
+  
+  .team-page .pc-card,
+  .team-card-container .pc-card {
+    width: 240px !important;
+    max-width: 240px !important;
+    height: 300px !important;
+    max-height: 300px !important;
+  }
+  
+  .team-page .pc-card-wrapper {
+    width: 240px !important;
+    height: 300px !important;
+  }
+}
+
+@media (max-width: 320px) {
+  .team-card-container .pc-card {
+    width: 200px !important;
+    max-width: 200px !important;
+    height: 260px !important;
+    max-height: 260px !important;
+  }
+  
+  .team-card-container .pc-details h3 {
+    font-size: 1rem !important;
+  }
+  
+  .team-card-container .pc-details p {
+    font-size: 0.6875rem !important;
+  }
+}

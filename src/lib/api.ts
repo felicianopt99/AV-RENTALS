@@ -16,12 +16,25 @@ async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> 
         'Content-Type': 'application/json',
         ...options?.headers,
       },
+      credentials: 'include', // Include cookies for authentication
       ...options,
     })
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Unknown error' }))
+      let error;
+      try {
+        error = await response.json();
+      } catch (jsonError) {
+        // If response is not JSON, create a generic error
+        error = { error: `HTTP ${response.status}: ${response.statusText}` };
+      }
       throw new APIError(response.status, error.error || 'Request failed')
+    }
+
+    // Check if response is JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      throw new APIError(500, 'Expected JSON response but received different content type');
     }
 
     return response.json()
@@ -30,10 +43,31 @@ async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> 
       throw error
     }
     
-    // Handle network errors
-    if (error instanceof TypeError && error.message === 'Failed to fetch') {
-      throw new APIError(0, 'Network error: Unable to connect to server')
+    // Handle various network errors
+    if (error instanceof TypeError) {
+      if (error.message === 'Failed to fetch' || error.message.includes('NetworkError')) {
+        throw new APIError(0, 'Network error: Unable to connect to server. Please check your internet connection.')
+      }
+      if (error.message.includes('CORS')) {
+        throw new APIError(0, 'CORS error: Cross-origin request blocked')
+      }
+      if (error.message.includes('Unexpected token')) {
+        throw new APIError(500, 'Invalid JSON response from server')
+      }
     }
+    
+    // Handle AbortError (request timeout/cancelled)
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw new APIError(0, 'Request timeout or cancelled')
+    }
+    
+    // Handle JSON parsing errors
+    if (error instanceof SyntaxError && error.message.includes('JSON')) {
+      throw new APIError(500, 'Invalid JSON response from server')
+    }
+    
+    // Log unexpected errors for debugging
+    console.error('Unexpected API error:', error);
     
     throw new APIError(500, error instanceof Error ? error.message : 'Unknown error')
   }
