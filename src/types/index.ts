@@ -176,6 +176,33 @@ export interface Quote {
   updatedAt: Date;
 }
 
+// Service types for quote management
+export interface Service {
+  id: string;
+  name: string;
+  description?: string;
+  unitPrice: number; // Price per service
+  unit: string; // e.g., 'hour', 'day', 'service', 'per event'
+  category?: string; // e.g., 'Setup', 'Technical Support', 'Delivery'
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Fee types for quote management
+export interface Fee {
+  id: string;
+  name: string;
+  description?: string;
+  amount: number;
+  type: 'fixed' | 'percentage'; // Fixed amount or percentage of total
+  category?: string; // e.g., 'Delivery', 'Setup', 'Insurance', 'Late Return'
+  isActive: boolean;
+  isRequired: boolean; // If true, automatically added to all quotes
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface Notification {
   id: string;
   userId: string;

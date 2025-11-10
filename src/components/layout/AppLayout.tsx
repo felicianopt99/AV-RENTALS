@@ -52,33 +52,44 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <SidebarProvider>
-      <Sidebar variant="sidebar" collapsible="icon">
-        <SidebarHeader>
+      <Sidebar variant="sidebar" collapsible="icon" className="backdrop-blur-xl border-r border-sidebar-border/50">
+        <SidebarHeader className="p-4">
             <AppLogo />
         </SidebarHeader>
-        <Separator className="my-2" />
-        <SidebarContent>
+        <Separator className="mx-4 my-2 bg-gradient-to-r from-transparent via-sidebar-border to-transparent" />
+        <SidebarContent className="nav-scrollbar nav-mobile">
           <AppSidebarNav />
         </SidebarContent>
-        <Separator className="my-2" />
-        <SidebarFooter>
+        <Separator className="mx-4 my-2 bg-gradient-to-r from-transparent via-sidebar-border to-transparent" />
+        <SidebarFooter className="p-4">
           <ClientOnly fallback={
-            <div className="p-2 space-y-2">
-              <div className="flex items-center gap-2">
-                <div className="h-5 w-5 bg-muted rounded-full animate-pulse" />
-                <div className="h-4 w-24 bg-muted rounded-md animate-pulse" />
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="h-8 w-8 bg-sidebar-accent/30 rounded-xl animate-pulse" />
+                <div className="flex-1 space-y-1">
+                  <div className="h-3 w-24 bg-sidebar-accent/20 rounded-lg animate-pulse" />
+                  <div className="h-2 w-16 bg-sidebar-accent/10 rounded-lg animate-pulse" />
+                </div>
               </div>
             </div>
           }>
             {currentUser && (
-              <div className="p-2 space-y-2">
-                <div className="flex items-center gap-2">
-                  <UserIcon className="h-5 w-5 text-muted-foreground" />
-                  <span className="font-semibold text-sm">{currentUser.name}</span>
-                  <span className="text-xs text-muted-foreground ml-auto px-2 py-0.5 rounded-full bg-primary/10">{currentUser.role}</span>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-sidebar-accent/20 border border-sidebar-border/50">
+                  <div className="h-8 w-8 rounded-xl bg-sidebar-accent/40 flex items-center justify-center">
+                    <UserIcon className="h-4 w-4 text-sidebar-foreground/80" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm text-sidebar-foreground truncate">{currentUser.name}</div>
+                    <div className="text-xs text-sidebar-foreground/60 capitalize">{currentUser.role}</div>
+                  </div>
                 </div>
-                <Button variant="ghost" className="w-full justify-start" onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start h-10 rounded-xl hover:bg-destructive/10 hover:text-destructive transition-all duration-200" 
+                  onClick={handleLogout}
+                >
+                  <LogOut className="mr-3 h-4 w-4" />
                   Logout
                 </Button>
               </div>

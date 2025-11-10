@@ -13,9 +13,7 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
-  eslint: {
-    ignoreDuringBuilds: false,
-  },
+  // eslint config removed for Next.js 16+
   // Turbopack optimizations (updated syntax)
   turbopack: {
     resolveAlias: {

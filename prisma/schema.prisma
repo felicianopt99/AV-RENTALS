@@ -404,6 +404,40 @@ model DataSyncEvent {
   @@index([processed])
   @@index([createdAt])
 }
+model Service {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  unitPrice   Float   // Price per unit
+  unit        String  @default("hour") // 'hour', 'day', 'service', 'event'
+  category    String? // e.g., 'Setup', 'Technical Support', 'Delivery'
+  isActive    Boolean @default(true)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([isActive])
+  @@index([category])
+}
+
+model Fee {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  amount      Float   // Amount or percentage value
+  type        String  @default("fixed") // 'fixed' or 'percentage'
+  category    String? // e.g., 'Delivery', 'Setup', 'Insurance', 'Late Return'
+  isActive    Boolean @default(true)
+  isRequired  Boolean @default(false) // If true, automatically added to all quotes
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([isActive])
+  @@index([isRequired])
+  @@index([category])
+}
+
 model Notification {
   id        String   @id @default(cuid())
   userId    String   // Recipient user ID

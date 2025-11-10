@@ -136,10 +136,10 @@ export function BottomNav() {
         className={cn(
           // Make the bar properly responsive and fit to screen
           "pointer-events-auto w-full max-w-[calc(100vw-16px)] mx-auto overflow-x-hidden",
-          "rounded-2xl",
-          "bg-white/80 dark:bg-black/80 backdrop-blur-xl",
-          "shadow-[0_4px_20px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)]",
-          "touch-pan-y"
+          "rounded-2xl border border-sidebar-border/20",
+          "bg-sidebar-background/95 backdrop-blur-xl",
+          "shadow-[0_8px_32px_rgba(0,0,0,0.12)] shadow-primary/5",
+          "touch-pan-y transition-all duration-300"
         )}
         style={{ marginBottom: '8px' }}
       >
@@ -152,8 +152,8 @@ export function BottomNav() {
                 {/* active pill */}
                 <div
                   className={cn(
-                    "absolute inset-x-1 -top-0.5 h-10 rounded-xl transition-all duration-200",
-                    active ? "bg-gray-100/50 dark:bg-gray-800/50" : "bg-transparent"
+                    "absolute inset-x-1 -top-0.5 h-10 rounded-xl transition-all duration-300 ease-out",
+                    active ? "bg-gradient-to-t from-primary/20 to-primary/10 shadow-lg shadow-primary/20 border border-primary/30" : "bg-transparent"
                   )}
                   aria-hidden
                 />
@@ -171,12 +171,12 @@ export function BottomNav() {
                   }}
                   className={cn(
                     "relative z-10 mx-auto flex h-11 flex-col items-center justify-center",
-                    "min-w-[52px] rounded-xl px-2 text-[10px] font-medium transition-all duration-200",
-                    active ? "text-blue-600 dark:text-blue-400" : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100",
-                    "active:scale-95"
+                    "min-w-[52px] rounded-xl px-2 text-[10px] font-semibold transition-all duration-300 ease-out",
+                    active ? "text-primary scale-105" : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:scale-105",
+                    "active:scale-95 group"
                   )}
                 >
-                  {item.icon && <item.icon className={cn("h-4 w-4 transition-all duration-200", active && "scale-105")} />}
+                  {item.icon && <item.icon className={cn("h-5 w-5 transition-all duration-300 ease-out group-hover:scale-110", active && "scale-110 text-primary drop-shadow-sm")} />}
                   <span className="mt-1.5 leading-none">{item.label}</span>
                 </Link>
               </div>
@@ -201,8 +201,8 @@ export function BottomNav() {
                         router.push(sub.href);
                       }}
                       className={cn(
-                        "rounded-full px-3 py-1 text-[10px] font-medium whitespace-nowrap transition-all duration-200 active:scale-95",
-                        subActive ? "text-gray-900 dark:text-gray-100 bg-gray-100/50 dark:bg-gray-800/50" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50/50 dark:hover:bg-gray-800/30"
+                        "rounded-full px-4 py-2 text-[11px] font-medium whitespace-nowrap transition-all duration-300 ease-out active:scale-95 border border-transparent",
+                        subActive ? "text-primary bg-primary/20 shadow-md shadow-primary/20 border-primary/30 font-semibold" : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/40 hover:scale-105 hover:border-sidebar-border/50"
                       )}
                     >
                       {sub.label}
@@ -219,8 +219,8 @@ export function BottomNav() {
                   <span
                     key={sub.href}
                     className={cn(
-                      "block h-1 w-1 rounded-full transition-all duration-200",
-                      activeDot ? "bg-gray-900 dark:bg-gray-100 w-2" : "bg-gray-400/40 dark:bg-gray-600/40"
+                      "block h-1.5 rounded-full transition-all duration-300 ease-out",
+                      activeDot ? "bg-primary w-4 shadow-sm shadow-primary/40" : "bg-sidebar-foreground/30 w-1.5 hover:bg-sidebar-foreground/50"
                     )}
                     aria-hidden
                   />

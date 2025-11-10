@@ -19,8 +19,12 @@ export const navItems: NavItem[] = [
   { href: '/team', label: 'Team', icon: Users2, requiredRole: ['Admin', 'Manager', 'Technician', 'Employee', 'Viewer'] },
   { label: 'Rentals', icon: CalendarDays, requiredRole: ['Admin', 'Manager', 'Employee'], subItems: [
     { href: '/rentals/calendar', label: 'Event Calendar' },
-    { href: '/events', label: 'Events' },
-    { href: '/quotes', label: 'Quotes' }
+    { href: '/events', label: 'Events' }
+  ] },
+  { label: 'Quotes', icon: FileText, requiredRole: ['Admin', 'Manager', 'Technician', 'Employee', 'Viewer'], subItems: [
+    { href: '/quotes', label: 'Quotes' },
+    { href: '/quotes/services', label: 'Services' },
+    { href: '/quotes/fees', label: 'Fees' }
   ] },
 ];
 

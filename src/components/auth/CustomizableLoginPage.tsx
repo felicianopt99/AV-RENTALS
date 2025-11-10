@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -10,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Lock, Building } from 'lucide-react';
+import { Loader2, Lock, Building, Eye, EyeOff } from 'lucide-react';
 import LightRays from '@/components/LightRays';
 
 const loginSchema = z.object({
@@ -63,6 +64,7 @@ interface CustomizationSettings {
 
 export default function CustomizableLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [settings, setSettings] = useState<CustomizationSettings>({});
   const [isSettingsLoaded, setIsSettingsLoaded] = useState(false);
   const router = useRouter();
@@ -364,13 +366,24 @@ export default function CustomizableLoginPage() {
                     <FormItem>
                       <FormLabel className="text-foreground">Password</FormLabel>
                       <FormControl>
-                        <Input
-                          type="password"
-                          placeholder="Enter your password"
-                          {...field}
-                          disabled={isLoading}
-                          className={getInputClasses()}
-                        />
+                        <div className="relative">
+                          <Input
+                            type={showPassword ? "text" : "password"}
+                            placeholder="Enter your password"
+                            {...field}
+                            disabled={isLoading}
+                            className={getInputClasses() + ' pr-10'}
+                          />
+                          <button
+                            type="button"
+                            tabIndex={-1}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
+                            onClick={() => setShowPassword((v) => !v)}
+                            aria-label={showPassword ? 'Hide password' : 'Show password'}
+                          >
+                            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                          </button>
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
