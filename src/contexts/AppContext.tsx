@@ -463,13 +463,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         date: quote.startDate // Added date property
       });
       
-      // Create rentals for each quote item
+      // Create rentals for each equipment item in the quote
       for (const item of quote.items) {
-        await addRental({
-          eventId,
-          equipmentId: item.equipmentId,
-          quantityRented: item.quantity,
-        });
+        // Only create rentals for equipment items
+        if (item.type === 'equipment' && item.equipmentId && item.quantity) {
+          await addRental({
+            eventId,
+            equipmentId: item.equipmentId,
+            quantityRented: item.quantity,
+          });
+        }
       }
 
       return { success: true, message: 'Quote approved successfully.' };

@@ -1,3 +1,58 @@
+import type { Service, Fee } from '@/types';
+// Sample services for UI fallback/testing
+const STATIC_DATE = "2025-01-01T00:00:00.000Z";
+export const sampleServices: Service[] = [
+  {
+    id: 'svc1',
+    name: 'Setup & Teardown',
+    description: 'Professional setup and teardown of AV equipment.',
+    unitPrice: 100,
+    unit: 'event',
+    category: 'Setup',
+    isActive: true,
+  createdAt: new Date(STATIC_DATE),
+  updatedAt: new Date(STATIC_DATE),
+  },
+  {
+    id: 'svc2',
+    name: 'On-site Technical Support',
+    description: 'Technician available during event hours.',
+    unitPrice: 40,
+    unit: 'hour',
+    category: 'Technical Support',
+    isActive: true,
+  createdAt: new Date(STATIC_DATE),
+  updatedAt: new Date(STATIC_DATE),
+  },
+];
+
+// Sample fees for UI fallback/testing
+export const sampleFees: Fee[] = [
+  {
+    id: 'fee1',
+    name: 'Delivery Fee',
+    description: 'Covers transport of equipment to venue.',
+    amount: 50,
+    type: 'fixed',
+    category: 'Delivery',
+    isActive: true,
+    isRequired: false,
+  createdAt: new Date(STATIC_DATE),
+  updatedAt: new Date(STATIC_DATE),
+  },
+  {
+    id: 'fee2',
+    name: 'Insurance',
+    description: 'Event insurance (percentage of subtotal).',
+    amount: 5,
+    type: 'percentage',
+    category: 'Insurance',
+    isActive: true,
+    isRequired: false,
+  createdAt: new Date(STATIC_DATE),
+  updatedAt: new Date(STATIC_DATE),
+  },
+];
 
 
 import type { Category, Subcategory, EquipmentItem, Rental, Client, Quote, QuoteItem, Event, MaintenanceLog, User } from '@/types';
@@ -232,15 +287,15 @@ export const sampleRentals: Rental[] = [
 ];
 
 const quoteItems1: QuoteItem[] = [
-  { id: 'qi1_1', equipmentId: 'eq1', equipmentName: 'Shure SM58', quantity: 4, unitPrice: 15.00, days: 3, lineTotal: 4 * 15.00 * 3 },
-  { id: 'qi1_2', equipmentId: 'eq2', equipmentName: 'Yamaha DBR10', quantity: 2, unitPrice: 45.00, days: 3, lineTotal: 2 * 45.00 * 3 },
+  { id: 'qi1_1', type: 'equipment', equipmentId: 'eq1', equipmentName: 'Shure SM58', quantity: 4, unitPrice: 15.00, days: 3, lineTotal: 4 * 15.00 * 3 },
+  { id: 'qi1_2', type: 'equipment', equipmentId: 'eq2', equipmentName: 'Yamaha DBR10', quantity: 2, unitPrice: 45.00, days: 3, lineTotal: 2 * 45.00 * 3 },
 ];
 const subTotal1 = quoteItems1.reduce((sum, item) => sum + item.lineTotal, 0);
 const taxAmount1 = subTotal1 * 0.05; // 5% tax
 
 const quoteItems2: QuoteItem[] = [
-  { id: 'qi2_1', equipmentId: 'eq3', equipmentName: 'Epson Pro EX7260', quantity: 1, unitPrice: 70.00, days: 7, lineTotal: 1 * 70.00 * 7 }, // Price override
-  { id: 'qi2_2', equipmentId: 'eq4', equipmentName: 'Chauvet DJ SlimPAR 56', quantity: 8, unitPrice: 10.00, days: 7, lineTotal: 8 * 10.00 * 7 },
+  { id: 'qi2_1', type: 'equipment', equipmentId: 'eq3', equipmentName: 'Epson Pro EX7260', quantity: 1, unitPrice: 70.00, days: 7, lineTotal: 1 * 70.00 * 7 }, // Price override
+  { id: 'qi2_2', type: 'equipment', equipmentId: 'eq4', equipmentName: 'Chauvet DJ SlimPAR 56', quantity: 8, unitPrice: 10.00, days: 7, lineTotal: 8 * 10.00 * 7 },
 ];
 const subTotal2 = quoteItems2.reduce((sum, item) => sum + item.lineTotal, 0);
 const discountAmount2 = 50; // Fixed discount
@@ -301,9 +356,9 @@ export const sampleQuotes: Quote[] = [
     clientEmail: 'alice@techsolutions.example.com',
     startDate: new Date(new Date(today).setDate(today.getDate() + 90)),
     endDate: calculateEndDate(new Date(new Date(today).setDate(today.getDate() + 90)), 2),
-    items: [
-        { id: 'qi3_1', equipmentId: 'eq1', equipmentName: 'Shure SM58', quantity: 10, unitPrice: 15.00, days: 2, lineTotal: 10 * 15.00 * 2 },
-    ],
+  items: [
+    { id: 'qi3_1', type: 'equipment', equipmentId: 'eq1', equipmentName: 'Shure SM58', quantity: 10, unitPrice: 15.00, days: 2, lineTotal: 10 * 15.00 * 2 },
+  ],
     subTotal: 300,
     discountType: 'fixed',
     discountAmount: 0,

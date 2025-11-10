@@ -34,8 +34,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { PlusCircle, Edit, Trash2, MoreHorizontal, Search, FileText, SearchSlash, CheckCircle2 } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, MoreHorizontal, Search, FileText, SearchSlash, CheckCircle2, Download, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { QuotePDFPreview } from './QuotePDFPreview';
+import { QuotePDFGenerator } from '@/lib/pdf-generator';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { format } from 'date-fns';
@@ -53,6 +55,11 @@ export function QuoteListDisplay() {
   const [quoteToApprove, setQuoteToApprove] = useState<Quote | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  
+  // PDF state
+  const [isPDFPreviewOpen, setIsPDFPreviewOpen] = useState(false);
+  const [previewQuote, setPreviewQuote] = useState<Quote | null>(null);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   const openDeleteDialog = useCallback((quote: Quote) => {
     setQuoteToDelete(quote);
@@ -82,6 +89,35 @@ export function QuoteListDisplay() {
       setQuoteToApprove(null);
     }
   }, [quoteToApprove, approveQuote, toast, router]);
+
+  // PDF Methods
+  const handlePreviewPDF = useCallback((quote: Quote) => {
+    setPreviewQuote(quote);
+    setIsPDFPreviewOpen(true);
+  }, []);
+
+  const handleDownloadPDF = useCallback(async (quote: Quote) => {
+    try {
+      setIsGeneratingPDF(true);
+      await QuotePDFGenerator.generateQuotePDF(quote, {
+        filename: `quote-${quote.quoteNumber}.pdf`,
+        download: true
+      });
+      toast({
+        title: "PDF Downloaded",
+        description: `Quote ${quote.quoteNumber} has been downloaded successfully.`
+      });
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      toast({
+        variant: "destructive",
+        title: "Download Failed",
+        description: "There was an error generating the PDF."
+      });
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  }, [toast]);
 
   const filteredQuotes = useMemo(() => {
     const lowerSearchTerm = searchTerm.toLowerCase();
@@ -193,6 +229,13 @@ export function QuoteListDisplay() {
                           </DropdownMenuItem>
                         )}
                         <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => handlePreviewPDF(quote)}>
+                          <Eye className="mr-2 h-4 w-4" /> Preview PDF
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDownloadPDF(quote)} disabled={isGeneratingPDF}>
+                          <Download className="mr-2 h-4 w-4" /> Download PDF
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => openDeleteDialog(quote)} className="text-destructive focus:text-destructive focus:bg-destructive/10">
                           <Trash2 className="mr-2 h-4 w-4" /> Delete
                         </DropdownMenuItem>
@@ -248,6 +291,13 @@ export function QuoteListDisplay() {
                                 <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" /> Approve & Create Event
                               </DropdownMenuItem>
                             )}
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => handlePreviewPDF(quote)}>
+                              <Eye className="mr-2 h-4 w-4" /> Preview PDF
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDownloadPDF(quote)} disabled={isGeneratingPDF}>
+                              <Download className="mr-2 h-4 w-4" /> Download PDF
+                            </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => openDeleteDialog(quote)} className="text-destructive focus:text-destructive focus:bg-destructive/10">
                               <Trash2 className="mr-2 h-4 w-4" /> Delete
@@ -313,6 +363,16 @@ export function QuoteListDisplay() {
           <QuoteForm onSubmitSuccess={() => setIsCreateDialogOpen(false)} />
         </DialogContent>
       </Dialog>
+
+      {/* PDF Preview Modal */}
+      <QuotePDFPreview
+        quote={previewQuote}
+        isOpen={isPDFPreviewOpen}
+        onClose={() => {
+          setIsPDFPreviewOpen(false);
+          setPreviewQuote(null);
+        }}
+      />
     </div>
   );
 }

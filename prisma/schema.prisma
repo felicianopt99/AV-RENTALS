@@ -239,16 +239,28 @@ model Quote {
 model QuoteItem {
   id            String @id @default(cuid())
   quoteId       String
-  equipmentId   String
-  equipmentName String
-  quantity      Int
-  unitPrice     Float
-  days          Int
+  type          String // 'equipment' | 'service' | 'fee'
+  // Equipment fields
+  equipmentId   String?
+  equipmentName String?
+  // Service fields
+  serviceId     String?
+  serviceName   String?
+  // Fee fields
+  feeId         String?
+  feeName       String?
+  amount        Float? // For fee
+  feeType       String? // 'fixed' | 'percentage'
+  // Common fields
+  quantity      Int?
+  unitPrice     Float?
+  days          Int?
   lineTotal     Float
-  
+
   quote     Quote         @relation(fields: [quoteId], references: [id], onDelete: Cascade)
-  equipment EquipmentItem @relation(fields: [equipmentId], references: [id])
-  
+  equipment EquipmentItem? @relation(fields: [equipmentId], references: [id])
+  // Optionally, you can add service and fee relations if you have those models
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

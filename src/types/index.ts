@@ -139,14 +139,28 @@ export interface Rental {
 
 
 // New types for Quotes
+export type QuoteItemType = 'equipment' | 'service' | 'fee';
+
 export interface QuoteItem {
   id: string; // Unique ID for the quote item line
-  equipmentId: string;
-  equipmentName: string; // Store at time of quote creation
-  quantity: number;
-  unitPrice: number; // Price per unit per day at time of quote creation
-  days: number;
+  type: QuoteItemType;
+  // For equipment
+  equipmentId?: string;
+  equipmentName?: string;
+  // For service
+  serviceId?: string;
+  serviceName?: string;
+  // For fee
+  feeId?: string;
+  feeName?: string;
+  // Common fields
+  quantity?: number; // For equipment/services
+  unitPrice?: number; // For equipment/services
+  days?: number; // For equipment/services
   lineTotal: number;
+  // For fees
+  amount?: number; // For fee
+  feeType?: 'fixed' | 'percentage';
 }
 
 export type QuoteStatus = 'Draft' | 'Sent' | 'Accepted' | 'Declined' | 'Archived';

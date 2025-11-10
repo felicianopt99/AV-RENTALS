@@ -1,20 +1,23 @@
 # AV Rentals Management System
 
 <div align="center">
-  <img src="https://img.shields.io/badge/Next.js-15.5.4-black?style=for-the-badge&logo=next.js" alt="Next.js">
+  <img src="https://img.shields.io/badge/Next.js-16.0.1-black?style=for-the-badge&logo=next.js" alt="Next.js">
   <img src="https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript" alt="TypeScript">
   <img src="https://img.shields.io/badge/Prisma-6.17.0-2D3748?style=for-the-badge&logo=prisma" alt="Prisma">
-  <img src="https://img.shields.io/badge/Socket.IO-4.8.1-black?style=for-the-badge&logo=socket.io" alt="Socket.IO">
+  <img src="https://img.shields.io/badge/Development-Active-orange?style=for-the-badge" alt="Development Status">
   <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License">
 </div>
 
+> **⚠️ DEVELOPMENT STATUS**: This project is actively under development. Core rental management features are **fully functional**, but some enterprise features documented below are **not yet implemented**. See the [What's Missing](#-whats-missing) section for full transparency about current vs. planned features.
+
 <br />
 
-A comprehensive, enterprise-grade equipment rental management system designed specifically for audio/video production companies. Built with modern web technologies, featuring real-time collaboration, advanced scheduling, and production-ready deployment capabilities.
+A comprehensive equipment rental management system designed specifically for audio/video production companies. Currently provides solid core functionality for managing equipment, clients, events, and rentals, with advanced features planned for future releases.
 
 ## 📋 Table of Contents
 
 - [Features](#-features)
+- [What's Missing](#-whats-missing) ⚠️ **Important: Read this first**
 - [Technology Stack](#-technology-stack)
 - [Quick Start](#-quick-start)
 - [Installation](#-installation)
@@ -28,57 +31,291 @@ A comprehensive, enterprise-grade equipment rental management system designed sp
 
 ## ✨ Features
 
-### Core Business Logic
-- **Equipment Inventory Management**: Comprehensive tracking with categorization, status monitoring, and location management
-- **Intelligent Rental Scheduling**: Automated conflict detection with visual calendar integration
-- **Client Relationship Management**: Detailed customer profiles with contact history and preferences
-- **Professional Quote Generation**: Automated pricing with tax calculations and PDF export capabilities
-- **Maintenance & Service Tracking**: Complete equipment lifecycle management with service history
+### 🟢 Currently Implemented
 
-### Advanced Collaboration
-- **Real-time Multi-user Sync**: Live updates across all connected users via Socket.IO
-- **Optimistic Locking**: Prevents data corruption from concurrent modifications
-- **Role-based Access Control**: Granular permissions for Admin, Manager, Technician, Employee, and Viewer roles
-- **Comprehensive Audit Trail**: Complete logging of all user actions for compliance and accountability
-- **Session Management**: Secure JWT-based authentication with automatic session handling
+#### Core Business Logic
+- **Equipment Inventory Management**: ✅ Full CRUD operations with categorization, status monitoring, and location management
+- **Client Relationship Management**: ✅ Detailed customer profiles with contact information and preferences
+- **Event Management**: ✅ Event scheduling with client assignments and date management
+- **Professional Quote Generation**: ✅ Complete quote system with line items, pricing calculations, and PDF export
+- **Rental System**: ✅ Equipment rental tracking with quantities and preparation status
+- **Maintenance & Service Tracking**: ✅ Equipment maintenance logs and service history
+- **Category Management**: ✅ Hierarchical organization with categories and subcategories
 
-### Enterprise Features
-- **Progressive Web Application**: Full offline capabilities with native app-like experience
-- **Responsive Design**: Mobile-first architecture optimized for all devices
-- **Dark Mode Interface**: Modern UI following Material Design principles
-- **Performance Optimization**: Intelligent caching, pagination, and query optimization
-- **Error Recovery**: Automatic retry mechanisms with graceful degradation
-- **Backup & Recovery**: Automated database backups with rotation policies
+#### Authentication & Security
+- **JWT Authentication**: ✅ Secure login/logout with token-based session management
+- **Role-based Access Control**: ✅ Five-tier permission system (Admin, Manager, Technician, Employee, Viewer)
+- **Password Security**: ✅ bcrypt hashing with proper salt rounds
+- **Input Validation**: ✅ Comprehensive Zod schema validation on all endpoints
+- **Session Tracking**: ✅ User session management with device and IP tracking
 
-## 🚀 Technology Stack
+#### User Interface
+- **Modern UI Components**: ✅ Radix UI with shadcn/ui component library
+- **Responsive Design**: ✅ Mobile-first architecture optimized for all devices
+- **Dark Mode Support**: ✅ Toggle between light and dark themes
+- **Form Handling**: ✅ React Hook Form with proper validation
+- **Calendar Integration**: ✅ FullCalendar for event scheduling
+- **Professional Styling**: ✅ Tailwind CSS with custom design system
 
-### Frontend Architecture
-- **Framework**: Next.js 15.5.4 with App Router
-- **Language**: TypeScript 5.0 with strict type checking
-- **UI Framework**: React 18.3.1 with modern hooks
-- **Styling**: Tailwind CSS 3.4.1 with custom design system
-- **Component Library**: Radix UI with shadcn/ui components
-- **State Management**: Context API with optimized re-rendering
-- **Form Handling**: React Hook Form with Zod validation
+#### Data Management
+- **Database Layer**: ✅ Prisma ORM with type-safe queries
+- **Audit Trail**: ✅ Activity logging and data change tracking
+- **Backup System**: ✅ Database backup API with rotation support
+- **Data Validation**: ✅ Server-side validation with Zod schemas
 
-### Backend Infrastructure
-- **API Layer**: Next.js API Routes with serverless architecture
-- **Database ORM**: Prisma 6.17.0 with type-safe queries
-- **Database**: SQLite (development), PostgreSQL (production)
-- **Real-time Communication**: Socket.IO 4.8.1 for live updates
-- **Authentication**: JWT tokens with bcryptjs encryption
-- **File Storage**: Local filesystem with cloud migration ready
+### 🟡 Planned Features (Roadmap)
 
-### Development & Deployment
-- **Build System**: Turbopack for fast development builds
-- **Code Quality**: ESLint, TypeScript strict mode
-- **Testing**: Built-in Next.js testing capabilities
-- **Deployment**: Firebase App Hosting with Docker support
-- **Monitoring**: Comprehensive logging and error tracking
+#### Real-time Collaboration
+- **Multi-user Sync**: 🔄 Client-side hooks implemented, server backend needed
+- **Live Updates**: 🔄 Socket.IO infrastructure partially set up
+- **Conflict Resolution**: 🔄 Optimistic locking framework in place
+- **Real-time Notifications**: 🔄 Database models ready, real-time delivery pending
+
+#### Enterprise Features  
+- **Progressive Web App**: 🔄 PWA manifest exists, service worker needed
+- **Offline Capabilities**: 🔄 Framework ready, offline sync implementation pending
+- **Performance Caching**: 🔄 Redis configured, caching layer implementation needed
+- **Advanced Monitoring**: 🔄 Health check endpoints exist, comprehensive monitoring needed
+
+#### AI Integration
+- **Equipment Analysis**: 🔄 Google AI dependencies installed, full implementation pending
+- **Smart Recommendations**: 🔄 Framework in place, ML models needed
+- **Predictive Maintenance**: 🔄 Data structure ready, prediction algorithms needed
+
+### 🔴 Not Yet Implemented
+
+See the [What's Missing](#-whats-missing) section below for detailed information about features that are documented but not yet implemented.
+
+## � What's Missing
+
+This section provides full transparency about features that are **documented in this README but not yet implemented** in the codebase. We believe in honest documentation and want users to understand the current state versus planned features.
+
+### 🔴 Real-time Collaboration (HIGH PRIORITY)
+
+**Status**: Client infrastructure exists, server implementation missing
+
+**What's Documented**:
+- Live multi-user synchronization via Socket.IO
+- Real-time updates across connected clients
+- Optimistic locking for concurrent modifications
+- Live notifications and alerts
+
+**Current Reality**:
+- ✅ Client-side Socket.IO hooks implemented (`useRealTimeSync`)
+- ✅ Event structures defined for data changes
+- ❌ **No Socket.IO server implementation** - critical missing piece
+- ❌ No WebSocket server to handle real-time connections
+- ❌ No broadcasting of data changes to connected clients
+
+**Impact**: Multi-user environments will not see live updates; users must refresh manually.
+
+### 🔴 Progressive Web App Features (MEDIUM PRIORITY)
+
+**Status**: Basic manifest exists, core PWA features missing
+
+**What's Documented**:
+- Full offline capabilities
+- Native app-like experience  
+- Service worker for caching
+- Background sync
+
+**Current Reality**:
+- ✅ Basic PWA manifest exists (`public/manifest.json`)
+- ❌ **No service worker implementation** for offline functionality
+- ❌ No offline data caching or sync mechanisms
+- ❌ No background sync for when connection returns
+- ❌ No app installation prompts or native features
+
+**Impact**: App requires internet connection; no offline capabilities.
+
+### 🔴 Production-Ready Infrastructure (HIGH PRIORITY)
+
+**Status**: Development setup only, production deployment not configured
+
+**What's Documented**:
+- Docker deployment with compose files
+- PostgreSQL production database
+- nginx load balancing
+- SSL automation scripts
+- Health monitoring and metrics
+
+**Current Reality**:
+- ✅ SQLite development database works
+- ❌ **No Docker configuration** (no Dockerfile or docker-compose.yml)
+- ❌ **No PostgreSQL setup** - still uses SQLite
+- ❌ **No nginx configuration** for load balancing
+- ❌ SSL setup scripts exist but may not be fully functional
+- ❌ No production environment variables or deployment guides
+
+**Impact**: Cannot deploy to production without significant additional configuration.
+
+### 🔴 Performance & Monitoring (MEDIUM PRIORITY)
+
+**Status**: Dependencies installed, implementation missing
+
+**What's Documented**:
+- Redis caching for performance
+- Comprehensive error tracking
+- Performance metrics and monitoring
+- Health checks and alerts
+
+**Current Reality**:
+- ✅ Redis dependency (ioredis) installed
+- ✅ Basic health check endpoints exist
+- ❌ **No Redis caching implementation** - no performance benefits
+- ❌ No error tracking service integration
+- ❌ No performance monitoring dashboard
+- ❌ No automated alerts or monitoring
+
+**Impact**: Poor performance under load; no visibility into system health.
+
+### 🔴 Advanced AI Features (LOW PRIORITY)
+
+**Status**: Dependencies installed, minimal implementation
+
+**What's Documented**:
+- Equipment analysis with Google AI
+- Smart recommendations
+- Predictive maintenance alerts
+- AI-powered quote optimization
+
+**Current Reality**:
+- ✅ Google AI dependencies installed (`@google/generative-ai`)
+- ✅ Basic Genkit framework set up
+- ❌ **Limited AI implementation** - only basic equipment analysis
+- ❌ No recommendation engine
+- ❌ No predictive maintenance algorithms
+- ❌ No AI-powered business logic
+
+**Impact**: Missing intelligent automation and insights.
+
+### 🔴 Enterprise Security (HIGH PRIORITY)
+
+**Status**: Basic auth implemented, enterprise features missing
+
+**What's Documented**:
+- Two-factor authentication
+- Advanced session management
+- Audit compliance features
+- Security hardening
+
+**Current Reality**:
+- ✅ JWT authentication with bcrypt passwords
+- ✅ Role-based access control
+- ✅ Basic audit logging
+- ❌ **No two-factor authentication**
+- ❌ No advanced session security (device management, concurrent session limits)
+- ❌ No security hardening for production
+- ❌ No compliance reporting features
+
+**Impact**: Not suitable for enterprise environments requiring strict security.
+
+### 🔴 Testing & Quality Assurance (HIGH PRIORITY)
+
+**Status**: No testing infrastructure implemented
+
+**What's Documented**:
+- Comprehensive test suite
+- Automated testing in CI/CD
+- Quality gates and coverage reports
+
+**Current Reality**:
+- ❌ **No test files exist** anywhere in the codebase
+- ❌ No testing framework configured
+- ❌ No CI/CD pipelines
+- ❌ No quality assurance processes
+
+**Impact**: No confidence in code changes; high risk of bugs in production.
+
+### 📋 Implementation Priority
+
+1. **🔥 Critical (Blocks Production)**:
+   - Socket.IO server implementation for real-time features
+   - Docker configuration and PostgreSQL setup
+   - Basic testing framework
+
+2. **⚠️ High Priority (Production Requirements)**:
+   - Security hardening and two-factor auth
+   - Monitoring and error tracking
+   - SSL and deployment automation
+
+3. **📈 Medium Priority (User Experience)**:
+   - PWA offline capabilities  
+   - Redis caching implementation
+   - Performance optimization
+
+4. **🎯 Low Priority (Nice to Have)**:
+   - Advanced AI features
+   - Additional integrations
+   - Advanced customization options
+
+### 🤝 Contributing to Missing Features
+
+We welcome contributions! If you'd like to implement any of these missing features:
+
+1. **Check the GitHub Issues** for existing work on these features
+2. **Open a Discussion** before starting major features like real-time sync
+3. **Start Small** - consider implementing basic versions first
+4. **Follow the Patterns** - use existing code patterns for consistency
+
+## �🚀 Technology Stack
+
+### ✅ Currently Implemented
+
+#### Frontend Architecture
+- **Framework**: Next.js 16.0.1 with App Router ✅
+- **Language**: TypeScript 5.0 with strict type checking ✅
+- **UI Framework**: React 18.3.1 with modern hooks ✅
+- **Styling**: Tailwind CSS 3.4.1 with custom design system ✅
+- **Component Library**: Radix UI with shadcn/ui components ✅
+- **State Management**: Context API with React Query ✅
+- **Form Handling**: React Hook Form with Zod validation ✅
+- **Calendar**: FullCalendar 6.1.19 for event management ✅
+
+#### Backend Infrastructure
+- **API Layer**: Next.js API Routes with serverless architecture ✅
+- **Database ORM**: Prisma 6.17.0 with type-safe queries ✅
+- **Database**: SQLite (development) ✅
+- **Authentication**: JWT tokens with bcryptjs encryption ✅
+- **File Storage**: Local filesystem ✅
+- **Validation**: Zod schemas for all inputs ✅
+
+#### Development Tools
+- **Build System**: Turbopack for fast development builds ✅
+- **Code Quality**: ESLint, TypeScript strict mode ✅
+- **Package Manager**: npm with proper dependency management ✅
+- **Development**: Hot reload with Next.js dev server ✅
+
+### 🔄 Partially Implemented
+
+#### Real-time Features
+- **Socket.IO**: 🔄 Client dependencies installed, server implementation needed
+- **Real-time Sync**: 🔄 Client hooks ready, WebSocket server pending
+- **Live Updates**: 🔄 Event structure defined, broadcasting not active
+
+#### Advanced Features
+- **AI Integration**: 🔄 Google AI (@google/generative-ai) installed, limited implementation
+- **Caching**: 🔄 Redis (ioredis) dependency added, implementation pending
+- **PWA**: 🔄 Basic manifest, full service worker needed
+
+### ❌ Not Yet Implemented
+
+#### Production Infrastructure
+- **Database**: ❌ PostgreSQL production setup not configured
+- **Deployment**: ❌ Docker configuration missing
+- **Monitoring**: ❌ Comprehensive logging and error tracking not set up
+- **Testing**: ❌ Test suites not implemented
+- **CI/CD**: ❌ Automated deployment pipelines missing
+
+#### Enterprise Features
+- **Load Balancing**: ❌ nginx configuration not provided
+- **CDN**: ❌ Static asset optimization not configured
+- **Backup Recovery**: ❌ Automated restore procedures not implemented
+- **Security Hardening**: ❌ Production security measures not configured
 
 ## 🚀 Quick Start
 
-Get up and running in less than 5 minutes:
+Get the core rental management system running in less than 5 minutes:
 
 ```bash
 # Clone the repository
@@ -88,8 +325,8 @@ cd AV-RENTALS
 # Install dependencies
 npm install
 
-# Set up environment
-cp .env.example .env
+# Set up environment (create your own .env file)
+# You'll need to set up DATABASE_URL and JWT_SECRET
 
 # Initialize database
 npm run db:generate && npm run db:push && npm run db:seed
@@ -98,9 +335,21 @@ npm run db:generate && npm run db:push && npm run db:seed
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) and log in with:
-- **Username**: `admin`
-- **Password**: `admin`
+Open [http://localhost:3000](http://localhost:3000) and log in with the seeded admin account.
+
+### ✅ What Works Immediately
+- Equipment inventory management
+- Client and event management  
+- Quote generation with PDF export
+- Rental tracking and scheduling
+- User authentication and roles
+- Responsive web interface
+
+### ❌ What Requires Additional Setup
+- Real-time collaboration (needs Socket.IO server)
+- Production deployment (needs Docker/PostgreSQL config)
+- PWA offline features (needs service worker)
+- Advanced monitoring (needs Redis/monitoring setup)
 
 ## 📦 Installation
 
@@ -407,34 +656,65 @@ For production deployment with SSL:
 - **Performance Metrics**: Real-time performance monitoring
 - **Health Checks**: Automated service health monitoring
 
-### Scalability Considerations
+### Current Scalability Status
 
-| User Count | Performance | Database | Recommendations |
-|------------|-------------|----------|-----------------|
-| 1-10 users | Excellent | SQLite/PostgreSQL | Single instance |
-| 11-50 users | Very Good | PostgreSQL | Load balancing |
-| 51-100 users | Good | PostgreSQL + Redis | Horizontal scaling |
+| User Count | Current Status | Database | Notes |
+|------------|---------------|----------|-------|
+| 1-5 users | ✅ Works well | SQLite | Perfect for development/small teams |
+| 6-15 users | ⚠️ May have issues | SQLite | Concurrent writes may cause conflicts |
+| 16+ users | ❌ Not recommended | SQLite | **Requires PostgreSQL migration** |
+
+### Planned Production Scalability
+
+| User Count | Target Performance | Database | Requirements |
+|------------|------------------|----------|-------------|
+| 1-10 users | Excellent | PostgreSQL | Basic production setup |
+| 11-50 users | Very Good | PostgreSQL + Redis | Load balancing needed |
+| 51-100 users | Good | PostgreSQL + Redis | Horizontal scaling required |
 | 100+ users | Requires optimization | Clustered PostgreSQL | Microservices architecture |
+
+**Current Limitation**: Real-time features are not implemented, so concurrent user scenarios haven't been fully tested.
 
 ## 🏗️ Architecture
 
-### System Architecture
+### Current System Architecture
+
+```
+┌─────────────────┐
+│   Web Clients   │ ✅ Responsive React App
+│   (Browser)     │
+└─────────────────┘
+         │
+         ▼ HTTP/HTTPS
+┌─────────────────┐
+│   Next.js App   │ ✅ API Routes + Server Components
+│  (App Router)   │
+└─────────────────┘
+         │
+         ▼ Prisma ORM
+┌─────────────────┐
+│     SQLite      │ ✅ Development Database
+│   (dev.db)      │
+└─────────────────┘
+```
+
+### Planned Production Architecture
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   Client Apps   │    │   Load Balancer │    │      CDN        │
-│  (Web/Mobile)   │◄──►│     (nginx)     │◄──►│   (Static)      │
+│  (Web/Mobile)   │◄──►│     (nginx)     │◄──►│   (Static)      │ ❌ Not Implemented
 └─────────────────┘    └─────────────────┘    └─────────────────┘
          │                       │
          ▼                       ▼
 ┌─────────────────┐    ┌─────────────────┐
-│   Next.js App   │    │   Socket.IO     │
+│   Next.js App   │    │   Socket.IO     │ ❌ Server Missing
 │  (App Router)   │◄──►│   (Real-time)   │
 └─────────────────┘    └─────────────────┘
          │                       │
          ▼                       ▼
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Prisma ORM    │◄──►│   PostgreSQL    │◄──►│   Redis Cache   │
+│   Prisma ORM    │◄──►│   PostgreSQL    │◄──►│   Redis Cache   │ ❌ Not Configured
 │  (Type-safe)    │    │   (Primary DB)  │    │   (Sessions)    │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
@@ -504,24 +784,35 @@ User {
 - **XSS Protection**: React's built-in XSS prevention
 - **CSRF Protection**: Next.js automatic CSRF handling
 
-### Real-time Architecture
+### Real-time Architecture Status
 
-#### Socket.IO Implementation
+#### ❌ Socket.IO Implementation (NOT IMPLEMENTED)
+
+**What exists**:
 ```typescript
-// Server-side event handling
+// ✅ Client-side hooks (implemented)
+export function useRealTimeSync(options: UseRealTimeSyncOptions) {
+  const [socket, setSocket] = useState<Socket | null>(null);
+  // ... client-side logic exists
+}
+```
+
+**What's missing**:
+```typescript
+// ❌ Server-side implementation (NOT IMPLEMENTED)
+// This code is documented but doesn't exist:
 io.on('connection', (socket) => {
   socket.on('equipment:update', (data) => {
-    // Broadcast to all connected clients
     socket.broadcast.emit('equipment:updated', data);
   });
 });
-
-// Client-side real-time sync
-socket.on('equipment:updated', (data) => {
-  // Update local state with optimistic locking
-  updateEquipmentState(data);
-});
 ```
+
+**Current Reality**: 
+- ✅ Client can attempt Socket.IO connections
+- ❌ **No Socket.IO server exists** - connections will fail
+- ❌ No real-time data broadcasting
+- ❌ Users must manually refresh for updates
 
 ### Performance Optimization
 

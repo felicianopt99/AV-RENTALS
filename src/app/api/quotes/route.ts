@@ -2,12 +2,24 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
 
+
 const QuoteItemSchema = z.object({
-  equipmentId: z.string(),
-  equipmentName: z.string(),
-  quantity: z.number().min(1),
-  unitPrice: z.number().min(0),
-  days: z.number().min(1),
+  type: z.enum(['equipment', 'service', 'fee']),
+  // Equipment fields
+  equipmentId: z.string().optional(),
+  equipmentName: z.string().optional(),
+  // Service fields
+  serviceId: z.string().optional(),
+  serviceName: z.string().optional(),
+  // Fee fields
+  feeId: z.string().optional(),
+  feeName: z.string().optional(),
+  amount: z.number().optional(),
+  feeType: z.enum(['fixed', 'percentage']).optional(),
+  // Common fields
+  quantity: z.number().optional(),
+  unitPrice: z.number().optional(),
+  days: z.number().optional(),
   lineTotal: z.number().min(0),
 })
 

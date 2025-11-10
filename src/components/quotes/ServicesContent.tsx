@@ -8,8 +8,51 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Service } from '@/types';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+// ...existing code...
 
 export function ServicesContent() {
+  // Delete modal state
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [deleteServiceId, setDeleteServiceId] = useState<string | null>(null);
+  // Open edit modal with selected service
+  const handleEditService = (service: Service) => {
+    setEditService(service);
+    setIsEditOpen(true);
+  };
+
+  // Update service via API
+  const handleUpdateService = async () => {
+    if (!editService) return;
+    if (!editService.name || !editService.unitPrice) {
+      toast({
+        title: 'Error',
+        description: 'Please fill in all required fields',
+        variant: 'destructive',
+      });
+      return;
+    }
+    try {
+      const response = await fetch(`/api/services/${editService.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...editService,
+          unitPrice: Number(editService.unitPrice),
+        }),
+      });
+      if (response.ok) {
+  toast({ title: 'Success', description: 'Service updated successfully', variant: 'default' });
+        setIsEditOpen(false);
+        setEditService(null);
+        fetchServices();
+      } else {
+        throw new Error('Failed to update service');
+      }
+    } catch (error) {
+      toast({ title: 'Error', description: 'Failed to update service', variant: 'destructive' });
+    }
+  };
   const [services, setServices] = useState<Service[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -24,6 +67,10 @@ export function ServicesContent() {
     unit: 'hour',
     category: '',
   });
+
+  // Edit modal state
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editService, setEditService] = useState<Service | null>(null);
 
   useEffect(() => {
     fetchServices();
@@ -101,16 +148,12 @@ export function ServicesContent() {
     }
   };
 
-  const handleDeleteService = async (serviceId: string) => {
-    if (!confirm('Are you sure you want to delete this service?')) {
-      return;
-    }
-
+  const handleDeleteService = async () => {
+    if (!deleteServiceId) return;
     try {
-      const response = await fetch(`/api/services/${serviceId}`, {
+      const response = await fetch(`/api/services/${deleteServiceId}`, {
         method: 'DELETE',
       });
-
       if (response.ok) {
         toast({
           title: 'Success',
@@ -121,12 +164,14 @@ export function ServicesContent() {
         throw new Error('Failed to delete service');
       }
     } catch (error) {
-      console.error('Error deleting service:', error);
       toast({
         title: 'Error',
         description: 'Failed to delete service',
         variant: 'destructive',
       });
+    } finally {
+      setIsDeleteOpen(false);
+      setDeleteServiceId(null);
     }
   };
 
@@ -183,6 +228,75 @@ export function ServicesContent() {
               Add Service
             </Button>
           </div>
+
+          {/* Edit Service Modal */}
+          <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Edit Service</DialogTitle>
+              </DialogHeader>
+              {editService && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium">Name *</label>
+                      <Input
+                        value={editService.name}
+                        onChange={e => setEditService({ ...editService, name: e.target.value })}
+                        placeholder="Service name"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Category</label>
+                      <Input
+                        value={editService.category || ''}
+                        onChange={e => setEditService({ ...editService, category: e.target.value })}
+                        placeholder="e.g., Setup, Technical Support"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Unit Price *</label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={editService.unitPrice}
+                        onChange={e => setEditService({ ...editService, unitPrice: Number(e.target.value) })}
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Unit</label>
+                      <select
+                        value={editService.unit}
+                        onChange={e => setEditService({ ...editService, unit: e.target.value })}
+                        className="w-full p-2 border border-input rounded-md bg-background"
+                      >
+                        <option value="hour">per Hour</option>
+                        <option value="day">per Day</option>
+                        <option value="service">per Service</option>
+                        <option value="event">per Event</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Description</label>
+                    <textarea
+                      value={editService.description || ''}
+                      onChange={e => setEditService({ ...editService, description: e.target.value })}
+                      placeholder="Service description"
+                      className="w-full p-2 border border-input rounded-md bg-background min-h-[100px]"
+                    />
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button onClick={handleUpdateService}>Update Service</Button>
+                    <Button variant="outline" onClick={() => setIsEditOpen(false)}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
 
           {/* Search */}
           <div className="relative">
@@ -273,16 +387,29 @@ export function ServicesContent() {
                       <h3 className="font-semibold text-lg">{service.name}</h3>
                     </div>
                     <div className="flex space-x-1">
-                      <Button size="sm" variant="ghost">
+                      <Button size="sm" variant="ghost" onClick={() => handleEditService(service)}>
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button 
                         size="sm" 
                         variant="ghost" 
-                        onClick={() => handleDeleteService(service.id)}
+                        onClick={() => { setDeleteServiceId(service.id); setIsDeleteOpen(true); }}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
+          {/* Delete Confirmation Modal */}
+          <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Delete Service</DialogTitle>
+              </DialogHeader>
+              <p>Are you sure you want to delete this service? This action cannot be undone.</p>
+              <div className="flex space-x-2 mt-4">
+                <Button variant="destructive" onClick={handleDeleteService}>Delete</Button>
+                <Button variant="outline" onClick={() => setIsDeleteOpen(false)}>Cancel</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
                     </div>
                   </div>
 
