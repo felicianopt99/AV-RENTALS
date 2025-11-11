@@ -79,13 +79,13 @@ export function ClientListDisplay() {
     <div className="space-y-4 md:space-y-6">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <h2 className="text-xl md:text-2xl font-semibold">Clients</h2>
-        <Button asChild className="w-full sm:w-auto">
+        <Button asChild variant="glass" className="w-full sm:w-auto">
           <Link href="/clients/new">
             <PlusCircle className="mr-2 h-4 w-4" /> Add New Client
           </Link>
         </Button>
       </div>
-      <Card className="shadow-lg">
+      <Card className="glass-card bg-card text-card-foreground shadow-xl border border-border/40">
         <CardHeader>
           <CardTitle>Client List</CardTitle>
           <CardDescription>View, search, and manage all your clients.</CardDescription>
@@ -96,7 +96,7 @@ export function ClientListDisplay() {
                 placeholder="Search clients (name, contact, email, phone)..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full sm:max-w-sm md:max-w-md pl-10"
+                className="w-full sm:max-w-sm md:max-w-md pl-10 bg-background/70 border border-border/30 focus:border-primary/60"
               />
             </div>
           </div>
@@ -123,7 +123,7 @@ export function ClientListDisplay() {
             {/* Mobile Card View */}
             <div className="md:hidden space-y-3">
               {filteredClients.map((client) => (
-                <Card key={client.id} className="p-3 cursor-pointer hover:bg-muted/30 transition-colors shadow-none border-0 bg-background/50" onClick={() => router.push(`/clients/${client.id}`)}>
+                <Card key={client.id} className="p-3 cursor-pointer glass-card bg-card/80 hover:bg-card/90 transition-all shadow-md border border-border/30" onClick={() => router.push(`/clients/${client.id}`)}>
                   <div className="flex justify-between items-start">
                     <div className="flex-grow min-w-0">
                       <h3 className="font-medium text-sm truncate">{client.name}</h3>

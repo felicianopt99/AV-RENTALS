@@ -5,21 +5,20 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-95",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium ring-offset-background transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700",
-        destructive:
-          "bg-red-50 dark:bg-red-950 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900",
-        outline:
-          "border border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-900/50 hover:bg-gray-50 dark:hover:bg-gray-800/50 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100",
-        secondary:
-          "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700",
-        ghost: "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-all duration-200",
-        accentGhost: "text-blue-600 dark:text-blue-400 hover:bg-blue-100/50 dark:hover:bg-blue-900/50",
-        link: "text-gray-700 dark:text-gray-300 underline-offset-4 hover:underline hover:text-gray-900 dark:hover:text-gray-100",
-        glass: "bg-white/40 dark:bg-gray-900/40 text-gray-900 dark:text-gray-100 hover:bg-white/60 dark:hover:bg-gray-800/60 border border-gray-200/30 dark:border-gray-700/30 backdrop-blur-md",
+        default: "bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200/60 dark:border-slate-700/60",
+        primary: "bg-blue-600 text-white hover:bg-blue-700 focus:bg-blue-700 shadow-sm border border-blue-600/20",
+        secondary: "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/60 dark:border-slate-600/60",
+        destructive: "bg-red-600 text-white hover:bg-red-700 focus:bg-red-700 shadow-sm border border-red-600/20",
+        outline: "border border-slate-300 dark:border-slate-600 bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300",
+        ghost: "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/50 dark:hover:bg-slate-800/50",
+        accentGhost: "text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50/80 dark:hover:bg-blue-950/50",
+        link: "text-slate-700 dark:text-slate-300 underline-offset-4 hover:underline hover:text-slate-900 dark:hover:text-slate-100",
+        glass: "bg-white/40 dark:bg-slate-900/40 text-slate-900 dark:text-slate-100 hover:bg-white/60 dark:hover:bg-slate-800/60 border border-white/30 dark:border-slate-700/40 backdrop-blur-sm",
+        navigation: "bg-blue-600/95 text-white hover:bg-blue-700/95 focus:bg-blue-700 border border-blue-600/30 shadow-sm backdrop-blur-sm",
       },
       size: {
         default: "h-10 px-4 py-2",

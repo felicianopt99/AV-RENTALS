@@ -33,7 +33,7 @@ export function CalendarContent() {
     <div className="flex flex-col min-h-screen">
       <div className="flex-1 overflow-y-auto p-2 md:p-6">
         <div className="mb-4 md:mb-6 flex flex-col sm:flex-row sm:justify-end gap-4">
-          <Button asChild className="shadow-md hover:shadow-lg transition-shadow w-full sm:w-auto">
+          <Button asChild className="w-full sm:w-auto">
             <Link href="/events/new">
               <PlusCircle className="mr-2 h-5 w-5" /> Add New Event
             </Link>

@@ -152,8 +152,8 @@ export function BottomNav() {
                 {/* active pill */}
                 <div
                   className={cn(
-                    "absolute inset-x-1 -top-0.5 h-10 rounded-xl transition-all duration-300 ease-out",
-                    active ? "bg-gradient-to-t from-primary/20 to-primary/10 shadow-lg shadow-primary/20 border border-primary/30" : "bg-transparent"
+                    "absolute inset-x-1 -top-0.5 h-10 rounded-lg transition-all duration-200 ease-out",
+                    active ? "bg-blue-100/80 dark:bg-blue-900/40 border border-blue-200/60 dark:border-blue-800/60" : "bg-transparent"
                   )}
                   aria-hidden
                 />
@@ -171,12 +171,12 @@ export function BottomNav() {
                   }}
                   className={cn(
                     "relative z-10 mx-auto flex h-11 flex-col items-center justify-center",
-                    "min-w-[52px] rounded-xl px-2 text-[10px] font-semibold transition-all duration-300 ease-out",
-                    active ? "text-primary scale-105" : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:scale-105",
-                    "active:scale-95 group"
+                    "min-w-[52px] rounded-lg px-2 text-[10px] font-medium transition-all duration-200 ease-out",
+                    active ? "text-blue-700 dark:text-blue-300" : "text-sidebar-foreground/60 hover:text-blue-600 dark:hover:text-blue-400",
+                    "group"
                   )}
                 >
-                  {item.icon && <item.icon className={cn("h-5 w-5 transition-all duration-300 ease-out group-hover:scale-110", active && "scale-110 text-primary drop-shadow-sm")} />}
+                  {item.icon && <item.icon className={cn("h-5 w-5 transition-all duration-200 ease-out", active && "text-blue-700 dark:text-blue-300")} />}
                   <span className="mt-1.5 leading-none">{item.label}</span>
                 </Link>
               </div>
@@ -201,8 +201,8 @@ export function BottomNav() {
                         router.push(sub.href);
                       }}
                       className={cn(
-                        "rounded-full px-4 py-2 text-[11px] font-medium whitespace-nowrap transition-all duration-300 ease-out active:scale-95 border border-transparent",
-                        subActive ? "text-primary bg-primary/20 shadow-md shadow-primary/20 border-primary/30 font-semibold" : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/40 hover:scale-105 hover:border-sidebar-border/50"
+                        "rounded-full px-4 py-2 text-[11px] font-medium whitespace-nowrap transition-all duration-200 ease-out border border-transparent",
+                        subActive ? "text-blue-700 dark:text-blue-300 bg-blue-100/80 dark:bg-blue-900/40 border-blue-200/60 dark:border-blue-800/60 font-medium" : "text-sidebar-foreground/60 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/60 dark:hover:bg-blue-950/40"
                       )}
                     >
                       {sub.label}
@@ -219,8 +219,8 @@ export function BottomNav() {
                   <span
                     key={sub.href}
                     className={cn(
-                      "block h-1.5 rounded-full transition-all duration-300 ease-out",
-                      activeDot ? "bg-primary w-4 shadow-sm shadow-primary/40" : "bg-sidebar-foreground/30 w-1.5 hover:bg-sidebar-foreground/50"
+                      "block h-1.5 rounded-full transition-all duration-200 ease-out",
+                      activeDot ? "bg-blue-600 dark:bg-blue-400 w-4" : "bg-sidebar-foreground/30 w-1.5 hover:bg-blue-400/60 dark:hover:bg-blue-500/60"
                     )}
                     aria-hidden
                   />

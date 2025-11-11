@@ -1,7 +1,46 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
+
+// Theme preset definitions
+const THEME_PRESETS = [
+  {
+    key: 'neon',
+    label: 'Neon Night',
+    className: 'theme-neon',
+    colors: {
+      primary: '#3a8bfd',
+      secondary: '#181a20',
+      accent: '#ff3cac',
+    },
+  },
+  {
+    key: 'oceanic',
+    label: 'Oceanic',
+    className: 'theme-oceanic',
+    colors: {
+      primary: '#1de9b6',
+      secondary: '#1a2233',
+      accent: '#43e97b',
+    },
+  },
+  {
+    key: 'minimal',
+    label: 'Minimalist',
+    className: 'theme-minimal',
+    colors: {
+      primary: '#7c83fd',
+      secondary: '#181a20',
+      accent: '#bfc9d1',
+    },
+  },
+  {
+    key: 'custom',
+    label: 'Custom',
+    className: '',
+    colors: {},
+  },
+];
 import { useRouter } from 'next/navigation';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -95,9 +134,25 @@ export default function AdminCustomizationPage() {
   const [useTextLogo, setUseTextLogo] = useState(true);
 
   // Theme states
+  const [themePreset, setThemePreset] = useState('custom');
   const [primaryColor, setPrimaryColor] = useState('#3B82F6');
   const [secondaryColor, setSecondaryColor] = useState('#F3F4F6');
   const [accentColor, setAccentColor] = useState('#10B981');
+  // Apply theme class to <body> when preset changes
+  useEffect(() => {
+    const body = document.body;
+    THEME_PRESETS.forEach(preset => {
+      if (preset.className) body.classList.remove(preset.className);
+    });
+    const selected = THEME_PRESETS.find(p => p.key === themePreset);
+    if (selected && selected.className) {
+      body.classList.add(selected.className);
+      // Optionally update color pickers to match preset
+      if (selected.colors.primary) setPrimaryColor(selected.colors.primary);
+      if (selected.colors.secondary) setSecondaryColor(selected.colors.secondary);
+      if (selected.colors.accent) setAccentColor(selected.colors.accent);
+    }
+  }, [themePreset]);
   const [darkMode, setDarkMode] = useState(false);
 
   // Advanced states
@@ -567,6 +622,23 @@ export default function AdminCustomizationPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Theme preset selector */}
+              <div className="mb-4">
+                <Label htmlFor="theme-preset">Theme Preset</Label>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {THEME_PRESETS.map((preset) => (
+                    <Button
+                      key={preset.key}
+                      type="button"
+                      variant={themePreset === preset.key ? 'glass' : 'outline'}
+                      className={themePreset === preset.key ? 'ring-2 ring-primary' : ''}
+                      onClick={() => setThemePreset(preset.key)}
+                    >
+                      {preset.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="primary-color">Primary Color</Label>

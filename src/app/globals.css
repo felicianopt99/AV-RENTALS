@@ -1,3 +1,107 @@
+/* === THEME PRESETS === */
+.theme-neon {
+  --background: 240 7% 8%;
+  --foreground: 0 0% 98%;
+  --card: 240 7% 12%;
+  --card-foreground: 0 0% 98%;
+  --primary: 210 100% 60%; /* Electric Blue */
+  --primary-foreground: 0 0% 100%;
+  --accent: 320 100% 60%; /* Neon Pink */
+  --accent-foreground: 0 0% 100%;
+  --muted: 220 13% 18%;
+  --muted-foreground: 220 10% 60%;
+  --secondary: 240 7% 16%;
+  --secondary-foreground: 0 0% 90%;
+  --destructive: 0 85% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 220 13% 22%;
+  --input: 220 13% 22%;
+  --ring: 210 100% 60%;
+}
+
+.theme-oceanic {
+  --background: 220 35% 12%;
+  --foreground: 0 0% 98%;
+  --card: 220 35% 16%;
+  --card-foreground: 0 0% 98%;
+  --primary: 190 80% 50%; /* Aqua Blue */
+  --primary-foreground: 0 0% 100%;
+  --accent: 160 70% 45%; /* Sea Green */
+  --accent-foreground: 0 0% 100%;
+  --muted: 180 20% 22%;
+  --muted-foreground: 180 10% 60%;
+  --secondary: 220 35% 20%;
+  --secondary-foreground: 0 0% 90%;
+  --destructive: 0 85% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 200 20% 28%;
+  --input: 200 20% 28%;
+  --ring: 190 80% 50%;
+}
+
+.theme-minimal {
+  --background: 240 10% 6%;
+  --foreground: 0 0% 98%;
+  --card: 240 10% 10%;
+  --card-foreground: 0 0% 98%;
+  --primary: 235 70% 60%; /* Soft Indigo */
+  --primary-foreground: 0 0% 100%;
+  --accent: 220 10% 40%; /* Light Gray */
+  --accent-foreground: 0 0% 100%;
+  --muted: 220 10% 20%;
+  --muted-foreground: 220 10% 60%;
+  --secondary: 240 10% 14%;
+  --secondary-foreground: 0 0% 90%;
+  --destructive: 0 85% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 220 10% 24%;
+  --input: 220 10% 24%;
+  --ring: 235 70% 60%;
+}
+/* Glassy, modern header and sidebar improvements */
+.glass-header {
+  background: rgba(24, 24, 32, 0.72) !important; /* deep dark glass, override any white */
+  box-shadow: 0 4px 32px 0 rgba(0,0,0,0.18);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1.5px solid rgba(255,255,255,0.08);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.03) !important;
+  box-shadow: 0 8px 32px 0 rgba(0,0,0,0.37), inset 0 1px 0 rgba(255,255,255,0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 12px 40px 0 rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15);
+  transform: translateY(-2px);
+}
+
+.glass-sidebar {
+  background: rgba(20, 20, 28, 0.92) !important;
+  box-shadow: 4px 0 32px 0 rgba(0,0,0,0.18);
+  border-right: 1.5px solid rgba(255,255,255,0.07);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+body, html {
+  background: #0a0a0a !important;
+}
+/* Translucent glassy header style */
+.glass-header {
+  background: rgba(30, 41, 59, 0.65); /* slate-800 with opacity */
+  box-shadow: 0 4px 32px 0 rgba(0,0,0,0.10);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1.5px solid rgba(255,255,255,0.08);
+}
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -6,23 +110,23 @@
   :root {
     --background: 0 0% 4%;
     --foreground: 0 0% 95%;
-    --card: 0 0% 7%;
-    --card-foreground: 0 0% 95%;
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 98%;
     --popover: 0 0% 6%;
     --popover-foreground: 0 0% 95%;
-    --primary: 220 100% 65%;
+    --primary: 217 78% 51%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 15%;
+    --secondary: 215 20% 22%;
     --secondary-foreground: 0 0% 90%;
-    --muted: 0 0% 12%;
-    --muted-foreground: 0 0% 60%;
-    --accent: 0 0% 16%;
-    --accent-foreground: 0 0% 90%;
+    --muted: 0 0% 14%;
+    --muted-foreground: 0 0% 65%;
+    --accent: 217 78% 51%;
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 50%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 18%;
-    --input: 0 0% 16%;
-    --ring: 0 0% 25%;
+    --border: 0 0% 20%;
+    --input: 0 0% 18%;
+    --ring: 220 100% 65%;
     --radius: 0.75rem;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
@@ -30,15 +134,15 @@
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
 
-    /* Modern sidebar variables with improved contrast and visual hierarchy */
+    /* Modern sidebar variables with subtle blue theme and clean hierarchy */
     --sidebar-background: 0 0% 4%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 220 100% 65%;
+    --sidebar-primary: 217 78% 51%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 12%;
+    --sidebar-accent: 215 20% 16%;
     --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 0 0% 15%;
-    --sidebar-ring: 220 100% 65%;
+    --sidebar-border: 215 15% 18%;
+    --sidebar-ring: 217 78% 51%;
   }
 }
 
@@ -91,6 +195,19 @@
     padding-left: 0.75rem; /* 12px */
     padding-right: 0.75rem;
   }
+  /* Minimal button utilities and subtle blue theme */
+  .button-nav-primary {
+    @apply bg-blue-600 text-white hover:bg-blue-700 border border-blue-600/20 transition-all duration-200 ease-out;
+  }
+  
+  .button-minimal-hover {
+    @apply hover:bg-blue-50/80 dark:hover:bg-blue-950/50 transition-colors duration-200;
+  }
+  
+  .nav-subtle-active {
+    @apply bg-blue-100/80 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 border border-blue-300/60 dark:border-blue-700/60;
+  }
+
   /* Soft gradient overlay for cards */
   .card-gradient {
     background-image: radial-gradient(1200px 500px at 10% -10%, hsla(var(--primary), 0.10), transparent 40%),

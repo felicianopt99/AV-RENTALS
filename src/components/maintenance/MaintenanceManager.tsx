@@ -84,11 +84,11 @@ export function MaintenanceManager() {
                         <div className={`w-2 h-2 rounded-full ${item.status === 'damaged' ? 'bg-red-500' : 'bg-yellow-500'}`}></div>
                       </div>
                       <div className="flex gap-2 pt-2 border-t border-gray-200/50 dark:border-gray-700/50">
-                        <Button variant="ghost" size="sm" onClick={() => handleAddLogClick(item)} className="flex-1 h-7 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100/50 dark:hover:bg-gray-800/50">
-                          <PlusCircle className="mr-1 h-3 w-3" /> Log
+                        <Button variant="ghost" size="sm" onClick={() => handleAddLogClick(item)} className="flex-1 h-7 text-xs">
+                          Add Log
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => router.push(`/equipment/${item.id}/edit`)} className="flex-1 h-7 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100/50 dark:hover:bg-gray-800/50">
-                          <Edit className="mr-1 h-3 w-3" /> Edit
+                        <Button variant="ghost" size="sm" onClick={() => router.push(`/equipment/${item.id}/edit`)} className="flex-1 h-7 text-xs">
+                          Edit
                         </Button>
                       </div>
                     </div>

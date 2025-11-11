@@ -56,9 +56,9 @@ export function FloatingActionButton({
   };
 
   const variantClasses = {
-    default: 'bg-primary hover:bg-primary/90 text-primary-foreground',
-    secondary: 'bg-secondary hover:bg-secondary/80 text-secondary-foreground',
-    destructive: 'bg-destructive hover:bg-destructive/90 text-destructive-foreground'
+    default: 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm border border-blue-600/20',
+    secondary: 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm border border-slate-200/60 dark:border-slate-600/60',
+    destructive: 'bg-red-600 hover:bg-red-700 text-white shadow-sm border border-red-600/20'
   };
 
   if (!isMobile) return null;
@@ -68,10 +68,8 @@ export function FloatingActionButton({
       onClick={handleClick}
       disabled={disabled}
       className={cn(
-        'fixed z-40 rounded-full shadow-lg',
-        'transition-all duration-200 ease-in-out',
-        'hover:scale-105 active:scale-95',
-        'border-2 border-background/20',
+        'fixed z-40 rounded-full',
+        'transition-all duration-200 ease-out',
         sizeClasses[size],
         positionClasses[position],
         variantClasses[variant],

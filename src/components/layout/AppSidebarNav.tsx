@@ -132,26 +132,26 @@ export function AppSidebarNav() {
             const isSubActive = hasSub && item.subItems!.some(sub => pathname.startsWith(sub.href));
             const parentActive = isParentActive || isSubActive;
             const linkClass = cn(
-              // Base styles with modern feel
-              "group/menu-item relative flex w-full items-center gap-3 overflow-hidden rounded-xl p-3 text-left text-sm font-medium outline-none transition-all duration-300 ease-out",
-              // Focus and interaction states
-              "ring-sidebar-ring focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-primary/50",
-              // Hover effects with subtle animations and enhanced visual feedback
-              "hover:bg-gradient-to-r hover:from-sidebar-accent/80 hover:to-sidebar-accent/40 hover:text-sidebar-accent-foreground hover:shadow-lg hover:shadow-primary/10 hover:scale-[1.02] hover:translate-x-1",
-              // Icon animation on hover
-              "hover:[&>svg]:scale-110 hover:[&>svg]:rotate-3 hover:[&>svg]:text-primary",
-              // Active state with enhanced modern styling
-              "data-[active=true]:bg-gradient-to-r data-[active=true]:from-primary/20 data-[active=true]:to-primary/10 data-[active=true]:text-primary data-[active=true]:font-semibold data-[active=true]:shadow-lg data-[active=true]:shadow-primary/20",
-              // Enhanced active indicator with glow effect
-              "data-[active=true]:before:absolute data-[active=true]:before:left-0 data-[active=true]:before:top-1/2 data-[active=true]:before:-translate-y-1/2 data-[active=true]:before:w-1 data-[active=true]:before:h-8 data-[active=true]:before:bg-primary data-[active=true]:before:rounded-r-full data-[active=true]:before:shadow-lg data-[active=true]:before:shadow-primary/50",
-              // Icon-only collapsed state with better spacing
-              "group-data-[collapsible=icon]:!size-12 group-data-[collapsible=icon]:!p-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:rounded-2xl",
+              // Modern minimal base styles
+              "group/menu-item relative flex w-full items-center gap-3 overflow-hidden rounded-lg p-3 text-left text-sm font-medium outline-none transition-all duration-200 ease-out",
+              // Focus states
+              "ring-blue-500/30 focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-blue-500/30",
+              // Subtle hover effects
+              "hover:bg-blue-50/80 dark:hover:bg-blue-950/50 hover:text-blue-700 dark:hover:text-blue-300",
+              // Minimal icon animation
+              "hover:[&>svg]:text-blue-600 dark:hover:[&>svg]:text-blue-400",
+              // Clean active state
+              "data-[active=true]:bg-blue-100/80 dark:data-[active=true]:bg-blue-900/50 data-[active=true]:text-blue-700 dark:data-[active=true]:text-blue-300 data-[active=true]:font-medium",
+              // Subtle active indicator
+              "data-[active=true]:before:absolute data-[active=true]:before:left-0 data-[active=true]:before:top-1/2 data-[active=true]:before:-translate-y-1/2 data-[active=true]:before:w-0.5 data-[active=true]:before:h-6 data-[active=true]:before:bg-blue-600 dark:data-[active=true]:before:bg-blue-400 data-[active=true]:before:rounded-r-sm",
+              // Icon-only collapsed state
+              "group-data-[collapsible=icon]:!size-12 group-data-[collapsible=icon]:!p-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:rounded-lg",
               // Disabled states
               "disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50",
-              // Enhanced icon and text styling
-              "[&>span:last-child]:truncate [&>svg]:size-5 [&>svg]:shrink-0 [&>svg]:transition-all [&>svg]:duration-300 [&>svg]:ease-out",
-              // Subtle border for better definition
-              "border border-transparent hover:border-sidebar-border/50 data-[active=true]:border-primary/30"
+              // Icon and text styling
+              "[&>span:last-child]:truncate [&>svg]:size-5 [&>svg]:shrink-0 [&>svg]:transition-all [&>svg]:duration-200 [&>svg]:ease-out data-[active=true]:[&>svg]:text-blue-600 dark:data-[active=true]:[&>svg]:text-blue-400",
+              // Minimal border
+              "border border-transparent hover:border-blue-200/60 dark:hover:border-blue-800/60 data-[active=true]:border-blue-300/60 dark:data-[active=true]:border-blue-700/60"
             );
 
             const sectionKey = item.href || item.label;
@@ -242,7 +242,7 @@ export function AppSidebarNav() {
                   renderMenuItem(
                     <>
                       <item.icon className="h-5 w-5" />
-                      <span>{item.label}</span>
+                      <span className="flex-1">{item.label}</span>
                     </>,
                     item.label,
                     item.href
@@ -260,11 +260,11 @@ export function AppSidebarNav() {
                           <Link
                             href={sub.href}
                             className={cn(
-                              "flex w-full items-center gap-2 rounded-lg p-2 text-sm transition-all duration-200 ease-out",
-                              "hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground hover:translate-x-1",
+                              "flex w-full items-center gap-2 rounded-md p-2 text-sm transition-all duration-200 ease-out",
+                              "hover:bg-blue-50/60 dark:hover:bg-blue-950/40 hover:text-blue-600 dark:hover:text-blue-400",
                               isSubActive 
-                                ? "bg-primary/10 text-primary font-medium border border-primary/20" 
-                                : "text-sidebar-foreground/70 hover:text-sidebar-foreground"
+                                ? "bg-blue-100/60 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-medium" 
+                                : "text-sidebar-foreground/70 hover:text-blue-600 dark:hover:text-blue-400"
                             )}
                           >
                             <div className="h-2 w-2 rounded-full bg-current opacity-50" />
@@ -306,30 +306,30 @@ export function AppSidebarNav() {
                               data-size="default"
                               data-active={isActive}
                               className={cn(
-                                // Base styles with modern feel - matching main nav
-                                "group/menu-item relative flex w-full items-center gap-3 overflow-hidden rounded-xl p-3 text-left text-sm font-medium outline-none transition-all duration-300 ease-out",
-                                // Focus and interaction states
-                                "ring-sidebar-ring focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-primary/50",
-                                // Hover effects with subtle animations and enhanced visual feedback
-                                "hover:bg-gradient-to-r hover:from-sidebar-accent/80 hover:to-sidebar-accent/40 hover:text-sidebar-accent-foreground hover:shadow-lg hover:shadow-primary/10 hover:scale-[1.02] hover:translate-x-1",
-                                // Icon animation on hover
-                                "hover:[&>svg]:scale-110 hover:[&>svg]:rotate-3 hover:[&>svg]:text-primary",
-                                // Active state with enhanced modern styling
-                                "data-[active=true]:bg-gradient-to-r data-[active=true]:from-primary/20 data-[active=true]:to-primary/10 data-[active=true]:text-primary data-[active=true]:font-semibold data-[active=true]:shadow-lg data-[active=true]:shadow-primary/20",
-                                // Enhanced active indicator with glow effect
-                                "data-[active=true]:before:absolute data-[active=true]:before:left-0 data-[active=true]:before:top-1/2 data-[active=true]:before:-translate-y-1/2 data-[active=true]:before:w-1 data-[active=true]:before:h-8 data-[active=true]:before:bg-primary data-[active=true]:before:rounded-r-full data-[active=true]:before:shadow-lg data-[active=true]:before:shadow-primary/50",
-                                // Icon-only collapsed state with better spacing
-                                "group-data-[collapsible=icon]:!size-12 group-data-[collapsible=icon]:!p-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:rounded-2xl",
+                                // Modern minimal base styles - matching main nav
+                                "group/menu-item relative flex w-full items-center gap-3 overflow-hidden rounded-lg p-3 text-left text-sm font-medium outline-none transition-all duration-200 ease-out",
+                                // Focus states
+                                "ring-blue-500/30 focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-blue-500/30",
+                                // Subtle hover effects
+                                "hover:bg-blue-50/80 dark:hover:bg-blue-950/50 hover:text-blue-700 dark:hover:text-blue-300",
+                                // Minimal icon animation
+                                "hover:[&>svg]:text-blue-600 dark:hover:[&>svg]:text-blue-400",
+                                // Clean active state
+                                "data-[active=true]:bg-blue-100/80 dark:data-[active=true]:bg-blue-900/50 data-[active=true]:text-blue-700 dark:data-[active=true]:text-blue-300 data-[active=true]:font-medium",
+                                // Subtle active indicator
+                                "data-[active=true]:before:absolute data-[active=true]:before:left-0 data-[active=true]:before:top-1/2 data-[active=true]:before:-translate-y-1/2 data-[active=true]:before:w-0.5 data-[active=true]:before:h-6 data-[active=true]:before:bg-blue-600 dark:data-[active=true]:before:bg-blue-400 data-[active=true]:before:rounded-r-sm",
+                                // Icon-only collapsed state
+                                "group-data-[collapsible=icon]:!size-12 group-data-[collapsible=icon]:!p-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:rounded-lg",
                                 // Disabled states
                                 "disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50",
-                                // Enhanced icon and text styling
-                                "[&>span:last-child]:truncate [&>svg]:size-5 [&>svg]:shrink-0 [&>svg]:transition-all [&>svg]:duration-300 [&>svg]:ease-out",
-                                // Subtle border for better definition
-                                "border border-transparent hover:border-sidebar-border/50 data-[active=true]:border-primary/30"
+                                // Icon and text styling
+                                "[&>span:last-child]:truncate [&>svg]:size-5 [&>svg]:shrink-0 [&>svg]:transition-all [&>svg]:duration-200 [&>svg]:ease-out data-[active=true]:[&>svg]:text-blue-600 dark:data-[active=true]:[&>svg]:text-blue-400",
+                                // Minimal border
+                                "border border-transparent hover:border-blue-200/60 dark:hover:border-blue-800/60 data-[active=true]:border-blue-300/60 dark:data-[active=true]:border-blue-700/60"
                               )}
                             >
                               <item.icon className="h-5 w-5" />
-                              <span>{item.label}</span>
+                              <span className="flex-1">{item.label}</span>
                             </Link>
                           </TooltipTrigger>
                           <TooltipContent side="right" className="w-48">
@@ -343,30 +343,30 @@ export function AppSidebarNav() {
                           data-size="default"
                           data-active={isActive}
                           className={cn(
-                            // Base styles with modern feel - matching main nav
-                            "group/menu-item relative flex w-full items-center gap-3 overflow-hidden rounded-xl p-3 text-left text-sm font-medium outline-none transition-all duration-300 ease-out",
-                            // Focus and interaction states
-                            "ring-sidebar-ring focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-primary/50",
-                            // Hover effects with subtle animations and enhanced visual feedback
-                            "hover:bg-gradient-to-r hover:from-sidebar-accent/80 hover:to-sidebar-accent/40 hover:text-sidebar-accent-foreground hover:shadow-lg hover:shadow-primary/10 hover:scale-[1.02] hover:translate-x-1",
-                            // Icon animation on hover
-                            "hover:[&>svg]:scale-110 hover:[&>svg]:rotate-3 hover:[&>svg]:text-primary",
-                            // Active state with enhanced modern styling
-                            "data-[active=true]:bg-gradient-to-r data-[active=true]:from-primary/20 data-[active=true]:to-primary/10 data-[active=true]:text-primary data-[active=true]:font-semibold data-[active=true]:shadow-lg data-[active=true]:shadow-primary/20",
-                            // Enhanced active indicator with glow effect
-                            "data-[active=true]:before:absolute data-[active=true]:before:left-0 data-[active=true]:before:top-1/2 data-[active=true]:before:-translate-y-1/2 data-[active=true]:before:w-1 data-[active=true]:before:h-8 data-[active=true]:before:bg-primary data-[active=true]:before:rounded-r-full data-[active=true]:before:shadow-lg data-[active=true]:before:shadow-primary/50",
-                            // Icon-only collapsed state with better spacing
-                            "group-data-[collapsible=icon]:!size-12 group-data-[collapsible=icon]:!p-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:rounded-2xl",
+                            // Modern minimal base styles - matching main nav
+                            "group/menu-item relative flex w-full items-center gap-3 overflow-hidden rounded-lg p-3 text-left text-sm font-medium outline-none transition-all duration-200 ease-out",
+                            // Focus states
+                            "ring-blue-500/30 focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-blue-500/30",
+                            // Subtle hover effects
+                            "hover:bg-blue-50/80 dark:hover:bg-blue-950/50 hover:text-blue-700 dark:hover:text-blue-300",
+                            // Minimal icon animation
+                            "hover:[&>svg]:text-blue-600 dark:hover:[&>svg]:text-blue-400",
+                            // Clean active state
+                            "data-[active=true]:bg-blue-100/80 dark:data-[active=true]:bg-blue-900/50 data-[active=true]:text-blue-700 dark:data-[active=true]:text-blue-300 data-[active=true]:font-medium",
+                            // Subtle active indicator
+                            "data-[active=true]:before:absolute data-[active=true]:before:left-0 data-[active=true]:before:top-1/2 data-[active=true]:before:-translate-y-1/2 data-[active=true]:before:w-0.5 data-[active=true]:before:h-6 data-[active=true]:before:bg-blue-600 dark:data-[active=true]:before:bg-blue-400 data-[active=true]:before:rounded-r-sm",
+                            // Icon-only collapsed state
+                            "group-data-[collapsible=icon]:!size-12 group-data-[collapsible=icon]:!p-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:rounded-lg",
                             // Disabled states
                             "disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50",
-                            // Enhanced icon and text styling
-                            "[&>span:last-child]:truncate [&>svg]:size-5 [&>svg]:shrink-0 [&>svg]:transition-all [&>svg]:duration-300 [&>svg]:ease-out",
-                            // Subtle border for better definition
-                            "border border-transparent hover:border-sidebar-border/50 data-[active=true]:border-primary/30"
+                            // Icon and text styling
+                            "[&>span:last-child]:truncate [&>svg]:size-5 [&>svg]:shrink-0 [&>svg]:transition-all [&>svg]:duration-200 [&>svg]:ease-out data-[active=true]:[&>svg]:text-blue-600 dark:data-[active=true]:[&>svg]:text-blue-400",
+                            // Minimal border
+                            "border border-transparent hover:border-blue-200/60 dark:hover:border-blue-800/60 data-[active=true]:border-blue-300/60 dark:data-[active=true]:border-blue-700/60"
                           )}
                         >
                           <item.icon className="h-5 w-5" />
-                          <span>{item.label}</span>
+                          <span className="flex-1">{item.label}</span>
                         </Link>
                       )}
                     </SidebarMenuItem>

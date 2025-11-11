@@ -23,10 +23,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { format, differenceInCalendarDays, addDays } from "date-fns";
-import { CalendarIcon, PlusCircle, Trash2, X, FileText, Download, Eye } from "lucide-react";
+import { CalendarIcon, PlusCircle, Trash2, X, FileText, Download, Eye, Package, ConciergeBell, Receipt } from "lucide-react";
 import type { Quote, QuoteItem, Client, EquipmentItem, QuoteStatus } from "@/types";
 import { QuotePDFPreview } from './QuotePDFPreview';
 import { QuotePDFGenerator } from '@/lib/pdf-generator';
@@ -574,132 +574,195 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
     <>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        {/* Enhanced Header Section */}
-        <div className="relative bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900 border border-blue-200 dark:border-blue-800 rounded-xl p-8 shadow-lg">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-600/5 to-indigo-600/5 rounded-xl"></div>
-          <div className="relative">
-            <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="h-12 w-12 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <FileText className="h-6 w-6 text-white" />
-                  </div>
-                  <div>
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                      {initialData ? 'Edit Quote' : 'Create New Quote'}
-                    </h1>
-                    <p className="text-blue-600 dark:text-blue-400 font-medium">
-                      Professional AV Equipment & Services
-                    </p>
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-3">
-                  {initialData && (
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 dark:bg-black/20 backdrop-blur-sm border border-blue-200 dark:border-blue-700 rounded-full">
-                      <div className="h-2 w-2 bg-green-500 rounded-full"></div>
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Quote #{initialData.quoteNumber}
-                      </span>
-                    </div>
-                  )}
-                  
-                  {/* Auto-save Status Indicator */}
-                  {!initialData && (
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 dark:bg-black/20 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-full">
-                      <div className={`h-2 w-2 rounded-full transition-colors duration-300 ${
-                        autoSaveStatus === 'saved' ? 'bg-green-500' :
-                        autoSaveStatus === 'saving' ? 'bg-yellow-500 animate-pulse' :
-                        'bg-gray-400'
-                      }`}></div>
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {autoSaveStatus === 'saved' && lastSaved ? 
-                          `Saved ${lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` :
-                          autoSaveStatus === 'saving' ? 'Saving...' :
-                          'Draft'
-                        }
-                      </span>
-                    </div>
-                  )}
+        {/* Header Section */}
+        <Card className="shadow-xl border-border/60">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <FileText className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <CardTitle>
+                    {initialData ? 'Edit Quote' : 'Create New Quote'}
+                  </CardTitle>
+                  <CardDescription>
+                    Professional AV Equipment & Services
+                  </CardDescription>
                 </div>
               </div>
-              <div className="text-right">
-                <div className="bg-white/90 dark:bg-black/30 backdrop-blur-sm border border-blue-200 dark:border-blue-700 rounded-xl p-4 shadow-md">
-                  <p className="font-bold text-gray-900 dark:text-white text-lg">AV RENTALS</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Est. 2020</p>
-                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">Professional Equipment Rental</p>
-                </div>
+              
+              <div className="flex gap-2">
+                {initialData && (
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 dark:bg-green-900/50 border border-green-200 dark:border-green-700 rounded-full">
+                    <div className="h-2 w-2 bg-green-500 rounded-full"></div>
+                    <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                      Quote #{initialData.quoteNumber}
+                    </span>
+                  </div>
+                )}
+                
+                {/* Auto-save Status Indicator */}
+                {!initialData && (
+                  <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all duration-200 ${
+                    autoSaveStatus === 'saved' ? 'bg-green-50 dark:bg-green-900/50 border-green-200 dark:border-green-700' :
+                    autoSaveStatus === 'saving' ? 'bg-yellow-50 dark:bg-yellow-900/50 border-yellow-200 dark:border-yellow-700' :
+                    'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700'
+                  }`}>
+                    <div className={`h-2 w-2 rounded-full transition-colors duration-200 ${
+                      autoSaveStatus === 'saved' ? 'bg-green-500' :
+                      autoSaveStatus === 'saving' ? 'bg-yellow-500 animate-pulse' :
+                      'bg-gray-400'
+                    }`}></div>
+                    <span className={`text-sm font-medium ${
+                      autoSaveStatus === 'saved' ? 'text-green-600 dark:text-green-400' :
+                      autoSaveStatus === 'saving' ? 'text-yellow-600 dark:text-yellow-400' :
+                      'text-gray-600 dark:text-gray-400'
+                    }`}>
+                      {autoSaveStatus === 'saved' && lastSaved ? 
+                        `Saved ${lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` :
+                        autoSaveStatus === 'saving' ? 'Saving...' :
+                        'Draft'
+                      }
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-        </div>
-        {/* Enhanced Quote Information Section */}
-        <Card className="border border-blue-200 dark:border-blue-800 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-white to-blue-50/30 dark:from-gray-900 dark:to-blue-900/20">
-          <div className="relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-transparent"></div>
-            <div className="relative p-6 lg:p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="h-10 w-10 bg-blue-600 rounded-lg flex items-center justify-center shadow-md">
-                  <FileText className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                    Quote Information
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Basic details and status of your quote
-                  </p>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          </CardHeader>
+        </Card>
+        {/* Quote Information Section */}
+        <Card className="shadow-xl border-border/60">
+          <CardHeader>
+            <CardTitle>Quote Information</CardTitle>
+            <CardDescription>Basic quote details and status</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Quote Name *</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="e.g., Summer Music Festival AV Package" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Quote Status *</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select quote status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {QUOTE_STATUSES.map(status => (
+                          <SelectItem key={status} value={status}>
+                            <div className="flex items-center gap-2">
+                              <div className={`h-2 w-2 rounded-full ${
+                                status === 'Draft' ? 'bg-gray-400' :
+                                status === 'Sent' ? 'bg-gray-400' :
+                                status === 'Accepted' ? 'bg-green-400' :
+                                status === 'Declined' ? 'bg-red-400' :
+                                'bg-gray-400'
+                              }`}></div>
+                              {status}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Event & Client Information Section */}
+        <Card className="shadow-xl border-border/60">
+          <CardHeader>
+            <CardTitle>Event & Client Details</CardTitle>
+            <CardDescription>Event location and client contact information</CardDescription>
+          </CardHeader>
+          <CardContent>
+            
+            <div className="space-y-6">
+              {/* Event Location */}
+              <div>
+                <h4 className="font-medium mb-4">Event Location</h4>
                 <FormField
                   control={form.control}
-                  name="name"
+                  name="location"
                   render={({ field }) => (
-                    <FormItem className="space-y-3">
-                      <FormLabel className="text-sm font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                        Quote Name
-                        <span className="text-red-500">*</span>
-                      </FormLabel>
+                    <FormItem>
+                      <FormLabel>Venue / Location *</FormLabel>
                       <FormControl>
-                        <div className="relative group">
-                          <Input 
-                            placeholder="e.g., Summer Music Festival AV Package" 
-                            {...field} 
-                            className="h-12 pl-4 pr-4 border-2 border-gray-200 dark:border-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg bg-white dark:bg-gray-800 transition-all duration-200 group-hover:border-gray-300 dark:group-hover:border-gray-600"
-                          />
-                        </div>
+                        <Input 
+                          placeholder="e.g., Grand Ballroom, Convention Center" 
+                          {...field} 
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+              </div>
+
+              <Separator />
+
+              {/* Client Selection */}
+              <div>
+                <h4 className="font-medium mb-4">Client Information</h4>
+
                 <FormField
                   control={form.control}
-                  name="status"
+                  name="clientId"
                   render={({ field }) => (
-                    <FormItem className="space-y-3">
-                      <FormLabel className="text-sm font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                        Quote Status
-                        <span className="text-red-500">*</span>
-                      </FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormItem className="mb-4">
+                      <FormLabel>Select Existing Client (Optional)</FormLabel>
+                      <Select
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          if (value === MANUAL_CLIENT_ENTRY_VALUE || value === "") {
+                            form.setValue("clientName", "");
+                            form.setValue("clientEmail", "");
+                            form.setValue("clientPhone", "");
+                            form.setValue("clientAddress", "");
+                          }
+                        }}
+                        value={field.value || MANUAL_CLIENT_ENTRY_VALUE}
+                      >
                         <FormControl>
-                          <SelectTrigger className="h-12 border-2 border-gray-200 dark:border-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg bg-white dark:bg-gray-800 transition-all duration-200 hover:border-gray-300 dark:hover:border-gray-600">
-                            <SelectValue placeholder="Select quote status" />
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select existing client or enter manually..." />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent className="rounded-lg">
-                          {QUOTE_STATUSES.map(status => (
-                            <SelectItem key={status} value={status} className="rounded-md">
-                              <div className="flex items-center gap-2">
-                                <div className={`h-2 w-2 rounded-full ${
-                                  status === 'Draft' ? 'bg-gray-400' :
-                                  status === 'Sent' ? 'bg-blue-400' :
-                                  status === 'Accepted' ? 'bg-green-400' :
-                                  status === 'Declined' ? 'bg-red-400' :
-                                  'bg-gray-400'
-                                }`}></div>
-                                {status}
+                        <SelectContent>
+                          <SelectItem value={MANUAL_CLIENT_ENTRY_VALUE}>
+                            <div className="flex items-center gap-2">
+                              <PlusCircle className="h-4 w-4" />
+                              Enter New Client Details
+                            </div>
+                          </SelectItem>
+                          {clients.map(client => (
+                            <SelectItem key={client.id} value={client.id}>
+                              <div className="flex flex-col">
+                                <span className="font-medium">{client.name}</span>
+                                {client.email && (
+                                  <span className="text-xs text-muted-foreground">{client.email}</span>
+                                )}
                               </div>
                             </SelectItem>
                           ))}
@@ -709,235 +772,90 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                     </FormItem>
                   )}
                 />
-              </div>
-            </div>
-          </div>
-        </Card>
 
-        {/* Enhanced Event & Client Information Section */}
-        <Card className="border border-green-200 dark:border-green-800 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-white to-green-50/30 dark:from-gray-900 dark:to-green-900/20">
-          <div className="relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-green-600/10 to-transparent"></div>
-            <div className="relative p-6 lg:p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="h-10 w-10 bg-green-600 rounded-lg flex items-center justify-center shadow-md">
-                  <CalendarIcon className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                    Event & Client Details
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Event location and client contact information
-                  </p>
-                </div>
-              </div>
-              
-              <div className="space-y-8">
-                {/* Event Location */}
-                <div className="bg-white/70 dark:bg-gray-800/50 p-6 rounded-xl border border-green-100 dark:border-green-800/50">
-                  <h4 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                    <div className="h-2 w-2 bg-green-500 rounded-full"></div>
-                    Event Location
-                  </h4>
-                  <FormField
-                    control={form.control}
-                    name="location"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          Venue / Location
-                          <span className="text-red-500">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <div className="relative group">
-                            <Input 
-                              placeholder="e.g., Grand Ballroom, Convention Center, or 123 Main Street" 
-                              {...field} 
-                              className="h-12 pl-4 pr-4 border-2 border-gray-200 dark:border-gray-700 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 rounded-lg bg-white dark:bg-gray-800 transition-all duration-200 group-hover:border-gray-300 dark:group-hover:border-gray-600"
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <FormField control={form.control} name="clientName" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Client Name *</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Client's Full Name or Company" 
+                          {...field} 
+                          disabled={!!watchClientId && watchClientId !== MANUAL_CLIENT_ENTRY_VALUE}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
 
-                {/* Client Selection */}
-                <div className="bg-white/70 dark:bg-gray-800/50 p-6 rounded-xl border border-green-100 dark:border-green-800/50">
-                  <h4 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                    <div className="h-2 w-2 bg-green-500 rounded-full"></div>
-                    Client Information
-                  </h4>
+                  <FormField control={form.control} name="clientEmail" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Client Email</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="email" 
+                          placeholder="client@company.com" 
+                          {...field} 
+                          disabled={!!watchClientId && watchClientId !== MANUAL_CLIENT_ENTRY_VALUE}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
 
-                  <FormField
-                    control={form.control}
-                    name="clientId"
-                    render={({ field }) => (
-                      <FormItem className="space-y-3">
-                        <FormLabel className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                          Select Existing Client (Optional)
-                        </FormLabel>
-                        <Select
-                          onValueChange={(value) => {
-                            field.onChange(value);
-                            if (value === MANUAL_CLIENT_ENTRY_VALUE || value === "") {
-                              form.setValue("clientName", "");
-                              form.setValue("clientEmail", "");
-                              form.setValue("clientPhone", "");
-                              form.setValue("clientAddress", "");
-                            }
-                          }}
-                          value={field.value || MANUAL_CLIENT_ENTRY_VALUE}
-                        >
-                          <FormControl>
-                            <SelectTrigger className="h-12 border-2 border-gray-200 dark:border-gray-700 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 rounded-lg bg-white dark:bg-gray-800 transition-all duration-200 hover:border-gray-300 dark:hover:border-gray-600">
-                              <SelectValue placeholder="Select existing client or enter manually..." />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="rounded-lg">
-                            <SelectItem value={MANUAL_CLIENT_ENTRY_VALUE} className="rounded-md">
-                              <div className="flex items-center gap-2">
-                                <PlusCircle className="h-4 w-4 text-green-600" />
-                                Enter New Client Details
-                              </div>
-                            </SelectItem>
-                            {clients.map(client => (
-                              <SelectItem key={client.id} value={client.id} className="rounded-md">
-                                <div className="flex flex-col">
-                                  <span className="font-medium">{client.name}</span>
-                                  {client.email && (
-                                    <span className="text-xs text-gray-500">{client.email}</span>
-                                  )}
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <FormField control={form.control} name="clientPhone" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Client Phone</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Phone Number" 
+                          {...field} 
+                          disabled={!!watchClientId && watchClientId !== MANUAL_CLIENT_ENTRY_VALUE}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
 
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-                    <FormField control={form.control} name="clientName" render={({ field }) => (
-                      <FormItem className="space-y-3">
-                        <FormLabel className="text-sm font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          Client Name
-                          <span className="text-red-500">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <div className="relative group">
-                            <Input 
-                              placeholder="Client's Full Name or Company" 
-                              {...field} 
-                              disabled={!!watchClientId && watchClientId !== MANUAL_CLIENT_ENTRY_VALUE}
-                              className="h-12 pl-4 pr-4 border-2 border-gray-200 dark:border-gray-700 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 rounded-lg bg-white dark:bg-gray-800 transition-all duration-200 group-hover:border-gray-300 dark:group-hover:border-gray-600 disabled:bg-gray-50 dark:disabled:bg-gray-900"
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-
-                    <FormField control={form.control} name="clientEmail" render={({ field }) => (
-                      <FormItem className="space-y-3">
-                        <FormLabel className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                          Client Email
-                        </FormLabel>
-                        <FormControl>
-                          <div className="relative group">
-                            <Input 
-                              type="email" 
-                              placeholder="client@company.com" 
-                              {...field} 
-                              disabled={!!watchClientId && watchClientId !== MANUAL_CLIENT_ENTRY_VALUE}
-                              className="h-12 pl-4 pr-4 border-2 border-gray-200 dark:border-gray-700 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 rounded-lg bg-white dark:bg-gray-800 transition-all duration-200 group-hover:border-gray-300 dark:group-hover:border-gray-600 disabled:bg-gray-50 dark:disabled:bg-gray-900"
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-
-                    <FormField control={form.control} name="clientPhone" render={({ field }) => (
-                      <FormItem className="space-y-3">
-                        <FormLabel className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                          Client Phone
-                        </FormLabel>
-                        <FormControl>
-                          <div className="relative group">
-                            <Input 
-                              placeholder="Phone Number" 
-                              {...field} 
-                              disabled={!!watchClientId && watchClientId !== MANUAL_CLIENT_ENTRY_VALUE}
-                              className="h-12 pl-4 pr-4 border-2 border-gray-200 dark:border-gray-700 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 rounded-lg bg-white dark:bg-gray-800 transition-all duration-200 group-hover:border-gray-300 dark:group-hover:border-gray-600 disabled:bg-gray-50 dark:disabled:bg-gray-900"
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-
-                    <FormField control={form.control} name="clientAddress" render={({ field }) => (
-                      <FormItem className="space-y-3">
-                        <FormLabel className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                          Client Address
-                        </FormLabel>
-                        <FormControl>
-                          <div className="relative group">
-                            <Textarea 
-                              placeholder="Client's Address" 
-                              {...field} 
-                              disabled={!!watchClientId && watchClientId !== MANUAL_CLIENT_ENTRY_VALUE}
-                              className="min-h-[48px] pl-4 pr-4 pt-3 border-2 border-gray-200 dark:border-gray-700 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 rounded-lg bg-white dark:bg-gray-800 transition-all duration-200 group-hover:border-gray-300 dark:group-hover:border-gray-600 disabled:bg-gray-50 dark:disabled:bg-gray-900"
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-                  </div>
+                  <FormField control={form.control} name="clientAddress" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Client Address</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Client's Address" 
+                          {...field} 
+                          disabled={!!watchClientId && watchClientId !== MANUAL_CLIENT_ENTRY_VALUE}
+                          className="min-h-[40px]"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
                 </div>
               </div>
             </div>
-          </div>
+          </CardContent>
         </Card>
 
-        {/* Enhanced Quote Period Section */}
-        <Card className="border border-purple-200 dark:border-purple-800 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-white to-purple-50/30 dark:from-gray-900 dark:to-purple-900/20">
-          <div className="relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 to-transparent"></div>
-            <div className="relative p-6 lg:p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="h-10 w-10 bg-purple-600 rounded-lg flex items-center justify-center shadow-md">
-                  <CalendarIcon className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                    Rental Period
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Select the start and end dates for equipment rental
-                  </p>
-                </div>
-              </div>
+        {/* Quote Period Section */}
+        <Card className="shadow-xl border-border/60">
+          <CardHeader>
+            <CardTitle>Rental Period</CardTitle>
+            <CardDescription>Select the start and end dates for equipment rental</CardDescription>
+          </CardHeader>
+          <CardContent>
               
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <FormField control={form.control} name="startDate" render={({ field }) => (
                   <FormItem className="space-y-3">
-                    <FormLabel className="text-sm font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                      Start Date
-                      <span className="text-red-500">*</span>
-                    </FormLabel>
+                    <FormLabel>Start Date *</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button 
                             variant="outline" 
                             className={cn(
-                              "h-12 w-full justify-start text-left font-normal border-2 border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-600 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 rounded-lg bg-white dark:bg-gray-800 transition-all duration-200",
+                              "w-full justify-start text-left font-normal",
                               !field.value && "text-muted-foreground"
                             )}
                           >
@@ -961,18 +879,15 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                 )} />
                 
                 <FormField control={form.control} name="endDate" render={({ field }) => (
-                  <FormItem className="space-y-3">
-                    <FormLabel className="text-sm font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                      End Date
-                      <span className="text-red-500">*</span>
-                    </FormLabel>
+                  <FormItem>
+                    <FormLabel>End Date *</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button 
                             variant="outline" 
                             className={cn(
-                              "h-12 w-full justify-start text-left font-normal border-2 border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-600 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 rounded-lg bg-white dark:bg-gray-800 transition-all duration-200",
+                              "w-full justify-start text-left font-normal",
                               !field.value && "text-muted-foreground"
                             )}
                           >
@@ -997,53 +912,25 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                 )} />
               </div>
               
-              <div className="mt-6 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+              <div className="mt-4 p-4 bg-muted/50 rounded-lg border border-border/50">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 bg-purple-500 rounded-full"></div>
-                    <span className="text-sm font-medium text-purple-900 dark:text-purple-300">
-                      Rental Duration
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg font-bold text-purple-900 dark:text-purple-300">
-                      {days} day{days !== 1 ? 's' : ''}
-                    </span>
-                    <div className="text-xs text-purple-600 dark:text-purple-400">
-                      (Equipment rates are per day)
-                    </div>
+                  <span className="text-sm font-medium">Rental Duration</span>
+                  <div className="text-right">
+                    <div className="font-semibold">{days} day{days !== 1 ? 's' : ''}</div>
+                    <div className="text-xs text-muted-foreground">Equipment rates are per day</div>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+          </CardContent>
         </Card>
 
-        {/* Enhanced Quote Items Section */}
-        <Card className="border border-orange-200 dark:border-orange-800 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-white to-orange-50/30 dark:from-gray-900 dark:to-orange-900/20">
-          <div className="relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-orange-600/10 to-transparent"></div>
-            <div className="relative p-6 lg:p-8">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 bg-orange-600 rounded-lg flex items-center justify-center shadow-md">
-                    <PlusCircle className="h-5 w-5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                      Equipment & Services
-                    </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Add rental items, services, and fees to your quote
-                    </p>
-                  </div>
-                </div>
-                <div className="bg-orange-100 dark:bg-orange-900/30 px-3 py-1 rounded-full">
-                  <span className="text-sm font-medium text-orange-800 dark:text-orange-300">
-                    {fields.length} item{fields.length !== 1 ? 's' : ''}
-                  </span>
-                </div>
-              </div>
+        {/* Quote Items Section */}
+        <Card className="shadow-xl border-border/60">
+          <CardHeader>
+            <CardTitle>Equipment & Services</CardTitle>
+            <CardDescription>Add rental items, services, and fees to your quote</CardDescription>
+          </CardHeader>
+          <CardContent>
               
               <div className="space-y-4">
                 {/* List all items (equipment, service, fee) */}
@@ -1056,13 +943,13 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                   return (
                     <Card
                       key={field.id}
-                      className="group relative p-6 rounded-xl shadow-md border-2 border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-orange-200 dark:hover:border-orange-700 hover:shadow-lg transition-all duration-300"
+                      className="group relative p-4 shadow-lg hover:shadow-primary/20 hover:border-primary/30 transition-all duration-300 transform hover:-translate-y-1"
                     >
                       <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="absolute top-3 right-3 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200"
+                  className="absolute top-2 right-2 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100"
                   onClick={() => remove(index)}
                   aria-label="Remove item"
                 >
@@ -1072,26 +959,26 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                   {/* Item Type Badge */}
                   <div className="flex items-center gap-3">
-                    <div className={`h-12 w-12 rounded-xl flex items-center justify-center shadow-sm
-                      ${field.type === 'equipment' ? 'bg-blue-100 dark:bg-blue-900/30' :
-                        field.type === 'service' ? 'bg-green-100 dark:bg-green-900/30' :
-                        'bg-yellow-100 dark:bg-yellow-900/30'}`}
+                    <div className={`h-12 w-12 rounded-xl flex items-center justify-center shadow-sm backdrop-blur border
+                      ${field.type === 'equipment' ? 'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600' :
+                        field.type === 'service' ? 'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600' :
+                        'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600'}`}
                     >
-                      {field.type === 'equipment' && <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />}
-                      {field.type === 'service' && <PlusCircle className="h-5 w-5 text-green-600 dark:text-green-400" />}
-                      {field.type === 'fee' && <CalendarIcon className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />}
+                      {field.type === 'equipment' && <FileText className="h-5 w-5 text-gray-600 dark:text-gray-400" />}
+                      {field.type === 'service' && <PlusCircle className="h-5 w-5 text-gray-600 dark:text-gray-400" />}
+                      {field.type === 'fee' && <CalendarIcon className="h-5 w-5 text-gray-600 dark:text-gray-400" />}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider
-                          ${field.type === 'equipment' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
-                            field.type === 'service' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
-                            'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'}`}
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider backdrop-blur border
+                          ${field.type === 'equipment' ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600' :
+                            field.type === 'service' ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600' :
+                            'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600'}`}
                         >
                           {field.type}
                         </span>
                       </div>
-                      <h4 className="font-semibold text-gray-900 dark:text-white mt-1 truncate">
+                      <h4 className="font-semibold text-card-foreground mt-1 truncate">
                         {field.type === 'equipment' && field.equipmentName}
                         {field.type === 'service' && field.serviceName}
                         {field.type === 'fee' && field.feeName}
@@ -1100,23 +987,23 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                   </div>
 
                   {/* Item Details */}
-                  <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                  <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                     {(field.type === 'equipment' || field.type === 'service') && (
                       <>
                         <div className="flex items-center gap-1">
                           <span className="font-medium">Qty:</span>
-                          <span className="text-gray-900 dark:text-white font-semibold">{field.quantity}</span>
+                          <span className="text-card-foreground font-semibold">{field.quantity}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <span className="font-medium">Rate:</span>
-                          <span className="text-gray-900 dark:text-white font-semibold">
+                          <span className="text-card-foreground font-semibold">
                             €{field.unitPrice?.toFixed(2)}{field.type === 'equipment' ? '/day' : ''}
                           </span>
                         </div>
                         {field.type === 'equipment' && (
                           <div className="flex items-center gap-1">
                             <span className="font-medium">Days:</span>
-                            <span className="text-gray-900 dark:text-white font-semibold">{days}</span>
+                            <span className="text-card-foreground font-semibold">{days}</span>
                           </div>
                         )}
                       </>
@@ -1125,11 +1012,11 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-1">
                           <span className="font-medium">Type:</span>
-                          <span className="text-gray-900 dark:text-white font-semibold capitalize">{field.feeType}</span>
+                          <span className="text-card-foreground font-semibold capitalize">{field.feeType}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <span className="font-medium">Amount:</span>
-                          <span className="text-gray-900 dark:text-white font-semibold">
+                          <span className="text-card-foreground font-semibold">
                             {field.feeType === 'percentage' ? `${field.amount}%` : `€${field.amount?.toFixed(2)}`}
                           </span>
                         </div>
@@ -1140,8 +1027,8 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                   {/* Line Total */}
                   <div className="ml-auto">
                     <div className="text-right">
-                      <div className="text-xs text-gray-500 font-medium">Line Total</div>
-                      <div className="text-lg font-bold text-orange-600 dark:text-orange-400">
+                      <div className="text-xs text-muted-foreground font-medium">Line Total</div>
+                      <div className="text-lg font-bold text-gray-900 dark:text-gray-100">
                         €{field.lineTotal?.toFixed(2) || '0.00'}
                       </div>
                     </div>
@@ -1153,74 +1040,74 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                 
                 {/* Enhanced Add Item Section */}
               {fields.length === 0 && (
-                <div className="text-center py-12 bg-gray-50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600">
+                <div className="text-center py-12 bg-muted/30 rounded-lg border-2 border-dashed border-border">
                   <div className="flex flex-col items-center gap-3">
-                    <div className="h-16 w-16 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center">
-                      <PlusCircle className="h-8 w-8 text-orange-600 dark:text-orange-400" />
+                    <div className="h-16 w-16 bg-muted/20 rounded-full flex items-center justify-center">
+                      <PlusCircle className="h-8 w-8 text-muted-foreground" />
                     </div>
                     <div>
-                      <h4 className="text-lg font-semibold text-gray-900 dark:text-white">No items added yet</h4>
-                      <p className="text-gray-600 dark:text-gray-400">Add equipment, services, or fees to get started</p>
+                      <h4 className="text-lg font-semibold text-card-foreground">No items added yet</h4>
+                      <p className="text-muted-foreground">Add equipment, services, or fees to get started</p>
                     </div>
                   </div>
                 </div>
               )}
 
-              <div className="bg-white dark:bg-gray-800 border-2 border-dashed border-orange-200 dark:border-orange-800 rounded-xl p-6 hover:border-orange-300 dark:hover:border-orange-700 transition-all duration-300">
+              <div className="border-2 border-dashed border-border bg-muted/30 rounded-lg p-6">
                 <div className="mb-6">
-                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Add New Item</h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Choose the type of item you want to add to this quote</p>
+                  <h4 className="text-lg font-semibold text-card-foreground mb-2">Add New Item</h4>
+                  <p className="text-sm text-muted-foreground">Choose the type of item you want to add to this quote</p>
                 </div>
                 
-                {/* Enhanced Tab Navigation */}
-                <div className="flex flex-wrap gap-2 mb-6 p-1 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                {/* Tab Navigation */}
+                <div className="flex flex-wrap gap-2 mb-6 p-1 bg-muted/50 rounded-lg border border-border/50">
                   <button
                     type="button"
                     onClick={() => setAddItemType('equipment')}
-                    className={`flex-1 min-w-fit px-4 py-3 rounded-md font-semibold text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50
+                    className={`flex-1 min-w-fit px-4 py-3 rounded-md font-medium text-sm transition-all duration-200
                       ${addItemType === 'equipment' 
-                        ? 'bg-blue-600 text-white shadow-lg transform scale-105' 
-                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-gray-600'}`}
+                        ? 'bg-gray-800 text-white dark:bg-gray-700 dark:text-white' 
+                        : 'text-muted-foreground hover:bg-muted/50'}`}
                   >
                     <div className="flex items-center justify-center gap-2">
-                      <FileText className="h-4 w-4" />
+                      <Package className="h-4 w-4" />
                       Equipment
                     </div>
                   </button>
                   <button
                     type="button"
                     onClick={() => setAddItemType('service')}
-                    className={`flex-1 min-w-fit px-4 py-3 rounded-md font-semibold text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500/50
+                    className={`flex-1 min-w-fit px-4 py-3 rounded-md font-medium text-sm transition-all duration-200
                       ${addItemType === 'service' 
-                        ? 'bg-green-600 text-white shadow-lg transform scale-105' 
-                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-gray-600'}`}
+                        ? 'bg-gray-800 text-white dark:bg-gray-700 dark:text-white' 
+                        : 'text-muted-foreground hover:bg-muted/50'}`}
                   >
                     <div className="flex items-center justify-center gap-2">
-                      <PlusCircle className="h-4 w-4" />
+                      <ConciergeBell className="h-4 w-4" />
                       Service
                     </div>
                   </button>
                   <button
                     type="button"
                     onClick={() => setAddItemType('fee')}
-                    className={`flex-1 min-w-fit px-4 py-3 rounded-md font-semibold text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-500/50
+                    className={`flex-1 min-w-fit px-4 py-3 rounded-md font-medium text-sm transition-all duration-200
                       ${addItemType === 'fee' 
-                        ? 'bg-yellow-500 text-white shadow-lg transform scale-105' 
-                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-gray-600'}`}
+                        ? 'bg-gray-800 text-white dark:bg-gray-700 dark:text-white' 
+                        : 'text-muted-foreground hover:bg-muted/50'}`}
                   >
                     <div className="flex items-center justify-center gap-2">
-                      <CalendarIcon className="h-4 w-4" />
+                      <Receipt className="h-4 w-4" />
                       Fee
                     </div>
                   </button>
                 </div>
-                {/* Enhanced Tab Content */}
-                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-6">
+                {/* Tab Content */}
+                <div className="bg-muted/50 rounded-lg p-6 border border-border/50">
                   {addItemType === 'equipment' && (
                     <div className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="md:col-span-2">
-                          <label className="block text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">
+                          <label className="block text-sm font-semibold mb-2">
                             Search Equipment
                           </label>
                           <div className="relative">
@@ -1237,10 +1124,10 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                                 else setSelectedEquipmentId('');
                               }}
                               placeholder="Type to search equipment..."
-                              className="w-full h-12 pl-4 pr-10 border-2 border-gray-200 dark:border-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg bg-white dark:bg-gray-800 transition-all duration-200"
+                              className="w-full h-12 pl-4 pr-10 border border-border/40 focus:border-gray-400 dark:focus:border-gray-500 focus:shadow-lg focus:shadow-gray-200/20 dark:focus:shadow-gray-800/20 hover:border-border/60 rounded-lg bg-background/50 backdrop-blur-sm transition-all duration-200"
                               list="equipment-list"
                             />
-                            <FileText className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                            <FileText className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                             <datalist id="equipment-list">
                               {rentableEquipment
                                 .filter(eq => eq.name.toLowerCase().includes(equipmentSearch.toLowerCase()))
@@ -1250,10 +1137,10 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                             </datalist>
                           </div>
                           {equipmentSearch && selectedEquipmentId && (
-                            <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                            <div className="mt-2 p-3 bg-green-50 dark:bg-green-900/50 rounded-lg border border-green-200 dark:border-green-700">
                               <div className="flex items-center gap-2">
-                                <div className="h-2 w-2 bg-blue-500 rounded-full"></div>
-                                <span className="text-sm text-blue-800 dark:text-blue-300">
+                                <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
+                                <span className="text-sm text-green-700 dark:text-green-300 font-medium">
                                   Selected: {rentableEquipment.find(eq => eq.id === selectedEquipmentId)?.name}
                                 </span>
                               </div>
@@ -1262,7 +1149,7 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                         </div>
                         
                         <div>
-                          <label className="block text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">
+                          <label className="block text-sm font-semibold mb-2">
                             Quantity
                           </label>
                           <input 
@@ -1270,7 +1157,7 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                             min={1} 
                             value={addQuantity} 
                             onChange={e => setAddQuantity(Number(e.target.value))} 
-                            className="w-full h-12 px-4 border-2 border-gray-200 dark:border-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg bg-white dark:bg-gray-800 transition-all duration-200" 
+                            className="w-full h-12 px-4 border border-border focus:border-gray-400 dark:focus:border-gray-500 rounded-lg bg-background/50" 
                           />
                         </div>
                       </div>
@@ -1278,7 +1165,6 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                       <div className="flex justify-end">
                         <Button 
                           type="button" 
-                          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg" 
                           onClick={() => {
                             let eqId = selectedEquipmentId;
                             if (!eqId && equipmentSearch) {
@@ -1304,13 +1190,13 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                     <div className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">
+                          <label className="block text-sm font-semibold mb-2">
                             Select Service
                           </label>
                           <select 
                             value={selectedServiceId} 
                             onChange={e => setSelectedServiceId(e.target.value)} 
-                            className="w-full h-12 px-4 border-2 border-gray-200 dark:border-gray-600 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 rounded-lg bg-white dark:bg-gray-800 transition-all duration-200"
+                            className="w-full h-12 px-4 border border-border focus:border-accent rounded-lg bg-background/50"
                           >
                             {services.map((svc: any) => (
                               <option key={svc.id} value={svc.id}>
@@ -1321,7 +1207,7 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                         </div>
                         
                         <div>
-                          <label className="block text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">
+                          <label className="block text-sm font-semibold mb-2">
                             Quantity
                           </label>
                           <input 
@@ -1329,7 +1215,7 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                             min={1} 
                             value={addQuantity} 
                             onChange={e => setAddQuantity(Number(e.target.value))} 
-                            className="w-full h-12 px-4 border-2 border-gray-200 dark:border-gray-600 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 rounded-lg bg-white dark:bg-gray-800 transition-all duration-200" 
+                            className="w-full h-12 px-4 border border-border focus:border-accent rounded-lg bg-background/50" 
                           />
                         </div>
                       </div>
@@ -1337,7 +1223,7 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                       <div className="flex justify-end">
                         <Button 
                           type="button" 
-                          className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg" 
+                          variant="secondary"
                           onClick={() => { 
                             handleAddItem(); 
                             setAddQuantity(1);
@@ -1354,13 +1240,13 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                     <div className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                          <label className="block text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">
+                          <label className="block text-sm font-semibold mb-2">
                             Select Fee
                           </label>
                           <select 
                             value={selectedFeeId} 
                             onChange={e => setSelectedFeeId(e.target.value)} 
-                            className="w-full h-12 px-4 border-2 border-gray-200 dark:border-gray-600 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 rounded-lg bg-white dark:bg-gray-800 transition-all duration-200"
+                            className="w-full h-12 px-4 border border-border focus:border-secondary rounded-lg bg-background/50"
                           >
                             {fees.map((fee: any) => (
                               <option key={fee.id} value={fee.id}>
@@ -1371,13 +1257,13 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                         </div>
                         
                         <div>
-                          <label className="block text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">
+                          <label className="block text-sm font-semibold mb-2">
                             Fee Type
                           </label>
                           <select 
                             value={addFeeType} 
                             onChange={e => setAddFeeType(e.target.value as any)} 
-                            className="w-full h-12 px-4 border-2 border-gray-200 dark:border-gray-600 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 rounded-lg bg-white dark:bg-gray-800 transition-all duration-200"
+                            className="w-full h-12 px-4 border border-border focus:border-secondary rounded-lg bg-background/50"
                           >
                             <option value="fixed">Fixed Amount</option>
                             <option value="percentage">Percentage</option>
@@ -1385,7 +1271,7 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                         </div>
                         
                         <div>
-                          <label className="block text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">
+                          <label className="block text-sm font-semibold mb-2">
                             Amount {addFeeType === 'percentage' ? '(%)' : '(€)'}
                           </label>
                           <input 
@@ -1394,7 +1280,7 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                             step={addFeeType === 'percentage' ? '0.1' : '0.01'}
                             value={addFeeAmount} 
                             onChange={e => setAddFeeAmount(Number(e.target.value))} 
-                            className="w-full h-12 px-4 border-2 border-gray-200 dark:border-gray-600 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 rounded-lg bg-white dark:bg-gray-800 transition-all duration-200" 
+                            className="w-full h-12 px-4 border border-border focus:border-secondary rounded-lg bg-background/50" 
                           />
                         </div>
                       </div>
@@ -1402,7 +1288,7 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                       <div className="flex justify-end">
                         <Button 
                           type="button" 
-                          className="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg" 
+                          variant="outline"
                           onClick={() => { 
                             handleAddItem(); 
                             setAddFeeAmount(0);
@@ -1416,50 +1302,37 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                   )}
                 </div>
               </div>
+              </div>
               
               {form.formState.errors.items && typeof form.formState.errors.items === 'object' && !Array.isArray(form.formState.errors.items) && (
                 <p className="text-sm font-medium text-destructive mt-4">{form.formState.errors.items.message}</p>
               )}
-              </div>
-            </div>
-          </div>
+            </CardContent>
         </Card>
 
-        {/* Enhanced Financial Summary Section */}
-        <Card className="border border-emerald-200 dark:border-emerald-800 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-white to-emerald-50/30 dark:from-gray-900 dark:to-emerald-900/20">
-          <div className="relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/10 to-transparent"></div>
-            <div className="relative p-6 lg:p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="h-10 w-10 bg-emerald-600 rounded-lg flex items-center justify-center shadow-md">
-                  <CalendarIcon className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                    Financial Summary
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Configure pricing, discounts, and tax calculations
-                  </p>
-                </div>
-              </div>
+        {/* Financial Summary Section */}
+        <Card className="shadow-xl border-border/60">
+          <CardHeader>
+            <CardTitle>Financial Summary</CardTitle>
+            <CardDescription>Configure pricing, discounts, and tax calculations</CardDescription>
+          </CardHeader>
+          <CardContent>
               
               {/* Pricing Configuration */}
-              <div className="bg-white/70 dark:bg-gray-800/50 p-6 rounded-xl border border-emerald-100 dark:border-emerald-800/50 mb-6">
-                <h4 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <div className="h-2 w-2 bg-emerald-500 rounded-full"></div>
+              <div className="bg-muted/20 p-6 rounded-lg mb-6 border border-border/30">
+                <h4 className="font-semibold text-card-foreground mb-4">
                   Pricing Configuration
                 </h4>
                 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   <FormField control={form.control} name="discountType" render={({ field }) => (
                     <FormItem className="space-y-3">
-                      <FormLabel className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                      <FormLabel className="text-sm font-semibold">
                         Discount Type
                       </FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <SelectTrigger className="h-12 border-2 border-gray-200 dark:border-gray-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-lg bg-white dark:bg-gray-800 transition-all duration-200 hover:border-gray-300 dark:hover:border-gray-600">
+                          <SelectTrigger>
                             <SelectValue placeholder="Select discount type" />
                           </SelectTrigger>
                         </FormControl>
@@ -1474,19 +1347,16 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                   
                   <FormField control={form.control} name="discountAmount" render={({ field }) => (
                     <FormItem className="space-y-3">
-                      <FormLabel className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                      <FormLabel className="text-sm font-semibold">
                         Discount Amount {watchDiscountType === 'percentage' ? '(%)' : '(€)'}
                       </FormLabel>
                       <FormControl>
-                        <div className="relative group">
-                          <Input 
-                            type="number" 
-                            step="0.01" 
-                            placeholder={watchDiscountType === 'percentage' ? 'e.g., 10 for 10%' : 'e.g., 50.00'}
-                            {...field} 
-                            className="h-12 pl-4 pr-4 border-2 border-gray-200 dark:border-gray-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-lg bg-white dark:bg-gray-800 transition-all duration-200 group-hover:border-gray-300 dark:group-hover:border-gray-600"
-                          />
-                        </div>
+                        <Input 
+                          type="number" 
+                          step="0.01" 
+                          placeholder={watchDiscountType === 'percentage' ? 'e.g., 10 for 10%' : 'e.g., 50.00'}
+                          {...field} 
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -1494,20 +1364,17 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                   
                   <FormField control={form.control} name="taxRate" render={({ field }) => (
                     <FormItem className="space-y-3">
-                      <FormLabel className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                      <FormLabel className="text-sm font-semibold">
                         Tax Rate (%)
                       </FormLabel>
                       <FormControl>
-                        <div className="relative group">
-                          <Input 
-                            type="number" 
-                            step="0.01" 
-                            placeholder="e.g., 23 for 23%" 
-                            {...field} 
-                            onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
-                            className="h-12 pl-4 pr-4 border-2 border-gray-200 dark:border-gray-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-lg bg-white dark:bg-gray-800 transition-all duration-200 group-hover:border-gray-300 dark:group-hover:border-gray-600"
-                          />
-                        </div>
+                        <Input 
+                          type="number" 
+                          step="0.01" 
+                          placeholder="e.g., 23 for 23%" 
+                          {...field} 
+                          onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -1515,29 +1382,24 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                 </div>
               </div>
               
-              {/* Enhanced Financial Breakdown */}
-              <div className="bg-gradient-to-br from-emerald-50 to-white dark:from-emerald-900/20 dark:to-gray-800/50 p-6 rounded-xl border border-emerald-200 dark:border-emerald-700 shadow-sm" aria-live="polite" aria-label="Financial summary">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="h-8 w-8 bg-emerald-600 rounded-lg flex items-center justify-center">
-                    <CalendarIcon className="h-4 w-4 text-white" />
-                  </div>
-                  <h4 className="font-bold text-gray-900 dark:text-white">Cost Breakdown</h4>
-                </div>
+              {/* Financial Breakdown */}
+              <div className="bg-muted/20 p-6 rounded-lg border border-border/30" aria-live="polite" aria-label="Financial summary">
+                <h4 className="font-semibold text-card-foreground mb-4">Cost Breakdown</h4>
                 
                 <div className="space-y-3">
                   {/* Subtotal */}
-                  <div className="flex justify-between items-center py-2 border-b border-emerald-100 dark:border-emerald-800">
-                    <span className="text-gray-700 dark:text-gray-300">Subtotal (Items & Services)</span>
-                    <span className="font-semibold text-gray-900 dark:text-white">€{subTotal.toFixed(2)}</span>
+                  <div className="flex justify-between items-center py-2 border-b border-border/50">
+                    <span className="text-muted-foreground">Subtotal (Items & Services)</span>
+                    <span className="font-semibold text-card-foreground">€{subTotal.toFixed(2)}</span>
                   </div>
                   
                   {/* Discount */}
                   {watchDiscountAmount > 0 && (
-                    <div className="flex justify-between items-center py-2 border-b border-emerald-100 dark:border-emerald-800">
-                      <span className="text-red-600 dark:text-red-400">
+                    <div className="flex justify-between items-center py-2 border-b border-border/50">
+                      <span className="text-destructive">
                         Discount {watchDiscountType === 'percentage' ? `(${watchDiscountAmount.toFixed(1)}%)` : ''}
                       </span>
-                      <span className="font-semibold text-red-600 dark:text-red-400">
+                      <span className="font-semibold text-destructive">
                         - €{watchDiscountType === 'percentage' 
                           ? (subTotal * (watchDiscountAmount / 100)).toFixed(2)
                           : watchDiscountAmount.toFixed(2)}
@@ -1547,163 +1409,142 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                   
                   {/* Fees */}
                   {feeTotal > 0 && (
-                    <div className="flex justify-between items-center py-2 border-b border-emerald-100 dark:border-emerald-800">
-                      <span className="text-gray-700 dark:text-gray-300">Fixed Fees</span>
-                      <span className="font-semibold text-gray-900 dark:text-white">€{feeTotal.toFixed(2)}</span>
+                    <div className="flex justify-between items-center py-2 border-b border-border/50">
+                      <span className="text-muted-foreground">Fixed Fees</span>
+                      <span className="font-semibold text-card-foreground">€{feeTotal.toFixed(2)}</span>
                     </div>
                   )}
                   
                   {percentageFeeTotal > 0 && (
-                    <div className="flex justify-between items-center py-2 border-b border-emerald-100 dark:border-emerald-800">
-                      <span className="text-gray-700 dark:text-gray-300">Percentage Fees ({percentageFeeTotal.toFixed(1)}%)</span>
-                      <span className="font-semibold text-gray-900 dark:text-white">
+                    <div className="flex justify-between items-center py-2 border-b border-border/50">
+                      <span className="text-muted-foreground">Percentage Fees ({percentageFeeTotal.toFixed(1)}%)</span>
+                      <span className="font-semibold text-card-foreground">
                         €{((discountedSubTotal) * (percentageFeeTotal / 100)).toFixed(2)}
                       </span>
                     </div>
                   )}
                   
                   {/* Pre-tax Total */}
-                  <div className="flex justify-between items-center py-2 border-b border-emerald-100 dark:border-emerald-800">
-                    <span className="text-gray-700 dark:text-gray-300">Total Before Tax</span>
-                    <span className="font-semibold text-gray-900 dark:text-white">
+                  <div className="flex justify-between items-center py-2 border-b border-border/50">
+                    <span className="text-muted-foreground">Total Before Tax</span>
+                    <span className="font-semibold text-card-foreground">
                       €{(discountedSubTotal + feeTotal + (percentageFeeTotal > 0 ? discountedSubTotal * (percentageFeeTotal / 100) : 0)).toFixed(2)}
                     </span>
                   </div>
                   
                   {/* Tax */}
                   {watchTaxRate > 0 && (
-                    <div className="flex justify-between items-center py-2 border-b border-emerald-100 dark:border-emerald-800">
-                      <span className="text-blue-600 dark:text-blue-400">Tax ({watchTaxRate.toFixed(1)}%)</span>
-                      <span className="font-semibold text-blue-600 dark:text-blue-400">€{taxAmount.toFixed(2)}</span>
+                    <div className="flex justify-between items-center py-2 border-b border-border/50">
+                      <span className="text-accent">Tax ({watchTaxRate.toFixed(1)}%)</span>
+                      <span className="font-semibold text-accent">€{taxAmount.toFixed(2)}</span>
                     </div>
                   )}
                   
                   {/* Final Total */}
-                  <div className="bg-emerald-600 dark:bg-emerald-700 text-white p-4 rounded-lg mt-4">
+                  <div className="bg-background/70 text-foreground p-6 rounded-xl mt-4 border border-border/50 shadow-lg">
                     <div className="flex justify-between items-center">
-                      <span className="text-lg font-bold">Total Amount</span>
-                      <span className="text-2xl font-bold">€{totalAmount.toFixed(2)}</span>
+                      <span className="text-xl font-bold">Total Amount</span>
+                      <span className="text-3xl font-bold">€{totalAmount.toFixed(2)}</span>
                     </div>
-                    <p className="text-emerald-100 text-sm mt-1">
+                    <p className="text-muted-foreground text-sm mt-2">
                       Final quote total including all items, discounts, fees, and taxes
                     </p>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+          </CardContent>
         </Card>
 
-        {/* Enhanced Notes Section */}
-        <Card className="border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-white to-gray-50/30 dark:from-gray-900 dark:to-gray-800/50">
-          <div className="relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-gray-600/10 to-transparent"></div>
-            <div className="relative p-6 lg:p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="h-10 w-10 bg-gray-600 rounded-lg flex items-center justify-center shadow-md">
-                  <FileText className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                    Additional Notes
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Add any special instructions or additional information
-                  </p>
-                </div>
+        {/* Notes Section */}
+        <Card className="shadow-xl border-border/60">
+          <CardHeader>
+            <CardTitle>Additional Notes</CardTitle>
+            <CardDescription>Add any special instructions or additional information</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FormField control={form.control} name="notes" render={({ field }) => (
+              <FormItem className="space-y-3">
+                <FormLabel className="text-sm font-semibold">
+                  Notes (Optional)
+                </FormLabel>
+                <FormControl>
+                  <Textarea 
+                    placeholder="Add any special requirements, delivery instructions, setup notes, or other important information..."
+                    {...field} 
+                    rows={4}
+                    className="min-h-[120px] resize-vertical"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+          </CardContent>
+        </Card>
+
+        {/* Action Buttons */}
+        <Card className="shadow-xl border-border/60">
+          <CardContent className="pt-6">
+            <div className="flex flex-col lg:flex-row gap-4 items-center">
+              <div className="flex-1 w-full lg:w-auto">
+                <Button 
+                  type="submit" 
+                  size="lg"
+                  className="w-full bg-gray-800 hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 text-white active:scale-95 transition-all duration-200"
+                  disabled={form.formState.isSubmitting}
+                >
+                  {form.formState.isSubmitting ? (
+                    <div className="flex items-center gap-3">
+                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      {initialData ? "Updating..." : "Creating..."}
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <FileText className="h-5 w-5" />
+                      {initialData ? "Update Quote" : "Create Quote"}
+                    </div>
+                  )}
+                </Button>
               </div>
               
-              <FormField control={form.control} name="notes" render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <FormLabel className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                    Notes (Optional)
-                  </FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Add any special requirements, delivery instructions, setup notes, or other important information..."
-                      {...field} 
-                      rows={4}
-                      className="min-h-[120px] p-4 border-2 border-gray-200 dark:border-gray-700 focus:border-gray-500 focus:ring-2 focus:ring-gray-500/20 rounded-lg bg-white dark:bg-gray-800 transition-all duration-200 resize-vertical"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-            </div>
-          </div>
-        </Card>
-
-        {/* Enhanced Action Buttons */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-blue-900/20 p-6 lg:p-8 rounded-xl border border-blue-200 dark:border-blue-800 shadow-lg">
-          <div className="flex flex-col lg:flex-row gap-4 items-center">
-            {/* Primary Action */}
-            <div className="flex-1 w-full lg:w-auto">
-              <Button 
-                type="submit" 
-                size="lg"
-                className="w-full h-14 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                disabled={form.formState.isSubmitting}
-              >
-                {form.formState.isSubmitting ? (
-                  <div className="flex items-center gap-3">
-                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                    {initialData ? "Updating..." : "Creating..."}
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-3">
-                    <FileText className="h-5 w-5" />
-                    {initialData ? "Update Quote" : "Create Quote"}
-                  </div>
-                )}
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="lg"
+                  className="hover:bg-gray-50 dark:hover:bg-gray-800 active:scale-95 transition-all duration-200"
+                  onClick={handlePreviewPDF}
+                  disabled={form.formState.isSubmitting}
+                >
+                  <Eye className="h-5 w-5 mr-2" />
+                  Preview PDF
+                </Button>
+                
+                <Button
+                  type="button"
+                  variant="outline" 
+                  size="lg"
+                  className="hover:bg-gray-50 dark:hover:bg-gray-800 active:scale-95 transition-all duration-200"
+                  onClick={handleDownloadPDF}
+                  disabled={isGeneratingPDF || form.formState.isSubmitting}
+                >
+                  {isGeneratingPDF ? (
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent mr-2" />
+                  ) : (
+                    <Download className="h-5 w-5 mr-2" />
+                  )}
+                  {isGeneratingPDF ? "Generating..." : "Download PDF"}
+                </Button>
+              </div>
             </div>
             
-            {/* Secondary Actions */}
-            <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-              <Button
-                type="button"
-                variant="outline"
-                size="lg"
-                onClick={handlePreviewPDF}
-                className="h-14 px-6 border-2 border-blue-200 dark:border-blue-700 hover:border-blue-300 dark:hover:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-300"
-                disabled={form.formState.isSubmitting}
-              >
-                <div className="flex items-center gap-2">
-                  <Eye className="h-5 w-5" />
-                  <span className="font-semibold">Preview PDF</span>
-                </div>
-              </Button>
-              
-              <Button
-                type="button"
-                variant="outline" 
-                size="lg"
-                onClick={handleDownloadPDF}
-                className="h-14 px-6 border-2 border-blue-200 dark:border-blue-700 hover:border-blue-300 dark:hover:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-300"
-                disabled={isGeneratingPDF || form.formState.isSubmitting}
-              >
-                <div className="flex items-center gap-2">
-                  {isGeneratingPDF ? (
-                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  ) : (
-                    <Download className="h-5 w-5" />
-                  )}
-                  <span className="font-semibold">
-                    {isGeneratingPDF ? "Generating..." : "Download PDF"}
-                  </span>
-                </div>
-              </Button>
+            <div className="mt-4 text-center text-sm text-muted-foreground">
+              <p>
+                Your quote will be automatically saved as a draft while you work. 
+                <span className="font-semibold text-gray-700 dark:text-gray-300"> All changes are saved continuously.</span>
+              </p>
             </div>
-          </div>
-          
-          {/* Helper Text */}
-          <div className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
-            <p>
-              Your quote will be automatically saved as a draft while you work. 
-              <span className="font-semibold text-blue-600 dark:text-blue-400"> All changes are saved continuously.</span>
-            </p>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
         </form>
       </Form>
 

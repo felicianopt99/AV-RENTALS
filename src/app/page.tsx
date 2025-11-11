@@ -122,19 +122,19 @@ export default function DashboardPage() {
                 <CardDescription>Get started by creating new items or managing your inventory.</CardDescription>
               </CardHeader>
               <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                <Button asChild size="lg" variant="outline" className="w-full h-20 text-base justify-start p-4 hover:bg-accent hover:text-accent-foreground">
+                <Button asChild size="lg" variant="outline" className="w-full h-20 text-base justify-start p-4">
                   <Link href="/equipment/new">
-                    <PlusCircle className="mr-3 h-6 w-6 text-primary" /> Add New Equipment
+                    <PlusCircle className="mr-3 h-6 w-6 text-blue-600 dark:text-blue-400" /> Add New Equipment
                   </Link>
                 </Button>
-                <Button asChild size="lg" variant="outline" className="w-full h-20 text-base justify-start p-4 hover:bg-accent hover:text-accent-foreground">
-                  <Link href="/events">
-                    <PartyPopper className="mr-3 h-6 w-6 text-primary" /> Manage Events
+                <Button asChild size="lg" variant="outline" className="w-full h-20 text-base justify-start p-4">
+                  <Link href="/clients/new">
+                    <UserPlus className="mr-3 h-6 w-6 text-blue-600 dark:text-blue-400" /> Add New Client
                   </Link>
                 </Button>
-                <Button asChild size="lg" variant="outline" className="w-full h-20 text-base justify-start p-4 hover:bg-accent hover:text-accent-foreground">
+                <Button asChild size="lg" variant="outline" className="w-full h-20 text-base justify-start p-4">
                   <Link href="/quotes/new">
-                    <FileText className="mr-3 h-6 w-6 text-primary" /> Create New Quote
+                    <FileText className="mr-3 h-6 w-6 text-blue-600 dark:text-blue-400" /> Create New Quote
                   </Link>
                 </Button>
               </CardContent>

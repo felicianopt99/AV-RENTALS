@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { ConditionalLayout } from '@/components/layout/ConditionalLayout';
 import { AppProvider } from '@/contexts/AppContext';
+import { ThemeProvider } from '@/contexts/ThemeProvider';
 import { ReactQueryProvider } from '@/providers/ReactQueryProvider';
 import { Toaster } from "@/components/ui/toaster";
 import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
@@ -50,7 +51,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning={true}>
+    <html lang="en" suppressHydrationWarning={true}>
       <head>
         <link rel="icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
@@ -61,14 +62,16 @@ export default function RootLayout({
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased font-sans`}>
         <ReactQueryProvider>
-          <AppProvider>
-            <ConditionalLayout>
-              {children}
-            </ConditionalLayout>
-            <PWAInstallPrompt />
-          </AppProvider>
+          <ThemeProvider>
+            <AppProvider>
+              <ConditionalLayout>
+                {children}
+              </ConditionalLayout>
+              <PWAInstallPrompt />
+            </AppProvider>
+          </ThemeProvider>
+          <Toaster />
         </ReactQueryProvider>
-        <Toaster />
       </body>
     </html>
   );

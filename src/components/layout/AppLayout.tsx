@@ -86,7 +86,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 </div>
                 <Button 
                   variant="ghost" 
-                  className="w-full justify-start h-10 rounded-xl hover:bg-destructive/10 hover:text-destructive transition-all duration-200" 
+                  className="w-full justify-start h-10 rounded-lg hover:bg-red-50/80 dark:hover:bg-red-950/50 hover:text-red-600 dark:hover:text-red-400 transition-all duration-200" 
                   onClick={handleLogout}
                 >
                   <LogOut className="mr-3 h-4 w-4" />

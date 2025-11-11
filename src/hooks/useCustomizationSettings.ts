@@ -7,6 +7,9 @@ interface CustomizationSettings {
   logoUrl?: string;
   useTextLogo?: boolean;
   primaryColor?: string;
+  secondaryColor?: string;
+  accentColor?: string;
+  darkMode?: boolean;
 }
 
 async function fetchCustomizationSettings(): Promise<CustomizationSettings> {
