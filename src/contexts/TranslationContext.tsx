@@ -6,10 +6,10 @@ import { Language } from '@/lib/translation';
 interface TranslationContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (text: string) => Promise<string>;
+  t: (text: string) =>{useTranslate('Promise')}<string>;
   tSync: (text: string) => string;
-  tBatch: (texts: string[], progressive?: boolean) => Promise<string[]>;
-  preloadTranslations: (texts: string[]) => Promise<void>;
+  tBatch: (texts: string[], progressive?: boolean) =>{useTranslate('Promise')}<string[]>;
+  preloadTranslations: (texts: string[]) =>{useTranslate('Promise')}<void>;
   isTranslating: boolean;
   isPreloading: boolean;
   cacheStats: () => { size: number; keys: string[] };

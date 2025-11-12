@@ -75,8 +75,8 @@ export function T({ children }: { children: string }) {
  * 
  * import { TranslatedLabel, TranslatedInput, TranslatedButton, T } from '@/components/TranslatedComponents';
  * 
- * <TranslatedLabel>Equipment Name</TranslatedLabel>
+ * <TranslatedLabel>{useTranslate('Equipment Name')}</TranslatedLabel>
  * <TranslatedInput placeholder="Enter equipment name" />
- * <TranslatedButton>Save Changes</TranslatedButton>
- * <p><T>This text will be translated</T></p>
+ * <TranslatedButton>{useTranslate('Save Changes')}</TranslatedButton>
+ * <p><T>{useTranslate('This text will be translated')}</T></p>
  */

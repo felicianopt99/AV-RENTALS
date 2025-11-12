@@ -89,8 +89,8 @@ export function PWAInstallPrompt() {
     <div className="fixed bottom-20 left-4 right-4 z-[9998] md:bottom-4 md:left-auto md:right-4 md:max-w-sm">
       <div className="bg-card border border-border rounded-lg shadow-lg p-4 flex items-center gap-3">
         <div className="flex-1">
-          <p className="text-sm font-medium">Install AV Rentals</p>
-          <p className="text-xs text-muted-foreground">Add to home screen for quick access</p>
+          <p className="text-sm font-medium">{useTranslate('Install AV Rentals')}</p>
+          <p className="text-xs text-muted-foreground">{useTranslate('Add to home screen for quick access')}</p>
         </div>
         <Button size="sm" onClick={handleInstallClick} className="shrink-0">
           <Download className="h-4 w-4 mr-1" />

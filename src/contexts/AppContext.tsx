@@ -39,34 +39,34 @@ const AppContext = createContext<AppContextState | undefined>(undefined);
 // --- Dispatch Context ---
 interface AppContextDispatch {
   setCurrentUser: (user: User | null) => void;
-  login: (username: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  checkAuth: () => Promise<void>;
-  addCategory: (category: Omit<Category, 'id'>) => Promise<void>;
-  updateCategory: (category: Category) => Promise<void>;
-  deleteCategory: (categoryId: string) => Promise<void>;
-  addSubcategory: (subcategory: Omit<Subcategory, 'id'>) => Promise<void>;
-  updateSubcategory: (subcategory: Subcategory) => Promise<void>;
-  deleteSubcategory: (subcategoryId: string) => Promise<void>;
-  addEquipmentItem: (item: Omit<EquipmentItem, 'id'>) => Promise<void>;
-  updateEquipmentItem: (item: EquipmentItem) => Promise<void>;
-  deleteEquipmentItem: (itemId: string) => Promise<void>;
-  addMaintenanceLog: (log: Omit<MaintenanceLog, 'id'>) => Promise<void>;
-  addClient: (client: Omit<Client, 'id'>) => Promise<void>;
-  updateClient: (client: Client) => Promise<void>;
-  deleteClient: (clientId: string) => Promise<void>;
-  addEvent: (event: Omit<Event, 'id'>) => Promise<string>;
-  updateEvent: (event: Event) => Promise<void>;
-  deleteEvent: (eventId: string) => Promise<void>;
-  addRental: (rental: Omit<Rental, 'id'>) => Promise<void>;
-  updateRental: (rental: Rental) => Promise<void>;
-  deleteRental: (rentalId: string) => Promise<void>;
-  addQuote: (quote: Omit<Quote, 'id' | 'quoteNumber' | 'createdAt' | 'updatedAt'>) => Promise<string>;
-  updateQuote: (quote: Quote) => Promise<void>;
-  deleteQuote: (quoteId: string) => Promise<void>;
+  login: (username: string, password: string) =>{useTranslate('Promise')}<void>;
+  logout: () =>{useTranslate('Promise')}<void>;
+  checkAuth: () =>{useTranslate('Promise')}<void>;
+  addCategory: (category: Omit<Category, 'id'>) =>{useTranslate('Promise')}<void>;
+  updateCategory: (category: Category) =>{useTranslate('Promise')}<void>;
+  deleteCategory: (categoryId: string) =>{useTranslate('Promise')}<void>;
+  addSubcategory: (subcategory: Omit<Subcategory, 'id'>) =>{useTranslate('Promise')}<void>;
+  updateSubcategory: (subcategory: Subcategory) =>{useTranslate('Promise')}<void>;
+  deleteSubcategory: (subcategoryId: string) =>{useTranslate('Promise')}<void>;
+  addEquipmentItem: (item: Omit<EquipmentItem, 'id'>) =>{useTranslate('Promise')}<void>;
+  updateEquipmentItem: (item: EquipmentItem) =>{useTranslate('Promise')}<void>;
+  deleteEquipmentItem: (itemId: string) =>{useTranslate('Promise')}<void>;
+  addMaintenanceLog: (log: Omit<MaintenanceLog, 'id'>) =>{useTranslate('Promise')}<void>;
+  addClient: (client: Omit<Client, 'id'>) =>{useTranslate('Promise')}<void>;
+  updateClient: (client: Client) =>{useTranslate('Promise')}<void>;
+  deleteClient: (clientId: string) =>{useTranslate('Promise')}<void>;
+  addEvent: (event: Omit<Event, 'id'>) =>{useTranslate('Promise')}<string>;
+  updateEvent: (event: Event) =>{useTranslate('Promise')}<void>;
+  deleteEvent: (eventId: string) =>{useTranslate('Promise')}<void>;
+  addRental: (rental: Omit<Rental, 'id'>) =>{useTranslate('Promise')}<void>;
+  updateRental: (rental: Rental) =>{useTranslate('Promise')}<void>;
+  deleteRental: (rentalId: string) =>{useTranslate('Promise')}<void>;
+  addQuote: (quote: Omit<Quote, 'id' | 'quoteNumber' | 'createdAt' | 'updatedAt'>) =>{useTranslate('Promise')}<string>;
+  updateQuote: (quote: Quote) =>{useTranslate('Promise')}<void>;
+  deleteQuote: (quoteId: string) =>{useTranslate('Promise')}<void>;
   generateQuoteNumber: () => string;
-  approveQuote: (quote: Quote) => Promise<{ success: boolean; message: string }>;
-  refreshData: () => Promise<void>;
+  approveQuote: (quote: Quote) =>{useTranslate('Promise')}<{ success: boolean; message: string }>;
+  refreshData: () =>{useTranslate('Promise')}<void>;
 }
 
 const AppDispatchContext = createContext<AppContextDispatch | undefined>(undefined);
@@ -421,7 +421,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return `Q${currentYear}-${String(maxNum + 1).padStart(3, '0')}`;
   }, [quotes]);
 
-  const addQuote = useCallback(async (quote: Omit<Quote, 'id' | 'quoteNumber' | 'createdAt' | 'updatedAt'>): Promise<string> => {
+  const addQuote = useCallback(async (quote: Omit<Quote, 'id' | 'quoteNumber' | 'createdAt' | 'updatedAt'>{useTranslate('): Promise')}<string> => {
     try {
       const newQuote = await quotesAPI.create(quote);
       setQuotes(prev => [...prev, newQuote]);

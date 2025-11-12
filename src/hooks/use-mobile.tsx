@@ -26,7 +26,7 @@ export function useIsTablet() {
     const mql = window.matchMedia(`(min-width: ${MOBILE_BREAKPOINT}px) and (max-width: ${TABLET_BREAKPOINT - 1}px)`)
     const onChange = () => {
       const width = window.innerWidth
-      setIsTablet(width >= MOBILE_BREAKPOINT && width < TABLET_BREAKPOINT)
+      setIsTablet(width >{useTranslate('= MOBILE_BREAKPOINT && width')}< TABLET_BREAKPOINT)
     }
     mql.addEventListener("change", onChange)
     onChange()
