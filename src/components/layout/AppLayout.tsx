@@ -25,26 +25,36 @@ import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ClientOnly } from '@/hooks/useIsClient';
 import type { User } from '@/types';
+import { useTranslate } from '@/components/translation/TranslatedComponents';
+import AutoTranslate from '@/components/translation/AutoTranslate';
+import TranslationPreloader, { TranslationStats } from '@/components/translation/TranslationPreloader';
+import BackgroundTranslationProvider from '@/components/translation/BackgroundTranslation';
+
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { currentUser } = useAppContext();
   const { logout } = useAppDispatch();
   const { toast } = useToast();
+  const { translated: logoutText } = useTranslate('Logout');
+  const { translated: loggedOutTitle } = useTranslate('Logged out');
+  const { translated: loggedOutDesc } = useTranslate('You have been successfully logged out.');
+  const { translated: errorTitle } = useTranslate('Error');
+  const { translated: logoutError } = useTranslate('Failed to log out. Please try again.');
 
   const handleLogout = async () => {
     try {
       await logout();
       toast({
-        title: 'Logged out',
-        description: 'You have been successfully logged out.',
+        title: loggedOutTitle,
+        description: loggedOutDesc,
       });
       window.location.href = '/login';
     } catch (error) {
       console.error('Logout error:', error);
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to log out. Please try again.',
+        title: errorTitle,
+        description: logoutError,
       });
     }
   };
@@ -90,7 +100,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   onClick={handleLogout}
                 >
                   <LogOut className="mr-3 h-4 w-4" />
-                  Logout
+                  {logoutText}
                 </Button>
               </div>
             )}
@@ -102,12 +112,25 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <AppHeader />
         <main className="flex-1 overflow-y-auto overflow-x-hidden pb-16 md:pb-0 min-h-0 min-w-0 max-w-full px-3 sm:px-4 md:px-6">
           <div className="page-container">
-            {children}
+            <BackgroundTranslationProvider>
+              <AutoTranslate
+                excludeSelectors={[
+                  'input', 'textarea', 'select', 
+                  '[data-value]', '[data-testid]',
+                  '.lucide', '.icon', '[role="button"]',
+                  'time', '[datetime]', '.timestamp'
+                ]}
+              >
+                {children}
+              </AutoTranslate>
+            </BackgroundTranslationProvider>
           </div>
         </main>
       </SidebarInset>
       <Toaster />
       <ScrollToTopButton />
+      <TranslationPreloader />
+      <TranslationStats />
       
     </SidebarProvider>
   );

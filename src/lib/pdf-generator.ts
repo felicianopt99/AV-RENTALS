@@ -1,13 +1,18 @@
 // src/lib/pdf-generator.ts
 // PDF Generator that fetches company branding from admin customization settings
 // Supports dynamic company name, tagline, contact info, and logo options
+// Includes multi-language support with Gemini translations
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
 import type { Quote } from '@/types';
+import { Language } from '@/lib/client-translation';
+import { clientPDFTranslationService, PDFTranslationOptions } from '@/lib/client-pdf-translation';
 
 export interface PDFGeneratorOptions {
   filename?: string;
   download?: boolean;
+  language?: Language; // New: language selection for PDF
+  translationOptions?: PDFTranslationOptions; // New: translation customization
 }
 
 interface CustomizationSettings {
@@ -26,6 +31,8 @@ export class QuotePDFGenerator {
   private margin: number = 20;
   private currentY: number = 20;
   private customizationSettings: CustomizationSettings | null = null;
+  private language: Language = 'en';
+  private translatedTexts: any = null;
   
   constructor() {
     this.doc = new jsPDF({
@@ -71,6 +78,13 @@ export class QuotePDFGenerator {
       this.customizationSettings = fallbackSettings;
       return fallbackSettings;
     }
+  }
+
+  private getTranslatedText(key: string, fallback?: string): string {
+    if (this.translatedTexts?.staticLabels?.[key]) {
+      return this.translatedTexts.staticLabels[key];
+    }
+    return fallback || key;
   }
 
   private addText(text: string, x: number, y: number, options: { 
@@ -154,7 +168,7 @@ export class QuotePDFGenerator {
     const leftStartY = 20;
     
     // Clean quote title
-    this.addText('QUOTE', this.margin, leftStartY, {
+    this.addText(this.getTranslatedText('quote', 'QUOTE'), this.margin, leftStartY, {
       fontSize: 20,
       fontWeight: 'bold'
     });
@@ -168,11 +182,13 @@ export class QuotePDFGenerator {
     
     // Date info - clean and simple
     const dateInfoY = quoteNumberY + 8;
-    this.addText(`Date: ${format(new Date(), 'MMMM d, yyyy')}`, this.margin, dateInfoY, {
+    const dateLabel = this.getTranslatedText('date', 'Date');
+    this.addText(`${dateLabel}: ${format(new Date(), 'MMMM d, yyyy')}`, this.margin, dateInfoY, {
       fontSize: 10
     });
     
-    this.addText(`Valid until: ${format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'MMMM d, yyyy')}`, this.margin, dateInfoY + 4, {
+    const validUntilLabel = this.getTranslatedText('validUntil', 'Valid until');
+    this.addText(`${validUntilLabel}: ${format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'MMMM d, yyyy')}`, this.margin, dateInfoY + 4, {
       fontSize: 10
     });
 
@@ -200,7 +216,7 @@ export class QuotePDFGenerator {
     const startY = this.currentY;
 
     // Clean section headers - remove underlines to reduce noise
-    this.addText('Client Information', leftColX, this.currentY, {
+    this.addText(this.getTranslatedText('clientInformation', 'Client Information'), leftColX, this.currentY, {
       fontSize: 12,
       fontWeight: 'bold'
     });
@@ -232,7 +248,7 @@ export class QuotePDFGenerator {
 
     // Event Information (Right column) - clean styling
     const rightStartY = startY;
-    this.addText('Event Details', rightColX, rightStartY, {
+    this.addText(this.getTranslatedText('eventDetails', 'Event Details'), rightColX, rightStartY, {
       fontSize: 12,
       fontWeight: 'bold'
     });
@@ -242,17 +258,21 @@ export class QuotePDFGenerator {
     // this.addLine(rightColX, rightCurrentY, this.pageWidth - this.margin, rightCurrentY, 0.5);
     
     let eventY = rightCurrentY + 6;
-    this.addText(`Location: ${quote.location}`, rightColX, eventY, { fontSize: 10 });
+    const locationLabel = this.getTranslatedText('location', 'Location');
+    this.addText(`${locationLabel}: ${quote.location}`, rightColX, eventY, { fontSize: 10 });
     eventY += 5;
     
-    this.addText(`Start Date: ${format(new Date(quote.startDate), 'MMMM d, yyyy')}`, rightColX, eventY, { fontSize: 10 });
+    const startDateLabel = this.getTranslatedText('startDate', 'Start Date');
+    this.addText(`${startDateLabel}: ${format(new Date(quote.startDate), 'MMMM d, yyyy')}`, rightColX, eventY, { fontSize: 10 });
     eventY += 5;
     
-    this.addText(`End Date: ${format(new Date(quote.endDate), 'MMMM d, yyyy')}`, rightColX, eventY, { fontSize: 10 });
+    const endDateLabel = this.getTranslatedText('endDate', 'End Date');
+    this.addText(`${endDateLabel}: ${format(new Date(quote.endDate), 'MMMM d, yyyy')}`, rightColX, eventY, { fontSize: 10 });
     eventY += 5;
     
     const days = Math.ceil((new Date(quote.endDate).getTime() - new Date(quote.startDate).getTime()) / (1000 * 60 * 60 * 24));
-    this.addText(`Duration: ${days} day(s)`, rightColX, eventY, { fontSize: 10 });
+    const durationLabel = this.getTranslatedText('duration', 'Duration');
+    this.addText(`${durationLabel}: ${days} day(s)`, rightColX, eventY, { fontSize: 10 });
 
     // Ensure currentY accounts for both columns
     this.currentY = Math.max(this.currentY, eventY) + 10;
@@ -260,7 +280,7 @@ export class QuotePDFGenerator {
 
   private addItemsTable(quote: Quote) {
     // Clean section header - remove line to reduce noise
-    this.addText('Equipment & Services', this.margin, this.currentY, {
+    this.addText(this.getTranslatedText('equipmentAndServices', 'Equipment & Services'), this.margin, this.currentY, {
       fontSize: 12,
       fontWeight: 'bold'
     });
@@ -278,19 +298,19 @@ export class QuotePDFGenerator {
     this.doc.setFillColor(245, 245, 245);
     this.doc.rect(this.margin, this.currentY - 3, this.pageWidth - 2 * this.margin, 8, 'F');
 
-    this.addText('Item', colX + 2, this.currentY, { fontSize: 9, fontWeight: 'bold' });
+    this.addText(this.getTranslatedText('item', 'Item'), colX + 2, this.currentY, { fontSize: 9, fontWeight: 'bold' });
     colX += colWidths[0];
     
-    this.addText('Qty', colX, this.currentY, { fontSize: 9, fontWeight: 'bold', align: 'center' });
+    this.addText(this.getTranslatedText('quantity', 'Qty'), colX, this.currentY, { fontSize: 9, fontWeight: 'bold', align: 'center' });
     colX += colWidths[1];
     
-    this.addText('Rate/Day', colX, this.currentY, { fontSize: 9, fontWeight: 'bold', align: 'right' });
+    this.addText(this.getTranslatedText('rate', 'Rate/Day'), colX, this.currentY, { fontSize: 9, fontWeight: 'bold', align: 'right' });
     colX += colWidths[2];
     
-    this.addText('Days', colX, this.currentY, { fontSize: 9, fontWeight: 'bold', align: 'center' });
+    this.addText(this.getTranslatedText('days', 'Days'), colX, this.currentY, { fontSize: 9, fontWeight: 'bold', align: 'center' });
     colX += colWidths[3];
     
-    this.addText('Total', colX + colWidths[4] - 2, this.currentY, { fontSize: 9, fontWeight: 'bold', align: 'right' });
+    this.addText(this.getTranslatedText('total', 'Total'), colX + colWidths[4] - 2, this.currentY, { fontSize: 9, fontWeight: 'bold', align: 'right' });
 
     this.currentY += 6;
     // Keep only the header separator line as it's essential for table structure
@@ -307,7 +327,24 @@ export class QuotePDFGenerator {
         this.doc.rect(this.margin, this.currentY - 2, this.pageWidth - 2 * this.margin, 6, 'F');
       }
 
-      this.addText(item.equipmentName || 'Equipment Item', colX + 2, this.currentY, { 
+      // Get item name based on type - only translate services and fees, NOT equipment
+      let itemName = 'Item';
+      if (item.type === 'equipment') {
+        // Equipment names are NEVER translated - keep original product names
+        itemName = item.equipmentName || 'Equipment Item';
+      } else if (item.type === 'service') {
+        // Services ARE translated
+        const translatedNames = this.translatedTexts?.dynamicContent?.serviceNames;
+        const serviceIndex = quote.items.filter((i, idx) => idx <= index && i.type === 'service').length - 1;
+        itemName = translatedNames?.[serviceIndex] || item.serviceName || 'Service Item';
+      } else if (item.type === 'fee') {
+        // Fees ARE translated  
+        const translatedNames = this.translatedTexts?.dynamicContent?.feeNames;
+        const feeIndex = quote.items.filter((i, idx) => idx <= index && i.type === 'fee').length - 1;
+        itemName = translatedNames?.[feeIndex] || item.feeName || 'Fee Item';
+      }
+
+      this.addText(itemName, colX + 2, this.currentY, { 
         fontSize: 9,
         maxWidth: colWidths[0] - 4
       });
@@ -355,27 +392,31 @@ export class QuotePDFGenerator {
     let summaryY = this.currentY;
     
     // Subtotal
-    this.addText('Subtotal:', summaryX + 3, summaryY, { fontSize: 10 });
+    const subtotalLabel = this.getTranslatedText('subtotal', 'Subtotal');
+    this.addText(`${subtotalLabel}:`, summaryX + 3, summaryY, { fontSize: 10 });
     this.addText(`€${subtotal.toFixed(2)}`, summaryX + summaryWidth - 3, summaryY, { fontSize: 10, align: 'right' });
     summaryY += 5;
 
     // Discount
     if (quote.discountAmount > 0) {
-      const discountLabel = quote.discountType === 'percentage' 
-        ? `Discount (${quote.discountAmount}%):`
-        : 'Discount:';
-      this.addText(discountLabel, summaryX + 3, summaryY, { fontSize: 10 });
+      const discountLabel = this.getTranslatedText('discount', 'Discount');
+      const discountText = quote.discountType === 'percentage' 
+        ? `${discountLabel} (${quote.discountAmount}%):`
+        : `${discountLabel}:`;
+      this.addText(discountText, summaryX + 3, summaryY, { fontSize: 10 });
       this.addText(`-€${discountAmount.toFixed(2)}`, summaryX + summaryWidth - 3, summaryY, { fontSize: 10, align: 'right' });
       summaryY += 5;
     }
 
     // Net amount
-    this.addText('Net Amount:', summaryX + 3, summaryY, { fontSize: 10 });
+    const netAmountLabel = this.getTranslatedText('netAmount', 'Net Amount');
+    this.addText(`${netAmountLabel}:`, summaryX + 3, summaryY, { fontSize: 10 });
     this.addText(`€${discountedSubtotal.toFixed(2)}`, summaryX + summaryWidth - 3, summaryY, { fontSize: 10, align: 'right' });
     summaryY += 5;
 
     // Tax
-    this.addText(`Tax (${((quote.taxRate || 0) * 100).toFixed(1)}%):`, summaryX + 3, summaryY, { fontSize: 10 });
+    const taxLabel = this.getTranslatedText('tax', 'Tax');
+    this.addText(`${taxLabel} (${((quote.taxRate || 0) * 100).toFixed(1)}%):`, summaryX + 3, summaryY, { fontSize: 10 });
     this.addText(`€${taxAmount.toFixed(2)}`, summaryX + summaryWidth - 3, summaryY, { fontSize: 10, align: 'right' });
     summaryY += 5;
 
@@ -387,7 +428,8 @@ export class QuotePDFGenerator {
     this.doc.setFillColor(240, 240, 240);
     this.doc.rect(summaryX + 1, summaryY - 1, summaryWidth - 2, 7, 'F');
     
-    this.addText('Total Amount:', summaryX + 3, summaryY + 2, { fontSize: 11, fontWeight: 'bold' });
+    const totalAmountLabel = this.getTranslatedText('totalAmount', 'Total Amount');
+    this.addText(`${totalAmountLabel}:`, summaryX + 3, summaryY + 2, { fontSize: 11, fontWeight: 'bold' });
     this.addText(`€${totalAmount.toFixed(2)}`, summaryX + summaryWidth - 3, summaryY + 2, { fontSize: 12, fontWeight: 'bold', align: 'right' });
 
     this.currentY = summaryY + 15;
@@ -395,7 +437,8 @@ export class QuotePDFGenerator {
 
   private addNotes(quote: Quote) {
     if (quote.notes) {
-      this.addText('Additional Notes', this.margin, this.currentY, {
+      const notesLabel = this.getTranslatedText('additionalNotes', 'Additional Notes');
+      this.addText(notesLabel, this.margin, this.currentY, {
         fontSize: 12,
         fontWeight: 'bold'
       });
@@ -409,7 +452,9 @@ export class QuotePDFGenerator {
       const notesHeight = 20;
       this.doc.rect(this.margin, this.currentY - 2, this.pageWidth - 2 * this.margin, notesHeight, 'F');
       
-      this.addText(quote.notes, this.margin + 3, this.currentY + 2, {
+      // Use translated notes if available, preserving client/company names
+      const notesToDisplay = this.translatedTexts?.dynamicContent?.notes || quote.notes;
+      this.addText(notesToDisplay, this.margin + 3, this.currentY + 2, {
         fontSize: 9,
         maxWidth: this.pageWidth - 2 * this.margin - 6
       });
@@ -419,7 +464,8 @@ export class QuotePDFGenerator {
   }
 
   private addTerms(compact: boolean = false) {
-    this.addText('Terms & Conditions', this.margin, this.currentY, {
+    const termsLabel = this.getTranslatedText('termsAndConditions', 'Terms & Conditions');
+    this.addText(termsLabel, this.margin, this.currentY, {
       fontSize: 12,
       fontWeight: 'bold'
     });
@@ -428,30 +474,42 @@ export class QuotePDFGenerator {
     // this.addLine(this.margin, this.currentY, this.pageWidth - this.margin, this.currentY, 0.5);
     // this.currentY += 5;
 
-    if (compact) {
-      // Compact version for short quotes
-      const compactTerms = [
-        '• Equipment returned in same condition • Payment due within 30 days',
-        '• 48hr cancellation notice • Quote valid for 30 days from issue date'
-      ];
-      compactTerms.forEach(term => {
+    // Use translated terms if available
+    const termsToDisplay = this.translatedTexts?.terms || [];
+    
+    if (termsToDisplay.length > 0) {
+      // Use translated terms from the translation service
+      termsToDisplay.forEach((term: string) => {
         this.addText(term, this.margin, this.currentY, { fontSize: 8 });
         this.currentY += 4;
       });
     } else {
-      // Full terms for longer quotes
-      const terms = [
-        '• Equipment must be returned in the same condition as received.',
-        '• Client is responsible for any damage or loss during rental period.',
-        '• Payment is due within 30 days of invoice date.',
-        '• Cancellations must be made 48 hours in advance.',
-        '• Setup and breakdown services are available upon request.',
-        '• This quote is valid for 30 days from the date issued.'
-      ];
-      terms.forEach(term => {
-        this.addText(term, this.margin, this.currentY, { fontSize: 8 });
-        this.currentY += 4;
-      });
+      // Fallback to default English terms
+      if (compact) {
+        // Compact version for short quotes
+        const compactTerms = [
+          '• Equipment returned in same condition • Payment due within 30 days',
+          '• 48hr cancellation notice • Quote valid for 30 days from issue date'
+        ];
+        compactTerms.forEach(term => {
+          this.addText(term, this.margin, this.currentY, { fontSize: 8 });
+          this.currentY += 4;
+        });
+      } else {
+        // Full terms for longer quotes
+        const terms = [
+          '• Equipment must be returned in the same condition as received.',
+          '• Client is responsible for any damage or loss during rental period.',
+          '• Payment is due within 30 days of invoice date.',
+          '• Cancellations must be made 48 hours in advance.',
+          '• Setup and breakdown services are available upon request.',
+          '• This quote is valid for 30 days from the date issued.'
+        ];
+        terms.forEach(term => {
+          this.addText(term, this.margin, this.currentY, { fontSize: 8 });
+          this.currentY += 4;
+        });
+      }
     }
 
     this.currentY += 5;
@@ -468,7 +526,11 @@ export class QuotePDFGenerator {
       contactPhone: '+1 (555) 123-4567'
     };
 
-    this.addText(`Thank you for considering ${settings.companyName || 'AV Rentals'} for your event needs!`, this.pageWidth / 2, footerY + 5, {
+    // Use translated thank you message template but preserve company name
+    const thankYouTemplate = this.getTranslatedText('thankYouMessage', 'Thank you for considering {companyName} for your event needs!');
+    const thankYouMessage = thankYouTemplate.replace('{companyName}', settings.companyName || 'AV Rentals');
+    
+    this.addText(thankYouMessage, this.pageWidth / 2, footerY + 5, {
       fontSize: 10,
       align: 'center',
       fontWeight: 'bold'
@@ -479,7 +541,11 @@ export class QuotePDFGenerator {
     if (settings.contactPhone) contactInfo.push(settings.contactPhone);
     
     if (contactInfo.length > 0) {
-      this.addText(`For questions about this quote, please contact us at ${contactInfo.join(' or ')}`, this.pageWidth / 2, footerY + 10, {
+      // Use translated contact message template but preserve contact info
+      const contactTemplate = this.getTranslatedText('contactMessage', 'For questions about this quote, please contact us at {contactInfo}');
+      const contactMessage = contactTemplate.replace('{contactInfo}', contactInfo.join(' or '));
+      
+      this.addText(contactMessage, this.pageWidth / 2, footerY + 10, {
         fontSize: 8,
         align: 'center'
       });
@@ -517,12 +583,45 @@ export class QuotePDFGenerator {
   }
 
   public async generatePDF(quote: Quote, options: PDFGeneratorOptions = {}): Promise<Blob> {
-    await this.addHeader(quote);
+    // Set language and prepare translations
+    this.language = options.language || 'en';
     
+    // Prepare dynamic content for translation
+    const dynamicContent = {
+      equipmentNames: quote.items?.filter(item => item.type === 'equipment').map(item => item.equipmentName || '') || [],
+      serviceNames: quote.items?.filter(item => item.type === 'service').map(item => item.serviceName || '') || [],
+      feeNames: quote.items?.filter(item => item.type === 'fee').map(item => item.feeName || '') || [],
+      notes: quote.notes
+    };
+
     // Smart pagination: estimate if content fits on one page to avoid unnecessary page breaks
     const contentHeight = this.estimateContentHeight(quote);
     const availableHeight = this.pageHeight - this.margin * 2;
     const fitsOnOnePage = contentHeight <= availableHeight;
+
+    // Get translations if needed
+    if (this.language !== 'en') {
+      try {
+        this.translatedTexts = await clientPDFTranslationService.getTranslatedPDFTexts(
+          this.language,
+          dynamicContent,
+          fitsOnOnePage
+        );
+        
+        // Translate dynamic content
+        const translatedDynamicContent = await clientPDFTranslationService.translateDynamicContent(
+          dynamicContent,
+          this.language
+        );
+        this.translatedTexts.dynamicContent = translatedDynamicContent;
+      } catch (error) {
+        console.error('Failed to get PDF translations, falling back to English:', error);
+        this.language = 'en';
+        this.translatedTexts = null;
+      }
+    }
+
+    await this.addHeader(quote);
     
     this.addQuoteInfo(quote);
     
