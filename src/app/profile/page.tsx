@@ -12,9 +12,13 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { useToast } from '@/hooks/use-toast';
 import { User } from '@/types';
 import ProfileCard from '@/components/ProfileCard';
+import { useTranslate } from '@/contexts/TranslationContext';
 import '../../components/ProfileCard.css';
 
 export default function ProfilePage() {
+  // Translation hooks
+  const { translated: profileText } = useTranslate('Profile');
+
   const { currentUser, isDataLoaded } = useAppContext();
   const router = useRouter();
   const { toast } = useToast();
@@ -164,7 +168,7 @@ export default function ProfilePage() {
       <ProfileCard
         avatarUrl={photoPreview || ''}
         name={profile?.name || 'User'}
-        title="Profile"
+        title={profileText}
         handle={profile?.username || ''}
         status="Active"
         contactText="Edit Profile"

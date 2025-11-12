@@ -3,6 +3,8 @@
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 
+import { useTranslate } from '@/contexts/TranslationContext';
+
 export default function Error({
   error,
   reset,
@@ -10,6 +12,7 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const { translated: uiTryagainText } = useTranslate('Try again');
   useEffect(() => {
     // Log the error to an error reporting service
     console.error(error);
@@ -37,8 +40,7 @@ export default function Error({
           }
           className="bg-primary hover:bg-primary/90 text-primary-foreground"
         >
-          Try again
-        </Button>
+          {uiTryagainText}</Button>
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
+import { useTranslate } from '@/contexts/TranslationContext';
 import {
   Form,
   FormControl,
@@ -39,6 +40,12 @@ interface ClientFormProps {
 }
 
 export function ClientForm({ initialData, onSubmitSuccess }: ClientFormProps) {
+  // Translation hooks
+  const { translated: toastFailedtosaveclientPlDescText } = useTranslate('Failed to save client. Please try again.');
+  const { translated: toastErrorTitleText } = useTranslate('Error');
+  const { translated: toastClientAddedTitleText } = useTranslate('Client Added');
+  const { translated: toastClientUpdatedTitleText } = useTranslate('Client Updated');
+
   const { addClient, updateClient } = useAppDispatch();
   const router = useRouter();
   const { toast } = useToast();
@@ -59,14 +66,14 @@ export function ClientForm({ initialData, onSubmitSuccess }: ClientFormProps) {
     try {
       if (initialData) {
         updateClient({ ...initialData, ...data });
-        toast({ title: "Client Updated", description: `Client "${data.name}" has been successfully updated.` });
+        toast({ title: toastClientUpdatedTitleText, description: `Client "${data.name}" has been successfully updated.` });
       } else {
         addClient(data);
-        toast({ title: "Client Added", description: `Client "${data.name}" has been successfully added.` });
+        toast({ title: toastClientAddedTitleText, description: `Client "${data.name}" has been successfully added.` });
       }
       onSubmitSuccess ? onSubmitSuccess() : router.push("/clients");
     } catch (error) {
-      toast({ variant: "destructive", title: "Error", description: "Failed to save client. Please try again." });
+      toast({ variant: "destructive", title: toastErrorTitleText, description: toastFailedtosaveclientPlDescText });
       console.error("Error saving client:", error);
     }
   }

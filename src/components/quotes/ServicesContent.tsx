@@ -9,9 +9,46 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Service } from '@/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useTranslate } from '@/contexts/TranslationContext';
 // ...existing code...
 
 export function ServicesContent() {
+  // Translation hooks
+  const { translated: uiCreateServiceText1 } = useTranslate('Create Service');
+  const { translated: uiNoServicesFoundText } = useTranslate('No Services Found');
+  const { translated: textInactiveText } = useTranslate('Inactive');
+  const { translated: textActiveText } = useTranslate('Active');
+  const { translated: uiCancelText2 } = useTranslate('Cancel');
+  const { translated: uiDeleteText } = useTranslate('Delete');
+  const { translated: uiDeleteServiceText } = useTranslate('Delete Service');
+  const { translated: uiCancelText1 } = useTranslate('Cancel');
+  const { translated: uiCreateServiceText } = useTranslate('Create Service');
+  const { translated: uiCreateNewServiceText } = useTranslate('Create New Service');
+  const { translated: attrSearchservicesText } = useTranslate('Search services...');
+  const { translated: uiCancelText } = useTranslate('Cancel');
+  const { translated: uiUpdateServiceText } = useTranslate('Update Service');
+  const { translated: attrServicedescriptionText } = useTranslate('Service description');
+  const { translated: uiDescriptionText } = useTranslate('Description');
+  const { translated: uiUnitText } = useTranslate('Unit');
+  const { translated: attr000Text } = useTranslate('0.00');
+  const { translated: attregSetupTechnicalSuppText } = useTranslate('e.g., Setup, Technical Support');
+  const { translated: uiCategoryText } = useTranslate('Category');
+  const { translated: attrServicenameText } = useTranslate('Service name');
+  const { translated: uiEditServiceText } = useTranslate('Edit Service');
+  const { translated: uiAddServiceText } = useTranslate('Add Service');
+  const { translated: uiManageservicesthatcaText } = useTranslate('Manage services that can be added to quotes');
+  const { translated: uiServicesText } = useTranslate('Services');
+  const { translated: toastFailedtodeletesDescText } = useTranslate('Failed to delete service');
+  const { translated: toastServicedeletedsDescText } = useTranslate('Service deleted successfully');
+  const { translated: toastFailedtocreatesDescText } = useTranslate('Failed to create service');
+  const { translated: toastServicecreatedsDescText } = useTranslate('Service created successfully');
+  const { translated: toastFailedtofetchseDescText } = useTranslate('Failed to fetch services');
+  const { translated: toastFailedtoupdatesDescText } = useTranslate('Failed to update service');
+  const { translated: toastServiceupdatedsDescText } = useTranslate('Service updated successfully');
+  const { translated: toastSuccessTitleText } = useTranslate('Success');
+  const { translated: toastPleasefillinallDescText } = useTranslate('Please fill in all required fields');
+  const { translated: toastErrorTitleText } = useTranslate('Error');
+
   // Delete modal state
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deleteServiceId, setDeleteServiceId] = useState<string | null>(null);
@@ -26,8 +63,8 @@ export function ServicesContent() {
     if (!editService) return;
     if (!editService.name || !editService.unitPrice) {
       toast({
-        title: 'Error',
-        description: 'Please fill in all required fields',
+        title: '{toastErrorTitleText}',
+        description: '{toastPleasefillinallDescText}',
         variant: 'destructive',
       });
       return;
@@ -42,7 +79,7 @@ export function ServicesContent() {
         }),
       });
       if (response.ok) {
-  toast({ title: 'Success', description: 'Service updated successfully', variant: 'default' });
+  toast({ title: '{toastSuccessTitleText}', description: '{toastServiceupdatedsDescText}', variant: 'default' });
         setIsEditOpen(false);
         setEditService(null);
         fetchServices();
@@ -50,7 +87,7 @@ export function ServicesContent() {
         throw new Error('Failed to update service');
       }
     } catch (error) {
-      toast({ title: 'Error', description: 'Failed to update service', variant: 'destructive' });
+      toast({ title: 'Error', description: '{toastFailedtoupdatesDescText}', variant: 'destructive' });
     }
   };
   const [services, setServices] = useState<Service[]>([]);
@@ -90,7 +127,7 @@ export function ServicesContent() {
       console.error('Error fetching services:', error);
       toast({
         title: 'Error',
-        description: 'Failed to fetch services',
+        description: '{toastFailedtofetchseDescText}',
         variant: 'destructive',
       });
     } finally {
@@ -124,7 +161,7 @@ export function ServicesContent() {
       if (response.ok) {
         toast({
           title: 'Success',
-          description: 'Service created successfully',
+          description: '{toastServicecreatedsDescText}',
         });
         setNewService({
           name: '',
@@ -142,7 +179,7 @@ export function ServicesContent() {
       console.error('Error creating service:', error);
       toast({
         title: 'Error',
-        description: 'Failed to create service',
+        description: '{toastFailedtocreatesDescText}',
         variant: 'destructive',
       });
     }
@@ -157,7 +194,7 @@ export function ServicesContent() {
       if (response.ok) {
         toast({
           title: 'Success',
-          description: 'Service deleted successfully',
+          description: '{toastServicedeletedsDescText}',
         });
         fetchServices();
       } else {
@@ -166,7 +203,7 @@ export function ServicesContent() {
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to delete service',
+        description: '{toastFailedtodeletesDescText}',
         variant: 'destructive',
       });
     } finally {
@@ -188,10 +225,9 @@ export function ServicesContent() {
           <div className="max-w-7xl mx-auto space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold tracking-tight">Services</h1>
+                <h1 className="text-3xl font-bold tracking-tight">{uiServicesText}</h1>
                 <p className="text-muted-foreground mt-2">
-                  Manage services that can be added to quotes
-                </p>
+                  {uiManageservicesthatcaText}         </p>
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -225,15 +261,14 @@ export function ServicesContent() {
             </div>
             <Button onClick={() => setIsCreating(!isCreating)}>
               <Plus className="h-4 w-4 mr-2" />
-              Add Service
-            </Button>
+              {uiAddServiceText}</Button>
           </div>
 
           {/* Edit Service Modal */}
           <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Edit Service</DialogTitle>
+                <DialogTitle>{uiEditServiceText}</DialogTitle>
               </DialogHeader>
               {editService && (
                 <div className="space-y-4">
@@ -243,15 +278,15 @@ export function ServicesContent() {
                       <Input
                         value={editService.name}
                         onChange={e => setEditService({ ...editService, name: e.target.value })}
-                        placeholder="Service name"
+                        placeholder={attrServicenameText}
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium">Category</label>
+                      <label className="text-sm font-medium">{uiCategoryText}</label>
                       <Input
                         value={editService.category || ''}
                         onChange={e => setEditService({ ...editService, category: e.target.value })}
-                        placeholder="e.g., Setup, Technical Support"
+                        placeholder={attregSetupTechnicalSuppText}
                       />
                     </div>
                     <div>
@@ -261,11 +296,11 @@ export function ServicesContent() {
                         step="0.01"
                         value={editService.unitPrice}
                         onChange={e => setEditService({ ...editService, unitPrice: Number(e.target.value) })}
-                        placeholder="0.00"
+                        placeholder={attr000Text}
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium">Unit</label>
+                      <label className="text-sm font-medium">{uiUnitText}</label>
                       <select
                         value={editService.unit}
                         onChange={e => setEditService({ ...editService, unit: e.target.value })}
@@ -279,19 +314,18 @@ export function ServicesContent() {
                     </div>
                   </div>
                   <div>
-                    <label className="text-sm font-medium">Description</label>
+                    <label className="text-sm font-medium">{uiDescriptionText}</label>
                     <textarea
                       value={editService.description || ''}
                       onChange={e => setEditService({ ...editService, description: e.target.value })}
-                      placeholder="Service description"
+                      placeholder={attrServicedescriptionText}
                       className="w-full p-2 border border-input rounded-md bg-background min-h-[100px]"
                     />
                   </div>
                   <div className="flex space-x-2">
-                    <Button onClick={handleUpdateService}>Update Service</Button>
+                    <Button onClick={handleUpdateService}>{uiUpdateServiceText}</Button>
                     <Button variant="outline" onClick={() => setIsEditOpen(false)}>
-                      Cancel
-                    </Button>
+                      {uiCancelText}</Button>
                   </div>
                 </div>
               )}
@@ -302,7 +336,7 @@ export function ServicesContent() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
-              placeholder="Search services..."
+              placeholder={attrSearchservicesText}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -313,7 +347,7 @@ export function ServicesContent() {
           {isCreating && (
             <Card>
               <CardHeader>
-                <CardTitle>Create New Service</CardTitle>
+                <CardTitle>{uiCreateNewServiceText}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -367,10 +401,9 @@ export function ServicesContent() {
                   />
                 </div>
                 <div className="flex space-x-2">
-                  <Button onClick={handleCreateService}>Create Service</Button>
+                  <Button onClick={handleCreateService}>{uiCreateServiceText}</Button>
                   <Button variant="outline" onClick={() => setIsCreating(false)}>
-                    Cancel
-                  </Button>
+                    {uiCancelText}</Button>
                 </div>
               </CardContent>
             </Card>
@@ -401,12 +434,12 @@ export function ServicesContent() {
           <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Delete Service</DialogTitle>
+                <DialogTitle>{uiDeleteServiceText}</DialogTitle>
               </DialogHeader>
               <p>Are you sure you want to delete this service? This action cannot be undone.</p>
               <div className="flex space-x-2 mt-4">
-                <Button variant="destructive" onClick={handleDeleteService}>Delete</Button>
-                <Button variant="outline" onClick={() => setIsDeleteOpen(false)}>Cancel</Button>
+                <Button variant="destructive" onClick={handleDeleteService}>{uiDeleteText}</Button>
+                <Button variant="outline" onClick={() => setIsDeleteOpen(false)}>{uiCancelText}</Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -435,7 +468,7 @@ export function ServicesContent() {
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Status:</span>
                       <Badge variant={service.isActive ? "default" : "secondary"}>
-                        {service.isActive ? "Active" : "Inactive"}
+                        {service.isActive ? textActiveText : textInactiveText}
                       </Badge>
                     </div>
                   </div>
@@ -448,15 +481,14 @@ export function ServicesContent() {
             <Card>
               <CardContent className="p-12 text-center">
                 <Package className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No Services Found</h3>
+                <h3 className="text-lg font-semibold mb-2">{uiNoServicesFoundText}</h3>
                 <p className="text-muted-foreground mb-4">
                   {searchTerm ? 'No services match your search.' : 'Get started by creating your first service.'}
                 </p>
                 {!searchTerm && (
                   <Button onClick={() => setIsCreating(true)}>
                     <Plus className="h-4 w-4 mr-2" />
-                    Create Service
-                  </Button>
+                    {uiCreateServiceText}</Button>
                 )}
               </CardContent>
             </Card>

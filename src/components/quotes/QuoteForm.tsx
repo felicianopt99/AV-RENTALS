@@ -9,6 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
+import { useTranslate } from '@/contexts/TranslationContext';
 import {
   Form,
   FormControl,
@@ -124,6 +125,19 @@ interface QuoteFormProps {
 }
 
 export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
+  // Translation hooks
+  const { translated: toastTherewasanerrorgenerDescText } = useTranslate('There was an error generating the PDF.');
+  const { translated: toastDownloadFailedTitleText } = useTranslate('Download Failed');
+  const { translated: toastQuotePDFhasbeendownlDescText } = useTranslate('Quote PDF has been downloaded successfully.');
+  const { translated: toastPDFDownloadedTitleText } = useTranslate('PDF Downloaded');
+  const { translated: toastFailedtosavequotePleDescText } = useTranslate('Failed to save quote. Please try again.');
+  const { translated: toastErrorTitleText } = useTranslate('Error');
+  const { translated: toastQuoteCreatedTitleText } = useTranslate('Quote Created');
+  const { translated: toastQuoteUpdatedTitleText } = useTranslate('Quote Updated');
+  const { translated: toastSelectfeeTitleText } = useTranslate('Select fee');
+  const { translated: toastSelectserviceTitleText } = useTranslate('Select service');
+  const { translated: toastSelectequipmentTitleText } = useTranslate('Select equipment');
+
   const { equipment, clients, isDataLoaded } = useAppContext();
   // Use sample data as fallback for services/fees
   const services = (typeof window !== 'undefined' && (window as any).services) || sampleServices;
@@ -307,7 +321,7 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
   const handleAddItem = () => {
     if (addItemType === 'equipment') {
       const eq = rentableEquipment.find(e => e.id === selectedEquipmentId);
-      if (!eq) return toast({ variant: 'destructive', title: 'Select equipment' });
+      if (!eq) return toast({ variant: 'destructive', title: toastSelectequipmentTitleText });
       append({
         type: 'equipment',
         equipmentId: eq.id,
@@ -319,7 +333,7 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
       });
     } else if (addItemType === 'service') {
       const svc = services.find((s: any) => s.id === selectedServiceId);
-      if (!svc) return toast({ variant: 'destructive', title: 'Select service' });
+      if (!svc) return toast({ variant: 'destructive', title: toastSelectserviceTitleText });
       append({
         type: 'service',
         serviceId: svc.id,
@@ -331,7 +345,7 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
       });
     } else if (addItemType === 'fee') {
       const fee = fees.find((f: any) => f.id === selectedFeeId);
-      if (!fee) return toast({ variant: 'destructive', title: 'Select fee' });
+      if (!fee) return toast({ variant: 'destructive', title: toastSelectfeeTitleText });
       append({
         type: 'fee',
         feeId: fee.id,
@@ -450,11 +464,11 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
     try {
       if (initialData) {
         updateQuote({ ...initialData, ...quoteData, updatedAt: new Date() });
-        toast({ title: "Quote Updated", description: `Quote "${data.name}" has been successfully updated.` });
+        toast({ title: toastQuoteUpdatedTitleText, description: `Quote "${data.name}" has been successfully updated.` });
         router.push("/quotes");
       } else {
         const newQuoteId = addQuote(quoteData);
-        toast({ title: "Quote Created", description: `Quote "${data.name}" has been successfully created.` });
+        toast({ title: toastQuoteCreatedTitleText, description: `Quote "${data.name}" has been successfully created.` });
         localStorage.removeItem('quoteDraft'); // Clear draft after successful submit
         if (onSubmitSuccess) {
           onSubmitSuccess();
@@ -463,7 +477,7 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
         }
       }
     } catch (error) {
-        toast({ variant: "destructive", title: "Error", description: "Failed to save quote. Please try again."});
+        toast({ variant: "destructive", title: toastErrorTitleText, description: toastFailedtosavequotePleDescText});
         console.error("Error saving quote:", error);
     }
   }
@@ -551,15 +565,15 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
         download: true
       });
       toast({
-        title: "PDF Downloaded",
-        description: "Quote PDF has been downloaded successfully."
+        title: toastPDFDownloadedTitleText,
+        description: toastQuotePDFhasbeendownlDescText
       });
     } catch (error) {
       console.error('Error downloading PDF:', error);
       toast({
         variant: "destructive",
-        title: "Download Failed", 
-        description: "There was an error generating the PDF."
+        title: toastDownloadFailedTitleText, 
+        description: toastTherewasanerrorgenerDescText
       });
     } finally {
       setIsGeneratingPDF(false);

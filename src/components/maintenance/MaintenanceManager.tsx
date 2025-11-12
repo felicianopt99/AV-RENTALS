@@ -14,11 +14,25 @@ import { MaintenanceRequestDialog } from './MaintenanceRequestDialog';
 import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useTranslate } from '@/contexts/TranslationContext';
 
 export function MaintenanceManager() {
   const { equipment, isDataLoaded } = useAppContext();
   const router = useRouter();
   const isMobile = useIsMobile();
+
+  // Translation hooks
+  const { translated: loadingText } = useTranslate('Loading maintenance data...');
+  const { translated: maintenanceText } = useTranslate('Maintenance');
+  const { translated: createMaintenanceText } = useTranslate('Create New Maintenance');
+  const { translated: noItemsText } = useTranslate('No items that need attention.');
+  const { translated: allGoodText } = useTranslate('All equipment is in good condition.');
+  const { translated: nameText } = useTranslate('Name');
+  const { translated: statusText } = useTranslate('Status');
+  const { translated: lastMaintenanceText } = useTranslate('Last Maintenance');
+  const { translated: actionsText } = useTranslate('Actions');
+  const { translated: addLogText } = useTranslate('Add Log');
+  const { translated: viewHistoryText } = useTranslate('View History');
 
   const [isLogDialogOpen, setIsLogDialogOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -41,7 +55,7 @@ export function MaintenanceManager() {
   if (!isDataLoaded) {
     return (
       <div className="flex items-center justify-center h-full">
-        <p className="text-lg text-muted-foreground">Loading maintenance data...</p>
+        <p className="text-lg text-muted-foreground">{loadingText}</p>
       </div>
     );
   }
@@ -50,20 +64,20 @@ export function MaintenanceManager() {
     <div className="space-y-6">
       <div className="flex justify-end">
         <Button onClick={() => setIsCreateDialogOpen(true)}>
-          <PlusCircle className="mr-2 h-4 w-4" /> Create New Maintenance
+          <PlusCircle className="mr-2 h-4 w-4" /> {createMaintenanceText}
         </Button>
       </div>
       <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle>Maintenance & Repairs</CardTitle>
+          <CardTitle>{maintenanceText}</CardTitle>
           <CardDescription>Track items that are damaged or currently undergoing maintenance.</CardDescription>
         </CardHeader>
         <CardContent>
           {itemsInMaintenance.length === 0 ? (
             <div className="text-center py-16 text-muted-foreground flex flex-col items-center">
               <Wrench className="w-16 h-16 mb-4 text-primary/50" />
-              <p className="text-xl mb-1">No items need attention.</p>
-              <p className="text-sm">All equipment is in good condition.</p>
+              <p className="text-xl mb-1">{noItemsText}</p>
+              <p className="text-sm">{allGoodText}</p>
             </div>
           ) : (
             <>
@@ -85,7 +99,7 @@ export function MaintenanceManager() {
                       </div>
                       <div className="flex gap-2 pt-2 border-t border-gray-200/50 dark:border-gray-700/50">
                         <Button variant="ghost" size="sm" onClick={() => handleAddLogClick(item)} className="flex-1 h-7 text-xs">
-                          Add Log
+                          {addLogText}
                         </Button>
                         <Button variant="ghost" size="sm" onClick={() => router.push(`/equipment/${item.id}/edit`)} className="flex-1 h-7 text-xs">
                           Edit

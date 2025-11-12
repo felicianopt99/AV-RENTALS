@@ -5,7 +5,11 @@
 import { QuoteForm } from '@/components/quotes/QuoteForm';
 import { FileText } from 'lucide-react';
 
+import { useTranslate } from '@/contexts/TranslationContext';
 export default function NewQuotePage() {
+  // Translation hooks
+  const { translated: uiCreateNewQuoteText } = useTranslate('Create New Quote');
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 max-w-6xl">
@@ -15,7 +19,7 @@ export default function NewQuotePage() {
               <FileText className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Create New Quote</h1>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{uiCreateNewQuoteText}</h1>
               <p className="text-gray-600 dark:text-gray-400">Generate professional quotes for your AV rental services</p>
             </div>
           </div>

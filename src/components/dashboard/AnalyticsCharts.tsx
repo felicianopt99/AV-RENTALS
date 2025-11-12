@@ -12,15 +12,20 @@ import {
 import { Card, CardContent } from "../ui/card";
 import { format } from "date-fns";
 
-// Revenue Chart
-const revenueChartConfig = {
-  revenue: {
-    label: "Revenue",
-    color: "hsl(var(--primary))",
-  },
-} satisfies ChartConfig
+import { useTranslate } from '@/contexts/TranslationContext';
 
 export function RevenueChart({ data }: { data: { month: string; revenue: number }[] }) {
+  // Translation hooks
+  const { translated: textRevenueText } = useTranslate('Revenue');
+
+  // Revenue Chart Configuration
+  const revenueChartConfig = {
+    revenue: {
+      label: textRevenueText,
+      color: "hsl(var(--primary))",
+    },
+  } satisfies ChartConfig
+
   return (
     <ChartContainer config={revenueChartConfig} className="min-h-[200px] w-full">
       <BarChart

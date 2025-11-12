@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { Event, Client } from '@/types';
 import { useAppContext, useAppDispatch } from '@/contexts/AppContext';
+import { useTranslate } from '@/contexts/TranslationContext';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -48,6 +49,32 @@ export function EventListDisplay() {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
+
+  // Translation hooks
+  const { translated: eventsText } = useTranslate('Events');
+  const { translated: createNewEventText } = useTranslate('Create New Event');
+  const { translated: allText } = useTranslate('All');
+  const { translated: upcomingText } = useTranslate('Upcoming');
+  const { translated: ongoingText } = useTranslate('Ongoing');
+  const { translated: completedText } = useTranslate('Completed');
+  const { translated: searchEventsText } = useTranslate('Search events (name, client, location)...');
+  const { translated: allClientsText } = useTranslate('All Clients');
+  const { translated: sortByText } = useTranslate('Sort by');
+  const { translated: nameText } = useTranslate('Name');
+  const { translated: dateText } = useTranslate('Date');
+  const { translated: clientText } = useTranslate('Client');
+  const { translated: locationText } = useTranslate('Location');
+  const { translated: loadingEventDataText } = useTranslate('Loading event data...');
+  const { translated: todayText } = useTranslate('Today');
+  const { translated: tomorrowText } = useTranslate('Tomorrow');
+  const { translated: yesterdayText } = useTranslate('Yesterday');
+  const { translated: viewDetailsText } = useTranslate('View Details');
+  const { translated: editText } = useTranslate('Edit');
+  const { translated: noEventsFoundText } = useTranslate('No events found');
+  const { translated: startAddingText } = useTranslate('Start by creating your first event');
+  const { translated: noEventsMatchFiltersText } = useTranslate('No events match your filters.');
+  const { translated: noEventsYetText } = useTranslate('No events yet.');
+  const { translated: tryAdjustingFiltersText } = useTranslate('Try adjusting your filters or search terms.');
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
   const [sortField, setSortField] = useState<SortField>('startDate');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
@@ -140,18 +167,18 @@ export function EventListDisplay() {
   const getStatusBadge = (status: 'upcoming' | 'ongoing' | 'completed') => {
     switch (status) {
       case 'upcoming':
-        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Upcoming</Badge>;
+        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">{upcomingText}</Badge>;
       case 'ongoing':
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Ongoing</Badge>;
+        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">{ongoingText}</Badge>;
       case 'completed':
-        return <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">Completed</Badge>;
+        return <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">{completedText}</Badge>;
     }
   };
 
   const getDateDescription = (date: Date) => {
-    if (isToday(date)) return 'Today';
-    if (isTomorrow(date)) return 'Tomorrow';
-    if (isYesterday(date)) return 'Yesterday';
+    if (isToday(date)) return todayText;
+    if (isTomorrow(date)) return tomorrowText;
+    if (isYesterday(date)) return yesterdayText;
     return format(date, 'MMM dd, yyyy');
   };
 
@@ -159,7 +186,7 @@ export function EventListDisplay() {
     return (
         <div className="flex flex-col">
             <div className="flex-grow flex items-center justify-center">
-                <p className="text-lg text-muted-foreground">Loading event data...</p>
+                <p className="text-lg text-muted-foreground">{loadingEventDataText}</p>
             </div>
         </div>
     );
@@ -170,13 +197,13 @@ export function EventListDisplay() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h2 className="text-xl md:text-2xl font-semibold">Events</h2>
+          <h2 className="text-xl md:text-2xl font-semibold">{eventsText}</h2>
           <p className="text-sm text-muted-foreground mt-1">
             {filteredAndSortedEvents.length} of {events.length} events
           </p>
         </div>
         <Button onClick={() => setIsFormOpen(true)} className="w-full sm:w-auto">
-          <PlusCircle className="mr-2 h-4 w-4" /> Create New Event
+          <PlusCircle className="mr-2 h-4 w-4" /> {createNewEventText}
         </Button>
       </div>
 
@@ -184,16 +211,16 @@ export function EventListDisplay() {
       <Tabs value={filterStatus} onValueChange={(value) => setFilterStatus(value as FilterStatus)} className="w-full">
         <TabsList className="grid w-full grid-cols-4 mb-4">
           <TabsTrigger value="all" className="text-xs sm:text-sm">
-            All ({eventsWithClient.length})
+            {allText} ({eventsWithClient.length})
           </TabsTrigger>
           <TabsTrigger value="upcoming" className="text-xs sm:text-sm">
-            Upcoming ({eventsWithClient.filter(e => e.status === 'upcoming').length})
+            {upcomingText} ({eventsWithClient.filter(e => e.status === 'upcoming').length})
           </TabsTrigger>
           <TabsTrigger value="ongoing" className="text-xs sm:text-sm">
-            Ongoing ({eventsWithClient.filter(e => e.status === 'ongoing').length})
+            {ongoingText} ({eventsWithClient.filter(e => e.status === 'ongoing').length})
           </TabsTrigger>
           <TabsTrigger value="completed" className="text-xs sm:text-sm">
-            Completed ({eventsWithClient.filter(e => e.status === 'completed').length})
+            {completedText} ({eventsWithClient.filter(e => e.status === 'completed').length})
           </TabsTrigger>
         </TabsList>
       </Tabs>
@@ -206,7 +233,7 @@ export function EventListDisplay() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input 
-                placeholder="Search events (name, client, location)..."
+                placeholder={searchEventsText}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -219,10 +246,10 @@ export function EventListDisplay() {
                 {/* Client Filter */}
                 <Select value={selectedClient} onValueChange={setSelectedClient}>
                   <SelectTrigger className="w-full sm:w-[160px]">
-                    <SelectValue placeholder="All Clients" />
+                    <SelectValue placeholder={allClientsText} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Clients</SelectItem>
+                    <SelectItem value="all">{allClientsText}</SelectItem>
                     {clients.map(client => (
                       <SelectItem key={client.id} value={client.id}>
                         {client.name}
@@ -241,16 +268,16 @@ export function EventListDisplay() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
                     <DropdownMenuItem onClick={() => handleSort('startDate')}>
-                      Date {sortField === 'startDate' && (sortOrder === 'asc' ? '↑' : '↓')}
+                      {dateText} {sortField === 'startDate' && (sortOrder === 'asc' ? '↑' : '↓')}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleSort('name')}>
-                      Name {sortField === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
+                      {nameText} {sortField === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleSort('client')}>
-                      Client {sortField === 'client' && (sortOrder === 'asc' ? '↑' : '↓')}
+                      {clientText} {sortField === 'client' && (sortOrder === 'asc' ? '↑' : '↓')}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleSort('location')}>
-                      Location {sortField === 'location' && (sortOrder === 'asc' ? '↑' : '↓')}
+                      {locationText} {sortField === 'location' && (sortOrder === 'asc' ? '↑' : '↓')}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -289,14 +316,14 @@ export function EventListDisplay() {
             {searchTerm || filterStatus !== 'all' || selectedClient !== 'all' ? (
               <>
                 <SearchSlash className="w-16 h-16 mb-4 text-primary/50" />
-                <p className="text-xl mb-1">No events match your filters.</p>
-                <p className="text-sm">Try adjusting your search or filters.</p>
+                <p className="text-xl mb-1">{noEventsMatchFiltersText}</p>
+                <p className="text-sm">{tryAdjustingFiltersText}</p>
               </>
             ) : (
               <>
                 <PartyPopper className="w-16 h-16 mb-4 text-primary/50" />
-                <p className="text-xl mb-1">No events yet.</p>
-                <p className="text-sm">Click "Create New Event" to get started.</p>
+                <p className="text-xl mb-1">{noEventsYetText}</p>
+                <p className="text-sm">{startAddingText}</p>
               </>
             )}
           </CardContent>
@@ -334,7 +361,7 @@ export function EventListDisplay() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={(e) => { e.stopPropagation(); router.push(`/events/${event.id}`)}}>
                         <Edit className="mr-2 h-4 w-4" />
-                        View Details
+                        {viewDetailsText}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={(e) => { e.stopPropagation(); router.push(`/rentals/${event.id}/prep`)}}>
                         <ListChecks className="mr-2 h-4 w-4 text-blue-500 dark:text-blue-400" />

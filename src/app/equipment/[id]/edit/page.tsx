@@ -7,7 +7,11 @@ import { useAppContext } from '@/contexts/AppContext';
 import { EquipmentForm } from '@/components/equipment/EquipmentForm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
+import { useTranslate } from '@/contexts/TranslationContext';
 export default function EditEquipmentPage() {
+  // Translation hooks
+  const { translated: uiEditEquipmentText } = useTranslate('Edit Equipment');
+
   const params = useParams();
   const router = useRouter();
   const { equipment, isDataLoaded } = useAppContext();
@@ -59,7 +63,7 @@ export default function EditEquipmentPage() {
       <div className="flex-1 overflow-y-auto p-4 md:p-6">
         <Card className="max-w-4xl mx-auto">
           <CardHeader>
-            <CardTitle>Edit Equipment</CardTitle>
+            <CardTitle>{uiEditEquipmentText}</CardTitle>
           </CardHeader>
           <CardContent>
             <EquipmentForm

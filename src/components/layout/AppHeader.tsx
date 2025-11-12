@@ -7,9 +7,11 @@ import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Bell, UserCircle, LogOut, User } from 'lucide-react';
 import { useAppContext, useAppDispatch } from '@/contexts/AppContext';
+import { useTranslate } from '@/contexts/TranslationContext';
 import { useToast } from '@/hooks/use-toast';
 import { Notification } from '@/types';
 import { ClientOnly, useIsClient } from '@/hooks/useIsClient';
+import { LanguageToggle } from '@/components/LanguageToggle';
 
 interface AppHeaderProps {
   title?: string;
@@ -25,6 +27,12 @@ export function AppHeader({ title, children, className }: AppHeaderProps) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const isClient = useIsClient();
+
+  // Translation hooks
+  const { translated: notificationsText } = useTranslate('Notifications');
+  const { translated: noNotificationsText } = useTranslate('No notifications');
+  const { translated: profileText } = useTranslate('Profile');
+  const { translated: logoutText } = useTranslate('Logout');
 
   useEffect(() => {
     if (isAuthenticated && currentUser) {
@@ -203,6 +211,7 @@ export function AppHeader({ title, children, className }: AppHeaderProps) {
   {/* Right side - Notifications (always visible when authenticated) - Always render container for consistent layout */}
   <div className="flex items-center gap-1 flex-1 justify-end sticky top-0 z-[10000]">
         <ClientOnly>
+          <LanguageToggle />
           {isAuthenticated && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

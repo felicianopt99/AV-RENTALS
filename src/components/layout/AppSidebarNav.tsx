@@ -10,11 +10,30 @@ import { useMemo, useRef, useEffect, useState } from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 import { navItems as baseNavItems, adminItems as baseAdminItems } from '@/components/layout/navConfig';
+import { useTranslate } from '@/components/translation/TranslatedComponents';
+import { PreloadTranslations, NavigationTranslations } from '@/components/translation/TranslatedComponents';
+
+// Component to translate nav labels
+function NavLabel({ text }: { text: string }) {
+  const { translated } = useTranslate(text);
+  return <>{translated}</>;
+}
 
 export function AppSidebarNav() {
   const pathname = usePathname();
   const { currentUser, isDataLoaded } = useAppContext();
   const { state: sidebarState, isMobile, toggleSidebar } = useSidebar();
+
+  // Preload all navigation translations
+  const navLabels = useMemo(() => {
+    const labels = [...baseNavItems.map(i => i.label), ...baseAdminItems.map(i => i.label)];
+    baseNavItems.forEach(item => {
+      if (item.subItems) {
+        item.subItems.forEach(sub => labels.push(sub.label));
+      }
+    });
+    return labels;
+  }, []);
 
   // DEBUG: Log context and nav state
   if (typeof window !== 'undefined') {
@@ -125,6 +144,7 @@ export function AppSidebarNav() {
   return (
     <TooltipProvider>
       <>
+        <PreloadTranslations texts={navLabels} />
         <SidebarMenu>
           {visibleNavItems.map((item, index) => {
             const hasSub = item.subItems && item.subItems.length > 0;
@@ -225,7 +245,7 @@ export function AppSidebarNav() {
                   renderMenuItem(
                     <>
                       <item.icon className="h-5 w-5" />
-                      <span className="flex-1">{item.label}</span>
+                      <span className="flex-1"><NavLabel text={item.label} /></span>
                       <ChevronDown 
                         className={cn(
                           "h-4 w-4 transition-transform duration-300 ease-out",
@@ -242,7 +262,7 @@ export function AppSidebarNav() {
                   renderMenuItem(
                     <>
                       <item.icon className="h-5 w-5" />
-                      <span className="flex-1">{item.label}</span>
+                      <span className="flex-1"><NavLabel text={item.label} /></span>
                     </>,
                     item.label,
                     item.href
@@ -268,7 +288,7 @@ export function AppSidebarNav() {
                             )}
                           >
                             <div className="h-2 w-2 rounded-full bg-current opacity-50" />
-                            <span>{sub.label}</span>
+                            <span><NavLabel text={sub.label} /></span>
                           </Link>
                         </SidebarMenuSubItem>
                       );
@@ -288,7 +308,7 @@ export function AppSidebarNav() {
 
             <SidebarGroup>
               <SidebarGroupLabel className="text-xs font-semibold text-sidebar-foreground/60 px-3 pb-3 tracking-wider uppercase">
-                Administration
+                <NavLabel text="Administration" />
               </SidebarGroupLabel>
               <SidebarMenu>
                 {baseAdminItems.map((item, adminIndex) => {
@@ -329,11 +349,11 @@ export function AppSidebarNav() {
                               )}
                             >
                               <item.icon className="h-5 w-5" />
-                              <span className="flex-1">{item.label}</span>
+                              <span className="flex-1"><NavLabel text={item.label} /></span>
                             </Link>
                           </TooltipTrigger>
                           <TooltipContent side="right" className="w-48">
-                            <p>{item.label}</p>
+                            <p><NavLabel text={item.label} /></p>
                           </TooltipContent>
                         </Tooltip>
                       ) : (
@@ -366,7 +386,7 @@ export function AppSidebarNav() {
                           )}
                         >
                           <item.icon className="h-5 w-5" />
-                          <span className="flex-1">{item.label}</span>
+                          <span className="flex-1"><NavLabel text={item.label} /></span>
                         </Link>
                       )}
                     </SidebarMenuItem>

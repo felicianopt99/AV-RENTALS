@@ -15,7 +15,16 @@ import { APP_NAME } from '@/lib/constants';
 import * as htmlToImage from 'html-to-image';
 import { useToast } from '@/hooks/use-toast';
 
+import { useTranslate } from '@/contexts/TranslationContext';
 export function InventoryLabelGenerator() {
+  // Translation hooks
+  const { translated: attrSearchequipmentText } = useTranslate('Search equipment...');
+  const { translated: attrYourCompanyNameText } = useTranslate('Your Company Name');
+  const { translated: uiCompanyNameforLabelsText } = useTranslate('Company Name for Labels');
+  const { translated: uiInventoryLabelGeneraText } = useTranslate('Inventory Label Generator');
+  const { translated: toastDownloadCompletTitleText } = useTranslate('Download Complete');
+  const { translated: toastStartingDownloaTitleText } = useTranslate('Starting Download...');
+
   const { equipment, isDataLoaded } = useAppContext();
   const { toast } = useToast();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -50,7 +59,7 @@ export function InventoryLabelGenerator() {
 
   const handleDownload = useCallback(async () => {
     setIsDownloading(true);
-    toast({ title: "Starting Download...", description: `Preparing ${selectedIds.size} labels.` });
+    toast({ title: "{toastStartingDownloaTitleText}", description: `Preparing ${selectedIds.size} labels.` });
 
     for (const id of Array.from(selectedIds)) {
       const itemRef = labelRefs.current[id]?.current;
@@ -72,7 +81,7 @@ export function InventoryLabelGenerator() {
     }
 
     setIsDownloading(false);
-    toast({ title: "Download Complete", description: `Finished downloading all selected labels.` });
+    toast({ title: "{toastDownloadCompletTitleText}", description: `Finished downloading all selected labels.` });
   }, [selectedIds, equipment, toast]);
 
   if (!isDataLoaded) {
@@ -85,18 +94,18 @@ export function InventoryLabelGenerator() {
     <div>
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle>Inventory Label Generator</CardTitle>
+            <CardTitle>{uiInventoryLabelGeneraText}</CardTitle>
             <CardDescription>Select equipment and customize info to download JPG labels with QR codes.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
               <div className="md:col-span-2">
-                <Label htmlFor="company-name">Company Name for Labels</Label>
+                <Label htmlFor="company-name">{uiCompanyNameforLabelsText}</Label>
                 <Input
                   id="company-name"
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
-                  placeholder="Your Company Name"
+                  placeholder={attrYourCompanyNameText}
                 />
               </div>
               <Button onClick={handleDownload} disabled={selectedIds.size === 0 || isDownloading} className="w-full">
@@ -120,7 +129,7 @@ export function InventoryLabelGenerator() {
                  <div className="relative w-full max-w-xs">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                    placeholder="Search equipment..."
+                    placeholder={attrSearchequipmentText}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10"

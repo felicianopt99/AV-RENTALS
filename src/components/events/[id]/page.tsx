@@ -17,6 +17,7 @@ import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { EventFormDialog } from '@/components/events/EventFormDialog';
 import { AddEquipmentToEventDialog } from '@/components/events/AddEquipmentToEventDialog';
+import { useTranslate } from '@/contexts/TranslationContext';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +30,13 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function EventDetailsPage() {
+  // Translation hooks
+  const { translated: toastEventDeletedTitleText } = useTranslate('Event Deleted');
+  const { translated: toastTheequipmenthasbeenrDescText } = useTranslate('The equipment has been removed from this event.');
+  const { translated: toastEquipmentRemovedTitleText } = useTranslate('Equipment Removed');
+  const { translated: toastEventnotfoundDescText } = useTranslate('Event not found.');
+  const { translated: toastErrorTitleText } = useTranslate('Error');
+
   const params = useParams();
   const router = useRouter();
   const { events, clients, rentals, equipment, isDataLoaded } = useAppContext();
@@ -63,7 +71,7 @@ export default function EventDetailsPage() {
           }));
         setEventRentals(rentalsForEvent);
       } else {
-        toast({ variant: "destructive", title: "Error", description: "Event not found."});
+        toast({ variant: "destructive", title: toastErrorTitleText, description: toastEventnotfoundDescText});
         router.replace('/events'); 
       }
       setLoading(false);
@@ -86,7 +94,7 @@ export default function EventDetailsPage() {
   const handleDeleteRental = () => {
     if(rentalToDelete) {
         deleteRental(rentalToDelete.id);
-        toast({ title: "Equipment Removed", description: "The equipment has been removed from this event."});
+        toast({ title: toastEquipmentRemovedTitleText, description: toastTheequipmenthasbeenrDescText});
         setRentalToDelete(null);
     }
   }
@@ -94,7 +102,7 @@ export default function EventDetailsPage() {
   const handleDeleteEvent = () => {
     if(event) {
         deleteEvent(event.id);
-        toast({ title: "Event Deleted", description: `The event "${event.name}" and all its rentals have been deleted.`});
+        toast({ title: toastEventDeletedTitleText, description: `The event "${event.name}" and all its rentals have been deleted.`});
         router.push('/events');
     }
     setIsDeleteEventOpen(false);

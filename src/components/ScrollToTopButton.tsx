@@ -6,7 +6,11 @@ import { Button } from '@/components/ui/button';
 import { ArrowUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+import { useTranslate } from '@/contexts/TranslationContext';
 export function ScrollToTopButton() {
+  // Translation hooks
+  const { translated: attrScrolltotopText } = useTranslate('Scroll to top');
+
   const [isVisible, setIsVisible] = useState(false);
 
   const toggleVisibility = () => {
@@ -41,7 +45,7 @@ export function ScrollToTopButton() {
         isVisible ? "opacity-100" : "opacity-0 pointer-events-none"
       )}
       onClick={scrollToTop}
-      aria-label="Scroll to top"
+      aria-label={attrScrolltotopText}
     >
       <ArrowUp className="h-5 w-5" />
     </Button>

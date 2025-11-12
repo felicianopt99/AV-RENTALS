@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
+import { useTranslate } from '@/contexts/TranslationContext';
 // Theme preset definitions
 const THEME_PRESETS = [
   {
@@ -120,6 +121,114 @@ type CustomizationSettings = z.infer<typeof customizationSchema>;
 type CustomizationFormValues = z.infer<typeof customizationSchema>;
 
 export default function AdminCustomizationPage() {
+  // Translation hooks
+  const { translated: attr2024YourCompanyNameAText } = useTranslate('© 2024 Your Company Name. All rights reserved.');
+  const { translated: uiCustomFooterTextText } = useTranslate('Custom Footer Text');
+  const { translated: attrAddyourcustomCSShereText } = useTranslate('/* Add your custom CSS here */');
+  const { translated: uiCustomCSSText } = useTranslate('Custom CSS');
+  const { translated: uiAdvancedSettingsText } = useTranslate('Advanced Settings');
+  const { translated: attrFaviconPreviewText } = useTranslate('Favicon Preview');
+  const { translated: uiFaviconText } = useTranslate('Favicon');
+  const { translated: uiClicktouploadordragaText } = useTranslate('Click to upload or drag and drop');
+  const { translated: uiOceanDepthsText } = useTranslate('Ocean Depths');
+  const { translated: uiModernBlueText } = useTranslate('Modern Blue');
+  const { translated: uiCleanWhiteText } = useTranslate('Clean White');
+  const { translated: uiDarkGlassText } = useTranslate('Dark Glass');
+  const { translated: uiQuickPresetsText } = useTranslate('Quick Presets');
+  const { translated: uiMobileText } = useTranslate('Mobile');
+  const { translated: uiDesktopText } = useTranslate('Desktop');
+  const { translated: uiSignInText } = useTranslate('Sign In');
+  const { translated: uiPasswordText } = useTranslate('Password');
+  const { translated: uiUsernameText } = useTranslate('Username');
+  const { translated: attrLogoText } = useTranslate('Logo');
+  const { translated: uiLivePreviewText } = useTranslate('Live Preview');
+  const { translated: attr2025YourCompanyAllriText } = useTranslate('© 2025 Your Company. All rights reserved.');
+  const { translated: uiFooterTextText } = useTranslate('Footer Text');
+  const { translated: uiUnderlineText } = useTranslate('Underline');
+  const { translated: uiInputStyleText } = useTranslate('Input Style');
+  const { translated: uiPillText } = useTranslate('Pill');
+  const { translated: uiRoundedText } = useTranslate('Rounded');
+  const { translated: uiDefaultText } = useTranslate('Default');
+  const { translated: uiButtonStyleText } = useTranslate('Button Style');
+  const { translated: attrhttpsexamplecomlogopText } = useTranslate('https://example.com/logo.png');
+  const { translated: uiCustomLoginLogoURLText } = useTranslate('Custom Login Logo URL');
+  const { translated: attrSignintoyouraccountText } = useTranslate('Sign in to your account');
+  const { translated: uiSubtitleText } = useTranslate('Subtitle');
+  const { translated: attrWelcomebackText } = useTranslate('Welcome back');
+  const { translated: uiWelcomeMessageText } = useTranslate('Welcome Message');
+  const { translated: uiShowCompanyNameText } = useTranslate('Show Company Name');
+  const { translated: uiEnableAnimationsText } = useTranslate('Enable Animations');
+  const { translated: uiEnableGlassmorphismEText } = useTranslate('Enable Glassmorphism Effect');
+  const { translated: uiExtraLargeText } = useTranslate('Extra Large');
+  const { translated: uiLargeText } = useTranslate('Large');
+  const { translated: uiMediumText } = useTranslate('Medium');
+  const { translated: uiSmallText } = useTranslate('Small');
+  const { translated: uiNoneText } = useTranslate('None');
+  const { translated: uiShadowStyleText } = useTranslate('Shadow Style');
+  const { translated: uiCenterText } = useTranslate('Center');
+  const { translated: uiCardPositionText } = useTranslate('Card Position');
+  const { translated: uiLoginCardSettingsText } = useTranslate('Login Card Settings');
+  const { translated: uiFollowMouseText } = useTranslate('Follow Mouse');
+  const { translated: uiPulsatingText } = useTranslate('Pulsating');
+  const { translated: attr00ffffText } = useTranslate('#00ffff');
+  const { translated: uiColorText } = useTranslate('Color');
+  const { translated: uiBottomLeftText } = useTranslate('Bottom Left');
+  const { translated: uiBottomRightText } = useTranslate('Bottom Right');
+  const { translated: uiBottomCenterText } = useTranslate('Bottom Center');
+  const { translated: uiLeftText } = useTranslate('Left');
+  const { translated: uiRightText } = useTranslate('Right');
+  const { translated: uiTopRightText } = useTranslate('Top Right');
+  const { translated: uiTopLeftText } = useTranslate('Top Left');
+  const { translated: uiTopCenterText } = useTranslate('Top Center');
+  const { translated: uiOriginText } = useTranslate('Origin');
+  const { translated: uiLightRaysSettingsText } = useTranslate('LightRays Settings');
+  const { translated: uiOrUploadImageText } = useTranslate('Or Upload Image');
+  const { translated: attrhttpsexamplecombackgText } = useTranslate('https://example.com/background.jpg');
+  const { translated: uiBackgroundImageURLText } = useTranslate('Background Image URL');
+  const { translated: uiBackgroundColorText } = useTranslate('Background Color');
+  const { translated: attr1E293BText } = useTranslate('#1E293B');
+  const { translated: uiEndColorText } = useTranslate('End Color');
+  const { translated: attr0F1419Text } = useTranslate('#0F1419');
+  const { translated: uiStartColorText } = useTranslate('Start Color');
+  const { translated: uiLightRaysText } = useTranslate('LightRays');
+  const { translated: uiBackgroundImageText } = useTranslate('Background Image');
+  const { translated: uiSolidColorText } = useTranslate('Solid Color');
+  const { translated: uiGradientText } = useTranslate('Gradient');
+  const { translated: uiBackgroundTypeText } = useTranslate('Background Type');
+  const { translated: uiBackgroundSettingsText } = useTranslate('Background Settings');
+  const { translated: uiEnableDarkModeText } = useTranslate('Enable Dark Mode');
+  const { translated: attr10B981Text } = useTranslate('#10B981');
+  const { translated: uiAccentColorText } = useTranslate('Accent Color');
+  const { translated: attrF3F4F6Text } = useTranslate('#F3F4F6');
+  const { translated: uiSecondaryColorText } = useTranslate('Secondary Color');
+  const { translated: attr3B82F6Text } = useTranslate('#3B82F6');
+  const { translated: uiPrimaryColorText } = useTranslate('Primary Color');
+  const { translated: uiThemePresetText } = useTranslate('Theme Preset');
+  const { translated: uiColorSchemeText } = useTranslate('Color Scheme');
+  const { translated: uiNologoselectedText } = useTranslate('No logo selected');
+  const { translated: attrLogoPreviewText } = useTranslate('Logo Preview');
+  const { translated: attrAbriefdescriptionofyText } = useTranslate('A brief description of your company');
+  const { translated: uiCompanyTaglineText } = useTranslate('Company Tagline');
+  const { translated: attr15551234567Text } = useTranslate('+1 (555) 123-4567');
+  const { translated: uiContactPhoneText } = useTranslate('Contact Phone');
+  const { translated: attrcontactcompanycomText } = useTranslate('contact@company.com');
+  const { translated: uiContactEmailText } = useTranslate('Contact Email');
+  const { translated: uiUsecompanynameaslogoText } = useTranslate('Use company name as logo');
+  const { translated: attrYourCompanyNameText } = useTranslate('Your Company Name');
+  const { translated: uiAdvancedText } = useTranslate('Advanced');
+  const { translated: uiLoginPageText } = useTranslate('Login Page');
+  const { translated: uiThemeText } = useTranslate('Theme');
+  const { translated: uiBrandingText } = useTranslate('Branding');
+  const { translated: uiResettoDefaultsText } = useTranslate('Reset to Defaults');
+  const { translated: uiCustomizationText } = useTranslate('Customization');
+  const { translated: toastFailedtoresetseDescText } = useTranslate('Failed to reset settings. Please try again.');
+  const { translated: toastErrorTitleText } = useTranslate('Error');
+  const { translated: toastSettingshavebeeDescText } = useTranslate('Settings have been reset to default values.');
+  const { translated: toastSettingsResetTitleText } = useTranslate('Settings Reset');
+  const { translated: toastCustomizationseDescText } = useTranslate('Customization settings saved successfully!');
+  const { translated: toastSuccessTitleText } = useTranslate('Success');
+  const { translated: toastFailedtoloadcusDescText } = useTranslate('Failed to load customization settings');
+
   const [isLoading, setIsLoading] = useState(false);
   const [settings, setSettings] = useState<CustomizationFormValues | null>(null);
   const [isSettingsLoaded, setIsSettingsLoaded] = useState(false);
@@ -281,7 +390,7 @@ export default function AdminCustomizationPage() {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Failed to load customization settings',
+        description: '{toastFailedtoloadcusDescText}',
       });
     } finally {
       setIsLoading(false);
@@ -360,8 +469,8 @@ export default function AdminCustomizationPage() {
       setVersion(updatedSettings.version);
       
       toast({
-        title: 'Success',
-        description: 'Customization settings saved successfully!',
+        title: '{toastSuccessTitleText}',
+        description: '{toastCustomizationseDescText}',
       });
       
     } catch (err) {
@@ -451,13 +560,13 @@ export default function AdminCustomizationPage() {
       await loadCustomizationSettings();
       
       toast({
-        title: "Settings Reset",
-        description: "Settings have been reset to default values.",
+        title: "{toastSettingsResetTitleText}",
+        description: "{toastSettingshavebeeDescText}",
       });
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to reset settings. Please try again.",
+        title: "{toastErrorTitleText}",
+        description: "{toastFailedtoresetseDescText}",
         variant: "destructive",
       });
     } finally {
@@ -478,7 +587,7 @@ export default function AdminCustomizationPage() {
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Customization</h1>
+          <h1 className="text-3xl font-bold">{uiCustomizationText}</h1>
           <p className="text-muted-foreground">
             Customize your application's appearance, branding, and settings.
           </p>
@@ -486,8 +595,7 @@ export default function AdminCustomizationPage() {
         <div className="flex gap-2">
           <Button variant="outline" onClick={resetToDefaults} disabled={isSaving}>
             <RotateCcw className="h-4 w-4 mr-2" />
-            Reset to Defaults
-          </Button>
+            {uiResettoDefaultsText}</Button>
           <Button onClick={saveCustomizationSettings} disabled={isSaving}>
             {isSaving ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -501,11 +609,11 @@ export default function AdminCustomizationPage() {
 
       <Tabs defaultValue="branding" className="space-y-6">
         <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="branding">Branding</TabsTrigger>
-          <TabsTrigger value="theme">Theme</TabsTrigger>
-          <TabsTrigger value="login">Login Page</TabsTrigger>
+          <TabsTrigger value="branding">{uiBrandingText}</TabsTrigger>
+          <TabsTrigger value="theme">{uiThemeText}</TabsTrigger>
+          <TabsTrigger value="login">{uiLoginPageText}</TabsTrigger>
           <TabsTrigger value="logos">Logos & Icons</TabsTrigger>
-          <TabsTrigger value="advanced">Advanced</TabsTrigger>
+          <TabsTrigger value="advanced">{uiAdvancedText}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="branding" className="space-y-6">
@@ -527,7 +635,7 @@ export default function AdminCustomizationPage() {
                     id="company-name"
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
-                    placeholder="Your Company Name"
+                    placeholder={attrYourCompanyNameText}
                     className="text-lg"
                   />
                   <p className="text-sm text-muted-foreground">
@@ -541,7 +649,7 @@ export default function AdminCustomizationPage() {
                     checked={useTextLogo}
                     onCheckedChange={setUseTextLogo}
                   />
-                  <Label htmlFor="use-text-logo" className="font-medium">Use company name as logo</Label>
+                  <Label htmlFor="use-text-logo" className="font-medium">{uiUsecompanynameaslogoText}</Label>
                   <span className="text-sm text-muted-foreground ml-2">
                     (Recommended - prioritizes text over image uploads)
                   </span>
@@ -550,33 +658,33 @@ export default function AdminCustomizationPage() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="contact-email">Contact Email</Label>
+                  <Label htmlFor="contact-email">{uiContactEmailText}</Label>
                   <Input
                     id="contact-email"
                     type="email"
                     value={contactEmail}
                     onChange={(e) => setContactEmail(e.target.value)}
-                    placeholder="contact@company.com"
+                    placeholder={attrcontactcompanycomText}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="contact-phone">Contact Phone</Label>
+                  <Label htmlFor="contact-phone">{uiContactPhoneText}</Label>
                   <Input
                     id="contact-phone"
                     value={contactPhone}
                     onChange={(e) => setContactPhone(e.target.value)}
-                    placeholder="+1 (555) 123-4567"
+                    placeholder={attr15551234567Text}
                   />
                 </div>
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="company-tagline">Company Tagline</Label>
+                <Label htmlFor="company-tagline">{uiCompanyTaglineText}</Label>
                 <Textarea
                   id="company-tagline"
                   value={companyTagline}
                   onChange={(e) => setCompanyTagline(e.target.value)}
-                  placeholder="A brief description of your company"
+                  placeholder={attrAbriefdescriptionofyText}
                   rows={3}
                 />
               </div>
@@ -598,11 +706,11 @@ export default function AdminCustomizationPage() {
                   ) : logoPreview ? (
                     <img 
                       src={logoPreview} 
-                      alt="Logo Preview"
+                      alt={attrLogoPreviewText}
                       className="h-6 w-auto max-w-[120px] object-contain"
                     />
                   ) : (
-                    <span className="text-muted-foreground">No logo selected</span>
+                    <span className="text-muted-foreground">{uiNologoselectedText}</span>
                   )}
                 </div>
               </div>
@@ -615,8 +723,7 @@ export default function AdminCustomizationPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Palette className="h-5 w-5" />
-                Color Scheme
-              </CardTitle>
+                {uiColorSchemeText}</CardTitle>
               <CardDescription>
                 Customize the color palette for your application.
               </CardDescription>
@@ -624,7 +731,7 @@ export default function AdminCustomizationPage() {
             <CardContent className="space-y-6">
               {/* Theme preset selector */}
               <div className="mb-4">
-                <Label htmlFor="theme-preset">Theme Preset</Label>
+                <Label htmlFor="theme-preset">{uiThemePresetText}</Label>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {THEME_PRESETS.map((preset) => (
                     <Button
@@ -641,7 +748,7 @@ export default function AdminCustomizationPage() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="primary-color">Primary Color</Label>
+                  <Label htmlFor="primary-color">{uiPrimaryColorText}</Label>
                   <div className="flex gap-2">
                     <Input
                       id="primary-color"
@@ -653,14 +760,14 @@ export default function AdminCustomizationPage() {
                     <Input
                       value={primaryColor}
                       onChange={(e) => setPrimaryColor(e.target.value)}
-                      placeholder="#3B82F6"
+                      placeholder={attr3B82F6Text}
                       className="flex-1"
                     />
                   </div>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="secondary-color">Secondary Color</Label>
+                  <Label htmlFor="secondary-color">{uiSecondaryColorText}</Label>
                   <div className="flex gap-2">
                     <Input
                       id="secondary-color"
@@ -672,14 +779,14 @@ export default function AdminCustomizationPage() {
                     <Input
                       value={secondaryColor}
                       onChange={(e) => setSecondaryColor(e.target.value)}
-                      placeholder="#F3F4F6"
+                      placeholder={attrF3F4F6Text}
                       className="flex-1"
                     />
                   </div>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="accent-color">Accent Color</Label>
+                  <Label htmlFor="accent-color">{uiAccentColorText}</Label>
                   <div className="flex gap-2">
                     <Input
                       id="accent-color"
@@ -691,7 +798,7 @@ export default function AdminCustomizationPage() {
                     <Input
                       value={accentColor}
                       onChange={(e) => setAccentColor(e.target.value)}
-                      placeholder="#10B981"
+                      placeholder={attr10B981Text}
                       className="flex-1"
                     />
                   </div>
@@ -704,7 +811,7 @@ export default function AdminCustomizationPage() {
                   checked={darkMode}
                   onCheckedChange={setDarkMode}
                 />
-                <Label htmlFor="dark-mode">Enable Dark Mode</Label>
+                <Label htmlFor="dark-mode">{uiEnableDarkModeText}</Label>
               </div>
               
               <div className="p-4 border rounded-lg bg-muted/20">
@@ -740,15 +847,14 @@ export default function AdminCustomizationPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <ImageIcon className="h-5 w-5" />
-                    Background Settings
-                  </CardTitle>
+                    {uiBackgroundSettingsText}</CardTitle>
                   <CardDescription>
                     Customize the background appearance of your login page.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-3">
-                    <Label>Background Type</Label>
+                    <Label>{uiBackgroundTypeText}</Label>
                     <RadioGroup
                       value={loginBackgroundType}
   onValueChange={(value: 'gradient' | 'solid' | 'image' | 'lightrays') => setLoginBackgroundType(value)}
@@ -756,19 +862,19 @@ export default function AdminCustomizationPage() {
                     >
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="gradient" id="gradient" />
-                        <Label htmlFor="gradient">Gradient</Label>
+                        <Label htmlFor="gradient">{uiGradientText}</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="solid" id="solid" />
-                        <Label htmlFor="solid">Solid Color</Label>
+                        <Label htmlFor="solid">{uiSolidColorText}</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="image" id="image" />
-                        <Label htmlFor="image">Background Image</Label>
+                        <Label htmlFor="image">{uiBackgroundImageText}</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="lightrays" id="lightrays" />
-                        <Label htmlFor="lightrays">LightRays</Label>
+                        <Label htmlFor="lightrays">{uiLightRaysText}</Label>
                       </div>
                     </RadioGroup>
                   </div>
@@ -776,7 +882,7 @@ export default function AdminCustomizationPage() {
                   {loginBackgroundType === 'gradient' && (
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="bg-color1">Start Color</Label>
+                        <Label htmlFor="bg-color1">{uiStartColorText}</Label>
                         <div className="flex gap-2">
                           <Input
                             id="bg-color1"
@@ -788,13 +894,13 @@ export default function AdminCustomizationPage() {
                           <Input
                             value={loginBackgroundColor1}
                             onChange={(e) => setLoginBackgroundColor1(e.target.value)}
-                            placeholder="#0F1419"
+                            placeholder={attr0F1419Text}
                             className="flex-1"
                           />
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="bg-color2">End Color</Label>
+                        <Label htmlFor="bg-color2">{uiEndColorText}</Label>
                         <div className="flex gap-2">
                           <Input
                             id="bg-color2"
@@ -806,7 +912,7 @@ export default function AdminCustomizationPage() {
                           <Input
                             value={loginBackgroundColor2}
                             onChange={(e) => setLoginBackgroundColor2(e.target.value)}
-                            placeholder="#1E293B"
+                            placeholder={attr1E293BText}
                             className="flex-1"
                           />
                         </div>
@@ -816,7 +922,7 @@ export default function AdminCustomizationPage() {
 
                   {loginBackgroundType === 'solid' && (
                     <div className="space-y-2">
-                      <Label htmlFor="bg-solid">Background Color</Label>
+                      <Label htmlFor="bg-solid">{uiBackgroundColorText}</Label>
                       <div className="flex gap-2">
                         <Input
                           id="bg-solid"
@@ -838,16 +944,16 @@ export default function AdminCustomizationPage() {
                   {loginBackgroundType === 'image' && (
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="bg-image">Background Image URL</Label>
+                        <Label htmlFor="bg-image">{uiBackgroundImageURLText}</Label>
                         <Input
                           id="bg-image"
                           value={loginBackgroundImage}
                           onChange={(e) => setLoginBackgroundImage(e.target.value)}
-                          placeholder="https://example.com/background.jpg"
+                          placeholder={attrhttpsexamplecombackgText}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="bg-image-upload">Or Upload Image</Label>
+                        <Label htmlFor="bg-image-upload">{uiOrUploadImageText}</Label>
                         <Input
                           id="bg-image-upload"
                           type="file"
@@ -861,28 +967,28 @@ export default function AdminCustomizationPage() {
 
                   {loginBackgroundType === 'lightrays' && (
                     <div className="space-y-4">
-                      <Label>LightRays Settings</Label>
+                      <Label>{uiLightRaysSettingsText}</Label>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label>Origin</Label>
+                          <Label>{uiOriginText}</Label>
                           <Select value={loginLightRaysOrigin} onValueChange={(value: any) => setLoginLightRaysOrigin(value)}>
                             <SelectTrigger>
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="top-center">Top Center</SelectItem>
-                              <SelectItem value="top-left">Top Left</SelectItem>
-                              <SelectItem value="top-right">Top Right</SelectItem>
-                              <SelectItem value="right">Right</SelectItem>
-                              <SelectItem value="left">Left</SelectItem>
-                              <SelectItem value="bottom-center">Bottom Center</SelectItem>
-                              <SelectItem value="bottom-right">Bottom Right</SelectItem>
-                              <SelectItem value="bottom-left">Bottom Left</SelectItem>
+                              <SelectItem value="top-center">{uiTopCenterText}</SelectItem>
+                              <SelectItem value="top-left">{uiTopLeftText}</SelectItem>
+                              <SelectItem value="top-right">{uiTopRightText}</SelectItem>
+                              <SelectItem value="right">{uiRightText}</SelectItem>
+                              <SelectItem value="left">{uiLeftText}</SelectItem>
+                              <SelectItem value="bottom-center">{uiBottomCenterText}</SelectItem>
+                              <SelectItem value="bottom-right">{uiBottomRightText}</SelectItem>
+                              <SelectItem value="bottom-left">{uiBottomLeftText}</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                         <div className="space-y-2">
-                          <Label>Color</Label>
+                          <Label>{uiColorText}</Label>
                           <div className="flex gap-2">
                             <Input
                               type="color"
@@ -893,7 +999,7 @@ export default function AdminCustomizationPage() {
                             <Input
                               value={loginLightRaysColor}
                               onChange={(e) => setLoginLightRaysColor(e.target.value)}
-                              placeholder="#00ffff"
+                              placeholder={attr00ffffText}
                               className="flex-1"
                             />
                           </div>
@@ -1001,7 +1107,7 @@ export default function AdminCustomizationPage() {
                           checked={loginLightRaysPulsating}
                           onCheckedChange={setLoginLightRaysPulsating}
                         />
-                        <Label htmlFor="pulsating">Pulsating</Label>
+                        <Label htmlFor="pulsating">{uiPulsatingText}</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Switch
@@ -1009,7 +1115,7 @@ export default function AdminCustomizationPage() {
                           checked={loginLightRaysFollowMouse}
                           onCheckedChange={setLoginLightRaysFollowMouse}
                         />
-                        <Label htmlFor="follow-mouse">Follow Mouse</Label>
+                        <Label htmlFor="follow-mouse">{uiFollowMouseText}</Label>
                       </div>
                     </div>
                   )}
@@ -1021,8 +1127,7 @@ export default function AdminCustomizationPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Lock className="h-5 w-5" />
-                    Login Card Settings
-                  </CardTitle>
+                    {uiLoginCardSettingsText}</CardTitle>
                   <CardDescription>
                     Customize the appearance and layout of the login form card.
                   </CardDescription>
@@ -1030,13 +1135,13 @@ export default function AdminCustomizationPage() {
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>Card Position</Label>
+                      <Label>{uiCardPositionText}</Label>
                       <Select value={loginCardPosition} onValueChange={(value: 'center' | 'left' | 'right') => setLoginCardPosition(value)}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="center">Center</SelectItem>
+                          <SelectItem value="center">{uiCenterText}</SelectItem>
                           <SelectItem value="left">Left</SelectItem>
                           <SelectItem value="right">Right</SelectItem>
                         </SelectContent>
@@ -1070,17 +1175,17 @@ export default function AdminCustomizationPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Shadow Style</Label>
+                      <Label>{uiShadowStyleText}</Label>
                       <Select value={loginCardShadow} onValueChange={(value) => setLoginCardShadow(value as 'none' | 'small' | 'medium' | 'large' | 'xl')}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="none">None</SelectItem>
-                          <SelectItem value="small">Small</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="large">Large</SelectItem>
-                          <SelectItem value="xl">Extra Large</SelectItem>
+                          <SelectItem value="none">{uiNoneText}</SelectItem>
+                          <SelectItem value="small">{uiSmallText}</SelectItem>
+                          <SelectItem value="medium">{uiMediumText}</SelectItem>
+                          <SelectItem value="large">{uiLargeText}</SelectItem>
+                          <SelectItem value="xl">{uiExtraLargeText}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -1104,7 +1209,7 @@ export default function AdminCustomizationPage() {
                       checked={loginCardBlur}
                       onCheckedChange={setLoginCardBlur}
                     />
-                    <Label htmlFor="card-blur">Enable Glassmorphism Effect</Label>
+                    <Label htmlFor="card-blur">{uiEnableGlassmorphismEText}</Label>
                   </div>
 
                   <div className="flex items-center space-x-2">
@@ -1113,7 +1218,7 @@ export default function AdminCustomizationPage() {
                       checked={loginAnimations}
                       onCheckedChange={setLoginAnimations}
                     />
-                    <Label htmlFor="login-animations">Enable Animations</Label>
+                    <Label htmlFor="login-animations">{uiEnableAnimationsText}</Label>
                   </div>
                 </CardContent>
               </Card>
@@ -1136,39 +1241,39 @@ export default function AdminCustomizationPage() {
                       checked={loginShowCompanyName}
                       onCheckedChange={setLoginShowCompanyName}
                     />
-                    <Label htmlFor="show-company">Show Company Name</Label>
+                    <Label htmlFor="show-company">{uiShowCompanyNameText}</Label>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="welcome-msg">Welcome Message</Label>
+                      <Label htmlFor="welcome-msg">{uiWelcomeMessageText}</Label>
                       <Input
                         id="welcome-msg"
                         value={loginWelcomeMessage}
                         onChange={(e) => setLoginWelcomeMessage(e.target.value)}
-                        placeholder="Welcome back"
+                        placeholder={attrWelcomebackText}
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="welcome-subtitle">Subtitle</Label>
+                      <Label htmlFor="welcome-subtitle">{uiSubtitleText}</Label>
                       <Input
                         id="welcome-subtitle"
                         value={loginWelcomeSubtitle}
                         onChange={(e) => setLoginWelcomeSubtitle(e.target.value)}
-                        placeholder="Sign in to your account"
+                        placeholder={attrSignintoyouraccountText}
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="login-logo">Custom Login Logo URL</Label>
+                      <Label htmlFor="login-logo">{uiCustomLoginLogoURLText}</Label>
                       <Input
                         id="login-logo"
                         value={loginLogoUrl}
                         onChange={(e) => setLoginLogoUrl(e.target.value)}
-                        placeholder="https://example.com/logo.png"
+                        placeholder={attrhttpsexamplecomlogopText}
                       />
                     </div>
 
@@ -1187,21 +1292,21 @@ export default function AdminCustomizationPage() {
 
                   <div className="grid grid-cols-3 gap-4">
                     <div className="space-y-2">
-                      <Label>Button Style</Label>
+                      <Label>{uiButtonStyleText}</Label>
                       <Select value={loginButtonStyle} onValueChange={(value: 'default' | 'rounded' | 'pill') => setLoginButtonStyle(value)}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="default">Default</SelectItem>
-                          <SelectItem value="rounded">Rounded</SelectItem>
-                          <SelectItem value="pill">Pill</SelectItem>
+                          <SelectItem value="default">{uiDefaultText}</SelectItem>
+                          <SelectItem value="rounded">{uiRoundedText}</SelectItem>
+                          <SelectItem value="pill">{uiPillText}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Input Style</Label>
+                      <Label>{uiInputStyleText}</Label>
                       <Select value={loginInputStyle} onValueChange={(value: 'default' | 'rounded' | 'underline') => setLoginInputStyle(value)}>
                         <SelectTrigger>
                           <SelectValue />
@@ -1209,7 +1314,7 @@ export default function AdminCustomizationPage() {
                         <SelectContent>
                           <SelectItem value="default">Default</SelectItem>
                           <SelectItem value="rounded">Rounded</SelectItem>
-                          <SelectItem value="underline">Underline</SelectItem>
+                          <SelectItem value="underline">{uiUnderlineText}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -1228,12 +1333,12 @@ export default function AdminCustomizationPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="footer-msg">Footer Text</Label>
+                    <Label htmlFor="footer-msg">{uiFooterTextText}</Label>
                     <Input
                       id="footer-msg"
                       value={loginFooterText}
                       onChange={(e) => setLoginFooterText(e.target.value)}
-                      placeholder="© 2025 Your Company. All rights reserved."
+                      placeholder={attr2025YourCompanyAllriText}
                     />
                   </div>
                 </CardContent>
@@ -1246,8 +1351,7 @@ export default function AdminCustomizationPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Eye className="h-5 w-5" />
-                    Live Preview
-                  </CardTitle>
+                    {uiLivePreviewText}</CardTitle>
                   <CardDescription>
                     See how your login page will look with current settings.
                   </CardDescription>
@@ -1330,7 +1434,7 @@ export default function AdminCustomizationPage() {
                             {loginLogoUrl ? (
                               <img 
                                 src={loginLogoUrl} 
-                                alt="Logo"
+                                alt={attrLogoText}
                                 className="object-contain"
                                 style={{
                                   width: `${loginLogoSize * 0.7}px`,
@@ -1369,7 +1473,7 @@ export default function AdminCustomizationPage() {
                         {/* Form Preview */}
                         <div className="space-y-4" style={{ gap: `${loginFormSpacing}px` }}>
                           <div className="space-y-2">
-                            <label className="text-sm font-medium text-foreground">Username</label>
+                            <label className="text-sm font-medium text-foreground">{uiUsernameText}</label>
                             <div 
                               className={`h-10 bg-input border border-border transition-colors ${
                                 loginInputStyle === 'rounded' ? 'rounded-full px-4' :
@@ -1380,7 +1484,7 @@ export default function AdminCustomizationPage() {
                           </div>
                           
                           <div className="space-y-2">
-                            <label className="text-sm font-medium text-foreground">Password</label>
+                            <label className="text-sm font-medium text-foreground">{uiPasswordText}</label>
                             <div 
                               className={`h-10 bg-input border border-border transition-colors ${
                                 loginInputStyle === 'rounded' ? 'rounded-full px-4' :
@@ -1400,8 +1504,7 @@ export default function AdminCustomizationPage() {
                             }`}
                             style={{ backgroundColor: primaryColor }}
                           >
-                            Sign In
-                          </button>
+                            {uiSignInText}</button>
                           
                           <div className="text-center">
                             <a 
@@ -1430,8 +1533,8 @@ export default function AdminCustomizationPage() {
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
                       <span>Preview Resolution:</span>
                       <div className="flex gap-2">
-                        <span className="px-2 py-1 bg-background rounded text-xs">Desktop</span>
-                        <span className="px-2 py-1 bg-background/50 rounded text-xs opacity-50">Mobile</span>
+                        <span className="px-2 py-1 bg-background rounded text-xs">{uiDesktopText}</span>
+                        <span className="px-2 py-1 bg-background/50 rounded text-xs opacity-50">{uiMobileText}</span>
                       </div>
                     </div>
                   </div>
@@ -1441,7 +1544,7 @@ export default function AdminCustomizationPage() {
               {/* Quick Actions */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Quick Presets</CardTitle>
+                  <CardTitle className="text-lg">{uiQuickPresetsText}</CardTitle>
                   <CardDescription>
                     Apply popular login page styles instantly.
                   </CardDescription>
@@ -1460,8 +1563,7 @@ export default function AdminCustomizationPage() {
                         setLoginAnimations(true);
                       }}
                     >
-                      Dark Glass
-                    </Button>
+                      {uiDarkGlassText}</Button>
                     <Button
                       variant="outline"
                       size="sm"
@@ -1473,8 +1575,7 @@ export default function AdminCustomizationPage() {
                         setLoginAnimations(false);
                       }}
                     >
-                      Clean White
-                    </Button>
+                      {uiCleanWhiteText}</Button>
                     <Button
                       variant="outline"
                       size="sm"
@@ -1487,8 +1588,7 @@ export default function AdminCustomizationPage() {
                         setLoginButtonStyle('pill');
                       }}
                     >
-                      Modern Blue
-                    </Button>
+                      {uiModernBlueText}</Button>
                     <Button
                       variant="outline"
                       size="sm"
@@ -1501,8 +1601,7 @@ export default function AdminCustomizationPage() {
                         setLoginButtonStyle('rounded');
                       }}
                     >
-                      Ocean Depths
-                    </Button>
+                      {uiOceanDepthsText}</Button>
                   </div>
                 </CardContent>
               </Card>
@@ -1546,8 +1645,7 @@ export default function AdminCustomizationPage() {
                     <div className="space-y-2">
                       <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
                       <p className="text-sm text-muted-foreground">
-                        Click to upload or drag and drop
-                      </p>
+                        {uiClicktouploadordragaText}    </p>
                     </div>
                   )}
                   <Input
@@ -1564,8 +1662,7 @@ export default function AdminCustomizationPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <ImageIcon className="h-5 w-5" />
-                  Favicon
-                </CardTitle>
+                  {uiFaviconText}</CardTitle>
                 <CardDescription>
                   Upload your favicon. Recommended size: 32x32px (ICO or PNG)
                 </CardDescription>
@@ -1576,7 +1673,7 @@ export default function AdminCustomizationPage() {
                     <div className="space-y-4">
                       <img
                         src={faviconPreview}
-                        alt="Favicon Preview"
+                        alt={attrFaviconPreviewText}
                         className="w-8 h-8 mx-auto"
                       />
                       <p className="text-sm text-muted-foreground">
@@ -1608,18 +1705,17 @@ export default function AdminCustomizationPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Settings className="h-5 w-5" />
-                Advanced Settings
-              </CardTitle>
+                {uiAdvancedSettingsText}</CardTitle>
               <CardDescription>
                 Advanced customization options for power users.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="custom-css">Custom CSS</Label>
+                <Label htmlFor="custom-css">{uiCustomCSSText}</Label>
                 <Textarea
                   id="custom-css"
-                  placeholder="/* Add your custom CSS here */"
+                  placeholder={attrAddyourcustomCSShereText}
                   rows={8}
                   className="font-mono text-sm"
                   value={customCSS}
@@ -1631,10 +1727,10 @@ export default function AdminCustomizationPage() {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="footer-text">Custom Footer Text</Label>
+                <Label htmlFor="footer-text">{uiCustomFooterTextText}</Label>
                 <Input
                   id="footer-text"
-                  placeholder="© 2024 Your Company Name. All rights reserved."
+                  placeholder={attr2024YourCompanyNameAText}
                   value={footerText}
                   onChange={(e) => setFooterText(e.target.value)}
                 />

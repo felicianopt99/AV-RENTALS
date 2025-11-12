@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,37 +8,30 @@ datasource db {
 }
 
 model User {
-  id       String @id @default(cuid())
-  name     String
-  username String @unique
-  password String
-  role     String // 'Admin' | 'Manager' | 'Technician' | 'Employee' | 'Viewer'
-  isActive Boolean @default(true)
-  version  Int @default(1)
-  lastLoginAt DateTime?
+  id             String         @id @default(cuid())
+  name           String
+  username       String         @unique
+  password       String
+  role           String
+  isActive       Boolean        @default(true)
+  version        Int            @default(1)
+  lastLoginAt    DateTime?
+  photoUrl       String?
+  nif            String?
+  iban           String?
+  contactPhone   String?
+  contactEmail   String?
+  emergencyPhone String?
+  isTeamMember   Boolean        @default(false)
+  teamTitle      String?
+  teamBio        String?
+  teamCoverPhoto String?
+  createdBy      String?
+  updatedBy      String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  notifications  Notification[]
 
-  // Profile fields
-  photoUrl         String?
-  nif              String?
-  iban             String?
-  contactPhone     String?
-  contactEmail     String?
-  emergencyPhone   String?
-
-  // Team member fields
-  isTeamMember     Boolean @default(false)
-  teamTitle        String?
-  teamBio          String?
-  teamCoverPhoto   String?
-
-  // Audit fields
-  createdBy String?
-  updatedBy String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  notifications Notification[]
   @@index([username])
   @@index([role])
   @@index([isActive])
@@ -49,71 +39,59 @@ model User {
 }
 
 model Category {
-  id   String @id @default(cuid())
-  name String
-  icon String?
-  version Int @default(1)
-  
-  subcategories Subcategory[]
+  id            String          @id @default(cuid())
+  name          String
+  icon          String?
+  version       Int             @default(1)
+  createdBy     String?
+  updatedBy     String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
   equipment     EquipmentItem[]
-  
-  // Audit fields
-  createdBy String?
-  updatedBy String?
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
+  subcategories Subcategory[]
+
   @@index([name])
 }
 
 model Subcategory {
-  id       String @id @default(cuid())
-  name     String
-  parentId String
-  version  Int @default(1)
-  
-  category  Category        @relation(fields: [parentId], references: [id], onDelete: Cascade)
-  equipment EquipmentItem[]
-  
-  // Audit fields
+  id        String          @id @default(cuid())
+  name      String
+  parentId  String
+  version   Int             @default(1)
   createdBy String?
   updatedBy String?
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  equipment EquipmentItem[]
+  category  Category        @relation(fields: [parentId], references: [id], onDelete: Cascade)
+
   @@index([parentId])
   @@index([name])
 }
 
 model EquipmentItem {
-  id            String  @id @default(cuid())
-  name          String
-  description   String
-  categoryId    String
-  subcategoryId String?
-  quantity      Int
-  status        String  // 'good' | 'damaged' | 'maintenance'
-  location      String
-  imageUrl      String?
-  dailyRate     Float   @default(0)
-  type          String  // 'equipment' | 'consumable'
-  version       Int     @default(1)
-  
-  category         Category           @relation(fields: [categoryId], references: [id])
-  subcategory      Subcategory?       @relation(fields: [subcategoryId], references: [id])
-  rentals          Rental[]
-  quoteItems       QuoteItem[]
-  maintenanceLogs  MaintenanceLog[]
-  
-  // Audit fields
-  createdBy String?
-  updatedBy String?
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
+  id              String           @id @default(cuid())
+  name            String
+  description     String
+  categoryId      String
+  subcategoryId   String?
+  quantity        Int
+  status          String
+  location        String
+  imageUrl        String?
+  dailyRate       Float            @default(0)
+  type            String
+  version         Int              @default(1)
+  createdBy       String?
+  updatedBy       String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  category        Category         @relation(fields: [categoryId], references: [id])
+  subcategory     Subcategory?     @relation(fields: [subcategoryId], references: [id])
+  maintenanceLogs MaintenanceLog[]
+  quoteItems      QuoteItem[]
+  rentals         Rental[]
+
   @@index([categoryId])
   @@index([subcategoryId])
   @@index([status])
@@ -122,61 +100,51 @@ model EquipmentItem {
 }
 
 model MaintenanceLog {
-  id          String  @id @default(cuid())
+  id          String        @id @default(cuid())
   equipmentId String
   date        DateTime
   description String
   cost        Float?
-  
-  equipment EquipmentItem @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  equipment   EquipmentItem @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
 }
 
 model Client {
-  id            String  @id @default(cuid())
+  id            String   @id @default(cuid())
   name          String
   contactPerson String?
   email         String?
   phone         String?
   address       String?
   notes         String?
-  version       Int     @default(1)
-  
-  events Event[]
-  quotes Quote[]
-  
-  // Audit fields
-  createdBy String?
-  updatedBy String?
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
+  version       Int      @default(1)
+  createdBy     String?
+  updatedBy     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  events        Event[]
+  quotes        Quote[]
+
   @@index([name])
   @@index([email])
 }
 
 model Event {
-  id        String   @id @default(cuid())
-  name      String
-  clientId  String
-  location  String
-  startDate DateTime
-  endDate   DateTime
+  id         String   @id @default(cuid())
+  name       String
+  clientId   String
+  location   String
+  startDate  DateTime
+  endDate    DateTime
   assignedTo String?
-  version   Int      @default(1)
-
-  client  Client   @relation(fields: [clientId], references: [id])
-  rentals Rental[]
-
-  // Audit fields
-  createdBy String?
-  updatedBy String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  version    Int      @default(1)
+  createdBy  String?
+  updatedBy  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  client     Client   @relation(fields: [clientId], references: [id])
+  rentals    Rental[]
 
   @@index([clientId])
   @@index([startDate])
@@ -185,22 +153,20 @@ model Event {
 }
 
 model Rental {
-  id              String  @id @default(cuid())
-  eventId         String
-  equipmentId     String
-  quantityRented  Int
-  prepStatus      String? // 'pending' | 'checked-out' | 'checked-in'
-  
-  event     Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  equipment EquipmentItem @relation(fields: [equipmentId], references: [id])
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String        @id @default(cuid())
+  eventId        String
+  equipmentId    String
+  quantityRented Int
+  prepStatus     String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  equipment      EquipmentItem @relation(fields: [equipmentId], references: [id])
+  event          Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
 }
 
 model Quote {
-  id             String   @id @default(cuid())
-  quoteNumber    String   @unique
+  id             String      @id @default(cuid())
+  quoteNumber    String      @unique
   name           String
   location       String
   clientId       String?
@@ -211,25 +177,21 @@ model Quote {
   startDate      DateTime
   endDate        DateTime
   subTotal       Float
-  discountAmount Float    @default(0)
-  discountType   String   @default("fixed") // 'percentage' | 'fixed'
-  taxRate        Float    @default(0)
-  taxAmount      Float    @default(0)
+  discountAmount Float       @default(0)
+  discountType   String      @default("fixed")
+  taxRate        Float       @default(0)
+  taxAmount      Float       @default(0)
   totalAmount    Float
-  status         String   @default("Draft") // 'Draft' | 'Sent' | 'Accepted' | 'Declined' | 'Archived'
+  status         String      @default("Draft")
   notes          String?
-  version        Int      @default(1)
-  
-  client Client?     @relation(fields: [clientId], references: [id])
-  items  QuoteItem[]
-  
-  // Audit fields
-  createdBy String?
-  updatedBy String?
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
+  version        Int         @default(1)
+  createdBy      String?
+  updatedBy      String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  client         Client?     @relation(fields: [clientId], references: [id])
+  items          QuoteItem[]
+
   @@index([clientId])
   @@index([status])
   @@index([startDate])
@@ -237,134 +199,100 @@ model Quote {
 }
 
 model QuoteItem {
-  id            String @id @default(cuid())
+  id            String         @id @default(cuid())
   quoteId       String
-  type          String // 'equipment' | 'service' | 'fee'
-  // Equipment fields
+  type          String
   equipmentId   String?
   equipmentName String?
-  // Service fields
   serviceId     String?
   serviceName   String?
-  // Fee fields
   feeId         String?
   feeName       String?
-  amount        Float? // For fee
-  feeType       String? // 'fixed' | 'percentage'
-  // Common fields
+  amount        Float?
+  feeType       String?
   quantity      Int?
   unitPrice     Float?
   days          Int?
   lineTotal     Float
-
-  quote     Quote         @relation(fields: [quoteId], references: [id], onDelete: Cascade)
-  equipment EquipmentItem? @relation(fields: [equipmentId], references: [id])
-  // Optionally, you can add service and fee relations if you have those models
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  equipment     EquipmentItem? @relation(fields: [equipmentId], references: [id])
+  quote         Quote          @relation(fields: [quoteId], references: [id], onDelete: Cascade)
 }
 
 model CustomizationSettings {
-  id String @id @default(cuid())
-  
-  // Branding
-  companyName     String?
-  companyTagline  String?
-  contactEmail    String?
-  contactPhone    String?
-  
-  // Logo Options
-  useTextLogo     Boolean @default(true) // Prioritize company name over image
-  
-  // Theme
-  primaryColor    String?
-  secondaryColor  String?
-  accentColor     String?
-  darkMode        Boolean @default(false)
-  
-  // Logos (fallback options)
-  logoUrl         String?
-  faviconUrl      String?
-  
-  // Login Page Customization
-  loginBackgroundType     String @default("gradient") // "gradient", "solid", "image"
-  loginBackgroundColor1   String? // Primary color for gradient or solid
-  loginBackgroundColor2   String? // Secondary color for gradient
-  loginBackgroundImage    String? // Background image URL
-  loginCardOpacity        Float @default(0.95) // 0.0 to 1.0
-  loginCardBlur           Boolean @default(true) // Glassmorphism effect
-  loginCardPosition       String @default("center") // "center", "left", "right"
-  loginCardWidth          Int @default(400) // Card width in pixels
-  loginCardBorderRadius   Int @default(8) // Border radius in pixels
-  loginCardShadow         String @default("large") // "none", "small", "medium", "large", "xl"
-  loginLogoUrl            String? // Custom logo for login page
-  loginLogoSize           Int @default(80) // Logo size in pixels
-  loginWelcomeMessage     String? // Custom welcome message
-  loginWelcomeSubtitle    String? // Subtitle under welcome message
-  loginFooterText         String? // Footer text on login page
-  loginShowCompanyName    Boolean @default(true) // Show company name on login
-  loginFormSpacing        Int @default(16) // Form element spacing in pixels
-  loginButtonStyle        String @default("default") // "default", "rounded", "pill"
-  loginInputStyle         String @default("default") // "default", "rounded", "underline"
-  loginAnimations         Boolean @default(true) // Enable login page animations
+  id                           String   @id @default(cuid())
+  companyName                  String?
+  companyTagline               String?
+  contactEmail                 String?
+  contactPhone                 String?
+  useTextLogo                  Boolean  @default(true)
+  primaryColor                 String?
+  secondaryColor               String?
+  accentColor                  String?
+  darkMode                     Boolean  @default(false)
+  logoUrl                      String?
+  faviconUrl                   String?
+  loginBackgroundType          String   @default("gradient")
+  loginBackgroundColor1        String?
+  loginBackgroundColor2        String?
+  loginBackgroundImage         String?
+  loginCardOpacity             Float    @default(0.95)
+  loginCardBlur                Boolean  @default(true)
+  loginCardPosition            String   @default("center")
+  loginCardWidth               Int      @default(400)
+  loginCardBorderRadius        Int      @default(8)
+  loginCardShadow              String   @default("large")
+  loginLogoUrl                 String?
+  loginLogoSize                Int      @default(80)
+  loginWelcomeMessage          String?
+  loginWelcomeSubtitle         String?
+  loginFooterText              String?
+  loginShowCompanyName         Boolean  @default(true)
+  loginFormSpacing             Int      @default(16)
+  loginButtonStyle             String   @default("default")
+  loginInputStyle              String   @default("default")
+  loginAnimations              Boolean  @default(true)
+  loginLightRaysOrigin         String?
+  loginLightRaysColor          String?
+  loginLightRaysSpeed          Float?
+  loginLightRaysSpread         Float?
+  loginLightRaysLength         Float?
+  loginLightRaysPulsating      Boolean  @default(false)
+  loginLightRaysFadeDistance   Float?
+  loginLightRaysSaturation     Float?
+  loginLightRaysFollowMouse    Boolean  @default(true)
+  loginLightRaysMouseInfluence Float?
+  loginLightRaysNoiseAmount    Float?
+  loginLightRaysDistortion     Float?
+  customCSS                    String?
+  footerText                   String?
+  systemName                   String?
+  timezone                     String?
+  dateFormat                   String?
+  currency                     String?
+  language                     String?
+  sessionTimeout               Int?
+  requireStrongPasswords       Boolean  @default(true)
+  enableTwoFactor              Boolean  @default(false)
+  maxLoginAttempts             Int?
+  emailEnabled                 Boolean  @default(true)
+  smtpServer                   String?
+  smtpPort                     String?
+  smtpUsername                 String?
+  smtpPassword                 String?
+  fromEmail                    String?
+  autoBackup                   Boolean  @default(true)
+  backupFrequency              String?
+  backupRetention              Int?
+  version                      Int      @default(1)
+  updatedBy                    String?
+  createdAt                    DateTime @default(now())
+  updatedAt                    DateTime @updatedAt
 
-  // LightRays Background Settings
-  loginLightRaysOrigin       String? // 'top-center', 'top-left', etc.
-  loginLightRaysColor        String? // Color for light rays
-  loginLightRaysSpeed        Float? // Speed of animation
-  loginLightRaysSpread       Float? // Spread of rays
-  loginLightRaysLength       Float? // Length of rays
-  loginLightRaysPulsating    Boolean @default(false) // Pulsating effect
-  loginLightRaysFadeDistance Float? // Fade distance
-  loginLightRaysSaturation   Float? // Saturation
-  loginLightRaysFollowMouse  Boolean @default(true) // Follow mouse
-  loginLightRaysMouseInfluence Float? // Mouse influence
-  loginLightRaysNoiseAmount  Float? // Noise amount
-  loginLightRaysDistortion   Float? // Distortion
-
-  // Advanced
-  customCSS       String?
-  footerText      String?
-  
-  // System Settings
-  systemName      String?
-  timezone        String?
-  dateFormat      String?
-  currency        String?
-  language        String?
-  
-  // Security
-  sessionTimeout        Int?
-  requireStrongPasswords Boolean @default(true)
-  enableTwoFactor       Boolean @default(false)
-  maxLoginAttempts      Int?
-  
-  // Email
-  emailEnabled    Boolean @default(true)
-  smtpServer      String?
-  smtpPort        String?
-  smtpUsername    String?
-  smtpPassword    String?
-  fromEmail       String?
-  
-  // Backup
-  autoBackup       Boolean @default(true)
-  backupFrequency  String?
-  backupRetention  Int?
-  
-  version   Int @default(1)
-  
-  // Audit fields
-  updatedBy String?
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
   @@map("customization_settings")
 }
 
-// New models for multi-user support
 model UserSession {
   id        String   @id @default(cuid())
   userId    String
@@ -373,28 +301,26 @@ model UserSession {
   userAgent String?
   expiresAt DateTime
   isActive  Boolean  @default(true)
-  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@index([userId])
   @@index([token])
   @@index([expiresAt])
 }
 
 model ActivityLog {
-  id        String   @id @default(cuid())
-  userId    String?
-  action    String   // 'CREATE', 'UPDATE', 'DELETE', 'LOGIN', 'LOGOUT'
-  entityType String? // 'User', 'Equipment', 'Client', etc.
-  entityId  String?
-  oldData   String?  // JSON string of old data
-  newData   String?  // JSON string of new data
-  ipAddress String?
-  userAgent String?
-  
-  createdAt DateTime @default(now())
-  
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String
+  entityType String?
+  entityId   String?
+  oldData    String?
+  newData    String?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
   @@index([userId])
   @@index([action])
   @@index([entityType])
@@ -403,72 +329,116 @@ model ActivityLog {
 
 model DataSyncEvent {
   id         String   @id @default(cuid())
-  entityType String   // 'User', 'Equipment', 'Client', etc.
+  entityType String
   entityId   String
-  action     String   // 'CREATE', 'UPDATE', 'DELETE'
-  data       String?  // JSON string of the data
+  action     String
+  data       String?
   version    Int
   processed  Boolean  @default(false)
-  
-  createdAt DateTime @default(now())
-  
+  createdAt  DateTime @default(now())
+
   @@index([entityType])
   @@index([processed])
   @@index([createdAt])
 }
+
 model Service {
-  id          String  @id @default(cuid())
+  id          String   @id @default(cuid())
   name        String
   description String?
-  unitPrice   Float   // Price per unit
-  unit        String  @default("hour") // 'hour', 'day', 'service', 'event'
-  category    String? // e.g., 'Setup', 'Technical Support', 'Delivery'
-  isActive    Boolean @default(true)
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
+  unitPrice   Float
+  unit        String   @default("hour")
+  category    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
   @@index([isActive])
   @@index([category])
 }
 
 model Fee {
-  id          String  @id @default(cuid())
+  id          String   @id @default(cuid())
   name        String
   description String?
-  amount      Float   // Amount or percentage value
-  type        String  @default("fixed") // 'fixed' or 'percentage'
-  category    String? // e.g., 'Delivery', 'Setup', 'Insurance', 'Late Return'
-  isActive    Boolean @default(true)
-  isRequired  Boolean @default(false) // If true, automatically added to all quotes
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
+  amount      Float
+  type        String   @default("fixed")
+  category    String?
+  isActive    Boolean  @default(true)
+  isRequired  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
   @@index([isActive])
   @@index([isRequired])
   @@index([category])
 }
 
 model Notification {
-  id        String   @id @default(cuid())
-  userId    String   // Recipient user ID
-  type      String   // 'event_reminder', 'conflict_alert', 'maintenance_due', etc.
-  title     String
-  message   String
-  priority  String   @default("medium") // 'low', 'medium', 'high'
-  isRead    Boolean  @default(false)
-  entityType String? // Related entity: 'Event', 'Rental', 'Equipment', etc.
-  entityId  String?  // ID of related entity
-  actionUrl String?  // URL to navigate for action
-  
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
+  id         String   @id @default(cuid())
+  userId     String
+  type       String
+  title      String
+  message    String
+  priority   String   @default("medium")
+  isRead     Boolean  @default(false)
+  entityType String?
+  entityId   String?
+  actionUrl  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
   @@index([isRead])
   @@index([type])
+  @@index([createdAt])
+}
+
+model Translation {
+  id               String               @id @default(cuid())
+  sourceText       String
+  targetLang       String
+  translatedText   String
+  model            String               @default("gemini-2.5-flash")
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  category         String               @default("general")
+  context          String?
+  isAutoTranslated Boolean              @default(false)
+  lastUsed         DateTime?
+  needsReview      Boolean              @default(false)
+  qualityScore     Int                  @default(100)
+  reviewedAt       DateTime?
+  reviewedBy       String?
+  status           String               @default("approved")
+  tags             String[]
+  usageCount       Int                  @default(0)
+  version          Int                  @default(1)
+  history          TranslationHistory[]
+
+  @@unique([sourceText, targetLang])
+  @@index([sourceText])
+  @@index([targetLang])
+  @@index([status])
+  @@index([category])
+  @@index([qualityScore])
+  @@index([needsReview])
+  @@index([usageCount])
+}
+
+model TranslationHistory {
+  id                String      @id @default(cuid())
+  translationId     String
+  oldTranslatedText String
+  newTranslatedText String
+  changedBy         String?
+  changeReason      String?
+  version           Int
+  createdAt         DateTime    @default(now())
+  translation       Translation @relation(fields: [translationId], references: [id], onDelete: Cascade)
+
+  @@index([translationId])
+  @@index([version])
   @@index([createdAt])
 }

@@ -1,4 +1,4 @@
-import { Home, CalendarDays, Users, FileText, Package, Wrench, Shield, Settings, Palette, Users2, FileType } from 'lucide-react';
+import { Home, CalendarDays, Users, FileText, Package, Wrench, Shield, Settings, Palette, Users2, FileType, Languages } from 'lucide-react';
 
 export type NavItem = {
   href?: string;
@@ -30,6 +30,7 @@ export const navItems: NavItem[] = [
 
 export const adminItems: NavItem[] = [
   { href: '/admin/users', label: 'User Management', icon: Shield, requiredRole: ['Admin'] },
+  { href: '/admin/translations', label: 'Translation Management', icon: Languages, requiredRole: ['Admin'] },
   { href: '/admin/customization', label: 'Customization', icon: Palette, requiredRole: ['Admin'] },
   { href: '/admin/pdf-branding', label: 'PDF Branding', icon: FileType, requiredRole: ['Admin'] },
   { href: '/admin/settings', label: 'System Settings', icon: Settings, requiredRole: ['Admin'] },

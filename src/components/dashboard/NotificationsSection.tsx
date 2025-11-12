@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAppContext } from '@/contexts/AppContext';
+import { useTranslate } from '@/contexts/TranslationContext';
 import { formatDistanceToNow } from 'date-fns';
 
 interface Notification {
@@ -27,6 +28,16 @@ export function NotificationsSection({ noCard = false }: { noCard?: boolean }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [showRead, setShowRead] = useState(false);
+
+  // Translation hooks
+  const { translated: notificationsText } = useTranslate('Notifications');
+  const { translated: loadingText } = useTranslate('Loading...');
+  const { translated: noNotificationsText } = useTranslate('No notifications');
+  const { translated: noUnreadNotificationsText } = useTranslate('No unread notifications');
+  const { translated: hideReadText } = useTranslate('Hide Read');
+  const { translated: showAllText } = useTranslate('Show All');
+  const { translated: markAllReadText } = useTranslate('Mark all read');
+  const { translated: markReadText } = useTranslate('Mark read');
 
   useEffect(() => {
     if (currentUser?.id) {
@@ -127,11 +138,11 @@ export function NotificationsSection({ noCard = false }: { noCard?: boolean }) {
         <div className="flex items-center p-6 pb-2">
           <h3 className="text-sm font-medium flex items-center">
             <Bell className="mr-2 h-4 w-4" />
-            Notifications
+            {notificationsText}
           </h3>
         </div>
         <div className="p-6 pt-0">
-          <p className="text-sm text-muted-foreground">Loading...</p>
+          <p className="text-sm text-muted-foreground">{loadingText}</p>
         </div>
       </>
     );
@@ -150,7 +161,7 @@ export function NotificationsSection({ noCard = false }: { noCard?: boolean }) {
       <div className="flex items-center justify-between p-6 pb-2">
         <h3 className="text-sm font-medium flex items-center">
           <Bell className="mr-2 h-4 w-4" />
-          Notifications
+          {notificationsText}
           {unreadCount > 0 && (
             <Badge variant="destructive" className="ml-2 text-xs">
               {unreadCount}
@@ -164,7 +175,7 @@ export function NotificationsSection({ noCard = false }: { noCard?: boolean }) {
             onClick={() => setShowRead(!showRead)}
             className="text-xs"
           >
-            {showRead ? 'Hide Read' : 'Show All'}
+            {showRead ? hideReadText : showAllText}
           </Button>
           {unreadCount > 0 && (
             <Button
@@ -173,7 +184,7 @@ export function NotificationsSection({ noCard = false }: { noCard?: boolean }) {
               onClick={() => markAsRead(notifications.filter(n => !n.isRead).map(n => n.id))}
               className="text-xs"
             >
-              Mark all read
+              {markAllReadText}
             </Button>
           )}
         </div>
@@ -181,7 +192,7 @@ export function NotificationsSection({ noCard = false }: { noCard?: boolean }) {
       <div className="p-6 pt-0">
         {displayedNotifications.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            {showRead ? 'No notifications' : 'No unread notifications'}
+            {showRead ? noNotificationsText : noUnreadNotificationsText}
           </p>
         ) : (
           <ScrollArea className="h-48">
@@ -229,7 +240,7 @@ export function NotificationsSection({ noCard = false }: { noCard?: boolean }) {
                             className="text-xs h-6 px-2"
                           >
                             <CheckCircle className="h-3 w-3 mr-1" />
-                            Mark read
+                            {markReadText}
                           </Button>
                         )}
                       </div>

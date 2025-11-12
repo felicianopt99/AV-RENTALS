@@ -448,6 +448,131 @@ async function main() {
     },
   });
 
+  // Create sample translations for the admin interface
+  const translations = [
+    {
+      sourceText: 'Dashboard',
+      translatedText: 'Painel de Controle',
+      targetLang: 'pt',
+      category: 'ui',
+      status: 'approved',
+      qualityScore: 100,
+      context: 'Main navigation menu',
+      tags: ['navigation', 'ui'],
+    },
+    {
+      sourceText: 'Equipment Management',
+      translatedText: 'Gestão de Equipamentos',
+      targetLang: 'pt',
+      category: 'ui',
+      status: 'approved',
+      qualityScore: 100,
+      context: 'Navigation menu item',
+      tags: ['navigation', 'equipment'],
+    },
+    {
+      sourceText: 'Client Management',
+      translatedText: 'Gestão de Clientes',
+      targetLang: 'pt',
+      category: 'ui',
+      status: 'approved',
+      qualityScore: 100,
+      context: 'Navigation menu item',
+      tags: ['navigation', 'clients'],
+    },
+    {
+      sourceText: 'Add New Equipment',
+      translatedText: 'Adicionar Novo Equipamento',
+      targetLang: 'pt',
+      category: 'ui',
+      status: 'approved',
+      qualityScore: 95,
+      context: 'Button text for adding equipment',
+      tags: ['button', 'equipment', 'action'],
+    },
+    {
+      sourceText: 'Save Changes',
+      translatedText: 'Guardar Alterações',
+      targetLang: 'pt',
+      category: 'ui',
+      status: 'approved',
+      qualityScore: 100,
+      context: 'Common save button',
+      tags: ['button', 'action'],
+    },
+    {
+      sourceText: 'Cancel',
+      translatedText: 'Cancelar',
+      targetLang: 'pt',
+      category: 'ui',
+      status: 'approved',
+      qualityScore: 100,
+      context: 'Common cancel button',
+      tags: ['button', 'action'],
+    },
+    {
+      sourceText: 'Equipment not found',
+      translatedText: 'Equipamento não encontrado',
+      targetLang: 'pt',
+      category: 'error',
+      status: 'pending_review',
+      qualityScore: 85,
+      needsReview: true,
+      context: 'Error message when equipment is not found',
+      tags: ['error', 'equipment'],
+    },
+    {
+      sourceText: 'Welcome to AV Rentals Management System',
+      translatedText: 'Bem-vindo ao Sistema de Gestão de Alugueres AV',
+      targetLang: 'pt',
+      category: 'business',
+      status: 'approved',
+      qualityScore: 90,
+      context: 'Main welcome message',
+      tags: ['welcome', 'business'],
+    },
+    {
+      sourceText: 'Your quote has been sent successfully',
+      translatedText: 'O seu orçamento foi enviado com sucesso',
+      targetLang: 'pt',
+      category: 'email',
+      status: 'approved',
+      qualityScore: 95,
+      context: 'Success message after sending quote',
+      tags: ['email', 'success', 'quote'],
+    },
+    {
+      sourceText: 'Translation Management',
+      translatedText: 'Gestão de Traduções',
+      targetLang: 'pt',
+      category: 'ui',
+      status: 'approved',
+      qualityScore: 100,
+      context: 'Admin navigation menu item',
+      tags: ['navigation', 'admin', 'translations'],
+    }
+  ];
+
+  console.log('🌐 Creating sample translations...')
+  
+  for (const translationData of translations) {
+    await prisma.translation.upsert({
+      where: {
+        sourceText_targetLang: {
+          sourceText: translationData.sourceText,
+          targetLang: translationData.targetLang,
+        }
+      },
+      update: {},
+      create: {
+        ...translationData,
+        usageCount: Math.floor(Math.random() * 50),
+        isAutoTranslated: Math.random() > 0.7, // 30% auto-translated
+        version: 1,
+      }
+    });
+  }
+
   console.log('✅ Database seeded successfully!')
   console.log('📊 Created:')
   console.log(`   - 1 Admin User (${adminUser.username})`)
@@ -458,6 +583,7 @@ async function main() {
   console.log(`   - ${await prisma.client.count()} Clients`)
   console.log(`   - ${await prisma.equipmentItem.count()} Equipment Items`)
   console.log(`   - ${await prisma.quote.count()} Quotes`)
+  console.log(`   - ${await prisma.translation.count()} Translations`)
   console.log('🎯 Database is clean and ready for production!')
 }
 

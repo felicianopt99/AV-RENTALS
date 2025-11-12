@@ -1,0 +1,116 @@
+2025-11-11 23:12:30,933 - INFO - Processing 1 requests for en -> pt
+2025-11-11 23:12:31,016 - INFO - Using cached translation: 'Dashboard' -> 'Painel de Controle'
+2025-11-11 23:12:41,969 - INFO - Processing 1 requests for en -> pt
+2025-11-11 23:12:42,037 - INFO - Translating 1 new texts...
+2025-11-11 23:12:42,234 - ERROR - Translation attempt 1 failed: 404 models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+2025-11-11 23:12:43,304 - ERROR - Translation attempt 2 failed: 404 models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+2025-11-11 23:12:45,368 - ERROR - Translation attempt 3 failed: 404 models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+2025-11-11 23:12:49,435 - ERROR - Translation attempt 4 failed: 404 models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+2025-11-11 23:12:49,435 - ERROR - Batch translation failed: 404 models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+2025-11-11 23:13:34,828 - INFO - Processing 1 requests for en -> pt
+2025-11-11 23:13:34,903 - INFO - Translating 1 new texts...
+2025-11-11 23:13:35,062 - ERROR - Translation attempt 1 failed: 404 models/gemini-1.5-flash-latest is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+2025-11-11 23:13:36,121 - ERROR - Translation attempt 2 failed: 404 models/gemini-1.5-flash-latest is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+2025-11-11 23:13:38,181 - ERROR - Translation attempt 3 failed: 404 models/gemini-1.5-flash-latest is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+2025-11-11 23:13:42,255 - ERROR - Translation attempt 4 failed: 404 models/gemini-1.5-flash-latest is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+2025-11-11 23:13:42,255 - ERROR - Batch translation failed: 404 models/gemini-1.5-flash-latest is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+2025-11-11 23:14:20,469 - INFO - Processing 1 requests for en -> pt
+2025-11-11 23:14:20,556 - INFO - Translating 1 new texts...
+2025-11-11 23:14:21,040 - ERROR - Translation attempt 1 failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/usage?tab=rate-limit. 
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 250
+Please retry in 38.991458181s. [links {
+  description: "Learn more about Gemini API quotas"
+  url: "https://ai.google.dev/gemini-api/docs/rate-limits"
+}
+, violations {
+  quota_metric: "generativelanguage.googleapis.com/generate_content_free_tier_requests"
+  quota_id: "GenerateRequestsPerDayPerProjectPerModel-FreeTier"
+  quota_dimensions {
+    key: "model"
+    value: "gemini-2.5-flash"
+  }
+  quota_dimensions {
+    key: "location"
+    value: "global"
+  }
+  quota_value: 250
+}
+, retry_delay {
+  seconds: 38
+}
+]
+2025-11-11 23:14:21,041 - INFO - Rotated to API key #2
+2025-11-11 23:14:21,041 - INFO - Rotated API key due to quota limit
+2025-11-11 23:14:22,710 - INFO - Successfully translated 1 texts
+2025-11-11 23:14:22,719 - INFO - Translated: 'Audio Equipment Management System' -> 'Sistema de Gerenciamento de Equipamentos de Áudio'
+2025-11-11 23:14:40,422 - INFO - No missing translations found
+2025-11-11 23:14:58,623 - INFO - Processing 23 requests for en -> pt
+2025-11-11 23:14:58,704 - INFO - Using cached translation: 'Dashboard' -> 'Painel de Controle'
+2025-11-11 23:14:58,704 - INFO - Translating 2 new texts...
+2025-11-11 23:14:58,916 - ERROR - Translation attempt 1 failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/usage?tab=rate-limit. 
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 250
+Please retry in 1.120355217s. [links {
+  description: "Learn more about Gemini API quotas"
+  url: "https://ai.google.dev/gemini-api/docs/rate-limits"
+}
+, violations {
+  quota_metric: "generativelanguage.googleapis.com/generate_content_free_tier_requests"
+  quota_id: "GenerateRequestsPerDayPerProjectPerModel-FreeTier"
+  quota_dimensions {
+    key: "model"
+    value: "gemini-2.5-flash"
+  }
+  quota_dimensions {
+    key: "location"
+    value: "global"
+  }
+  quota_value: 250
+}
+, retry_delay {
+  seconds: 1
+}
+]
+2025-11-11 23:14:58,917 - INFO - Rotated to API key #2
+2025-11-11 23:14:58,917 - INFO - Rotated API key due to quota limit
+2025-11-11 23:15:00,690 - INFO - Successfully translated 2 texts
+2025-11-11 23:15:00,696 - INFO - Translated: '# Sample texts for testing translation' -> '# Textos de exemplo para teste de tradução'
+2025-11-11 23:15:00,704 - INFO - Translated: '# One text per line' -> '# Um texto por linha'
+2025-11-11 23:15:00,706 - INFO - Using cached translation: 'Equipment Management' -> 'Gestão de Equipamentos'
+2025-11-11 23:15:00,709 - INFO - Using cached translation: 'Create New Quote' -> 'Criar Nova Cotação'
+2025-11-11 23:15:00,709 - INFO - Translating 1 new texts...
+2025-11-11 23:15:00,710 - INFO - Enforcing minimum delay: 30.0s
+2025-11-11 23:15:46,075 - INFO - Processing 1 requests for en -> pt
+2025-11-11 23:15:46,154 - INFO - Translating 1 new texts...
+2025-11-11 23:15:46,357 - ERROR - Translation attempt 1 failed: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/usage?tab=rate-limit. 
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 250
+Please retry in 13.676392638s. [links {
+  description: "Learn more about Gemini API quotas"
+  url: "https://ai.google.dev/gemini-api/docs/rate-limits"
+}
+, violations {
+  quota_metric: "generativelanguage.googleapis.com/generate_content_free_tier_requests"
+  quota_id: "GenerateRequestsPerDayPerProjectPerModel-FreeTier"
+  quota_dimensions {
+    key: "model"
+    value: "gemini-2.5-flash"
+  }
+  quota_dimensions {
+    key: "location"
+    value: "global"
+  }
+  quota_value: 250
+}
+, retry_delay {
+  seconds: 13
+}
+]
+2025-11-11 23:15:46,358 - INFO - Rotated to API key #2
+2025-11-11 23:15:46,358 - INFO - Rotated API key due to quota limit
+2025-11-11 23:15:47,874 - INFO - Successfully translated 1 texts
+2025-11-11 23:15:47,888 - INFO - Translated: 'Video Equipment Management System' -> 'Sistema de Gestão de Equipamentos de Vídeo'
+2025-11-11 23:16:23,121 - INFO - Processing 1 requests for en -> pt
+2025-11-11 23:16:23,192 - INFO - Using cached translation: 'Audio Equipment Management System' -> 'Sistema de Gestão de Equipamentos de Áudio'
+2025-11-11 23:19:48,840 - INFO - 🔍 Extracting texts needing translation...
+2025-11-11 23:20:06,042 - INFO - 🔍 Extracting texts needing translation...
+2025-11-11 23:20:24,702 - INFO - 🔍 Extracting texts needing translation...
+2025-11-11 23:20:24,778 - INFO - 📋 Found 0 texts needing translation to pt

@@ -8,7 +8,16 @@ import { Button } from "@/components/ui/button";
 import { useHapticFeedback } from "@/hooks/useHapticFeedback";
 import { useToast } from "@/hooks/use-toast";
 
+import { useTranslate } from '@/contexts/TranslationContext';
 export function MobileQuickActions() {
+  // Translation hooks
+  const { translated: textNewClientText } = useTranslate('New Client');
+  const { translated: textNewEventText } = useTranslate('New Event');
+  const { translated: textNewQuoteText } = useTranslate('New Quote');
+  const { translated: textOpeninventorytoscanText } = useTranslate('Open inventory to scan');
+  const { translated: textScanText } = useTranslate('Scan');
+  const { translated: uiQuickactionsText } = useTranslate('Quick actions');
+
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const { triggerHaptic } = useHapticFeedback();
@@ -41,13 +50,13 @@ export function MobileQuickActions() {
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="bottom" className="rounded-t-2xl border-border/40">
           <SheetHeader>
-            <SheetTitle>Quick actions</SheetTitle>
+            <SheetTitle>{uiQuickactionsText}</SheetTitle>
           </SheetHeader>
           <div className="mt-3 grid grid-cols-3 gap-3">
-            <ActionCard icon={QrCode} label="Scan" onClick={go("/inventory", "Open inventory to scan")}/>
-            <ActionCard icon={FilePlus2} label="New Quote" onClick={go("/quotes")}/>
-            <ActionCard icon={CalendarPlus} label="New Event" onClick={go("/events")}/>
-            <ActionCard icon={UserPlus} label="New Client" onClick={go("/clients")}/>
+            <ActionCard icon={QrCode} label={textScanText} onClick={go("/inventory", textOpeninventorytoscanText)}/>
+            <ActionCard icon={FilePlus2} label={textNewQuoteText} onClick={go("/quotes")}/>
+            <ActionCard icon={CalendarPlus} label={textNewEventText} onClick={go("/events")}/>
+            <ActionCard icon={UserPlus} label={textNewClientText} onClick={go("/clients")}/>
           </div>
         </SheetContent>
       </Sheet>

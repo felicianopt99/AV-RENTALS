@@ -1,0 +1,24 @@
+# Sample texts for testing translation
+# One text per line
+
+Dashboard
+Equipment Management
+User Settings
+Create New Quote
+Rental History
+Payment Methods
+Customer Information
+Equipment Categories
+Search Equipment
+Add to Cart
+Checkout
+Order Confirmation
+Rental Agreement
+Return Equipment
+Maintenance Schedule
+Inventory Status
+Monthly Report
+Export Data
+User Profile
+Change Password
+Logout

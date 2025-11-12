@@ -4,7 +4,11 @@ import Link from "next/link";
 import { useAppContext } from "@/contexts/AppContext";
 import { CalendarDays, Package, Users, Calendar } from "lucide-react";
 
+import { useTranslate } from '@/contexts/TranslationContext';
 export function MobileWelcomeBar() {
+  // Translation hooks
+  const { translated: clientsText } = useTranslate('Clients');
+
   const { currentUser } = useAppContext();
   const hour = typeof window !== 'undefined' ? new Date().getHours() : 12;
   const timeGreeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
@@ -16,7 +20,7 @@ export function MobileWelcomeBar() {
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">What would you like to do?</p>
       </div>
       <div className="flex items-center gap-3 overflow-x-auto no-scrollbar">
-        <QuickLink href="/clients" icon={Users} label="Clients" />
+        <QuickLink href="/clients" icon={Users} label={clientsText} />
         <QuickLink href="/rentals/calendar" icon={CalendarDays} label="Calendar" />
         <Link
           href="/events"

@@ -9,7 +9,13 @@ import { format, parse } from 'date-fns';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
+import { useTranslate } from '@/contexts/TranslationContext';
 function NewRentalContent() {
+  // Translation hooks
+  const { translated: uiCreateRentalText } = useTranslate('Create Rental');
+  const { translated: uiNewRentalText } = useTranslate('New Rental');
+  const { translated: uiBacktoCalendarText } = useTranslate('Back to Calendar');
+  
   const searchParams = useSearchParams();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
@@ -35,12 +41,11 @@ function NewRentalContent() {
         <div className="mb-6">
           <Button asChild variant="outline">
             <Link href="/rentals/calendar">
-              <ArrowLeft className="mr-2 h-4 w-4" /> Back to Calendar
-            </Link>
+              <ArrowLeft className="mr-2 h-4 w-4" /> {uiBacktoCalendarText}</Link>
           </Button>
         </div>
         <div className="max-w-md">
-          <h2 className="text-2xl font-bold mb-4">New Rental</h2>
+          <h2 className="text-2xl font-bold mb-4">{uiNewRentalText}</h2>
           {selectedDate && (
             <div className="mb-4 p-4 bg-muted rounded-md">
               <p className="text-sm text-muted-foreground">Selected Date: {format(selectedDate, 'MMMM dd, yyyy')}</p>
@@ -48,8 +53,7 @@ function NewRentalContent() {
           )}
           <p className="text-muted-foreground mb-6">TODO: Add form for selecting equipment, client, event, quantity, etc.</p>
           <Button onClick={handleCreateRental} className="w-full">
-            Create Rental
-          </Button>
+            {uiCreateRentalText}</Button>
         </div>
       </div>
     </div>
@@ -57,6 +61,7 @@ function NewRentalContent() {
 }
 
 export default function NewRentalPage() {
+
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <NewRentalContent />

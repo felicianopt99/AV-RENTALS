@@ -10,7 +10,13 @@ import { QuoteForm } from '@/components/quotes/QuoteForm';
 import { FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
+import { useTranslate } from '@/contexts/TranslationContext';
 export default function EditQuotePage() {
+  // Translation hooks
+  const { translated: toastNoquoteIDprovidedDescText } = useTranslate('No quote ID provided.');
+  const { translated: toastQuotenotfoundDescText } = useTranslate('Quote not found.');
+  const { translated: toastErrorTitleText } = useTranslate('Error');
+
   const params = useParams();
   const router = useRouter();
   const { quotes, isDataLoaded } = useAppContext();
@@ -34,12 +40,12 @@ export default function EditQuotePage() {
           items: foundQuote.items.map(item => ({...item})) // Shallow copy items
         });
       } else {
-        toast({ variant: "destructive", title: "Error", description: "Quote not found."});
+        toast({ variant: "destructive", title: toastErrorTitleText, description: toastQuotenotfoundDescText});
         router.replace('/quotes'); 
       }
       setLoading(false);
     } else if (isDataLoaded && !quoteId) {
-        toast({ variant: "destructive", title: "Error", description: "No quote ID provided."});
+        toast({ variant: "destructive", title: "Error", description: toastNoquoteIDprovidedDescText});
         router.replace('/quotes');
         setLoading(false);
     }

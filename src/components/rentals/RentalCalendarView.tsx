@@ -24,6 +24,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import multiMonthPlugin from '@fullcalendar/multimonth';
+import { useTranslate } from '@/contexts/TranslationContext';
 import {
   Dialog,
   DialogContent,
@@ -45,6 +46,9 @@ interface RentalCalendarViewProps {
 }
 
 export function RentalCalendarView({ searchQuery, filters }: RentalCalendarViewProps) {
+  // Translation hooks
+  const { translated: toastEventRescheduledTitleText } = useTranslate('Event Rescheduled');
+
   const { rentals, equipment, events, isDataLoaded, clients, categories } = useAppContext();
   const dispatch = useAppDispatch();
   const router = useRouter();
@@ -139,7 +143,7 @@ export function RentalCalendarView({ searchQuery, filters }: RentalCalendarViewP
     if (!originalEvent) return;
     const updatedEvent = { ...originalEvent, startDate: newStart.toISOString(), endDate: newEnd.toISOString() };
     dispatch.updateEvent(updatedEvent);
-    toast({ title: 'Event Rescheduled', description: `Event moved to ${format(newStart, 'PPP')} - ${format(newEnd, 'PPP')}` });
+    toast({ title: toastEventRescheduledTitleText, description: `Event moved to ${format(newStart, 'PPP')} - ${format(newEnd, 'PPP')}` });
   };
 
   const handleExportCSV = () => {

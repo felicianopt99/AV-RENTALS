@@ -15,7 +15,22 @@ import { EquipmentForm } from '@/components/equipment/EquipmentForm';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import Link from 'next/link';
 
+import { useTranslate } from '@/contexts/TranslationContext';
 export function InventoryContent() {
+  // Translation hooks
+  const { translated: uiAddNewEquipmentText } = useTranslate('Add New Equipment');
+  const { translated: uiLabelsText } = useTranslate('Labels');
+  const { translated: uiLabelGeneratorText } = useTranslate('Label Generator');
+  const { translated: uiAvailText } = useTranslate('Avail');
+  const { translated: uiAvailabilityText } = useTranslate('Availability');
+  const { translated: uiListText } = useTranslate('List');
+  const { translated: uiListViewText } = useTranslate('List View');
+  const { translated: uiGridText } = useTranslate('Grid');
+  const { translated: uiGridViewText } = useTranslate('Grid View');
+  const { translated: uiAddEquipmentText } = useTranslate('Add Equipment');
+  const { translated: uiInventoryText } = useTranslate('Inventory');
+  const { translated: uiDashboardText } = useTranslate('Dashboard');
+
   const [activeTab, setActiveTab] = useState("grid");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
@@ -27,12 +42,12 @@ export function InventoryContent() {
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link href="/dashboard">Dashboard</Link>
+                <Link href="/dashboard">{uiDashboardText}</Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage>Inventory</BreadcrumbPage>
+              <BreadcrumbPage>{uiInventoryText}</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
@@ -42,30 +57,29 @@ export function InventoryContent() {
           <h1 className="text-xl md:text-2xl font-bold">Equipment & Inventory</h1>
           <Button onClick={() => setIsAddDialogOpen(true)} variant="outline" className="gap-2 w-full sm:w-auto">
             <Plus className="h-4 w-4" />
-            Add Equipment
-          </Button>
+            {uiAddEquipmentText}</Button>
         </div>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-4 md:mb-6 h-auto">
             <TabsTrigger value="grid" className="text-xs md:text-sm">
               <LayoutGrid className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">Grid View</span>
-              <span className="sm:hidden">Grid</span>
+              <span className="hidden sm:inline">{uiGridViewText}</span>
+              <span className="sm:hidden">{uiGridText}</span>
             </TabsTrigger>
             <TabsTrigger value="list" className="text-xs md:text-sm">
               <List className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">List View</span>
-              <span className="sm:hidden">List</span>
+              <span className="hidden sm:inline">{uiListViewText}</span>
+              <span className="sm:hidden">{uiListText}</span>
             </TabsTrigger>
             <TabsTrigger value="availability" className="text-xs md:text-sm">
               <CalendarDays className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">Availability</span>
-              <span className="sm:hidden">Avail</span>
+              <span className="hidden sm:inline">{uiAvailabilityText}</span>
+              <span className="sm:hidden">{uiAvailText}</span>
             </TabsTrigger>
             <TabsTrigger value="labels" className="text-xs md:text-sm">
               <QrCode className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">Label Generator</span>
-              <span className="sm:hidden">Labels</span>
+              <span className="hidden sm:inline">{uiLabelGeneratorText}</span>
+              <span className="sm:hidden">{uiLabelsText}</span>
             </TabsTrigger>
           </TabsList>
           <TabsContent value="grid">
@@ -85,7 +99,7 @@ export function InventoryContent() {
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Add New Equipment</DialogTitle>
+              <DialogTitle>{uiAddNewEquipmentText}</DialogTitle>
             </DialogHeader>
             <EquipmentForm onSubmitSuccess={() => setIsAddDialogOpen(false)} />
           </DialogContent>

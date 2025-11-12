@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import type { Client } from '@/types';
 import { useAppContext, useAppDispatch } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
+import { useTranslate } from '@/contexts/TranslationContext';
 import {
   Table,
   TableBody,
@@ -38,6 +39,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 
 export function ClientListDisplay() {
+  // Translation hooks
+  const { translated: toastClientDeletedTitleText } = useTranslate('Client Deleted');
+
   const { clients, isDataLoaded } = useAppContext();
   const { deleteClient } = useAppDispatch();
   const router = useRouter();
@@ -53,7 +57,7 @@ export function ClientListDisplay() {
   const confirmDelete = useCallback(() => {
     if (clientToDelete) {
       deleteClient(clientToDelete.id);
-      toast({ title: 'Client Deleted', description: `Client "${clientToDelete.name}" has been removed.` });
+      toast({ title: toastClientDeletedTitleText, description: `Client "${clientToDelete.name}" has been removed.` });
       setClientToDelete(null);
     }
   }, [clientToDelete, deleteClient, toast]);

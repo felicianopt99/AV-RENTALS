@@ -5,6 +5,7 @@ import { useState, useRef, useEffect } from 'react';
 import { RentalCalendarView } from '@/components/rentals/RentalCalendarView';
 import { CalendarLegend } from '@/components/rentals/CalendarLegend';
 import { CalendarFilters } from '@/components/rentals/CalendarFilters';
+import { useTranslate } from '@/contexts/TranslationContext';
 
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -15,6 +16,9 @@ export function CalendarContent() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState({});
   const calendarRef = useRef<any>(null);
+
+  // Translation hooks
+  const { translated: addNewEventText } = useTranslate('Add New Event');
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -35,7 +39,7 @@ export function CalendarContent() {
         <div className="mb-4 md:mb-6 flex flex-col sm:flex-row sm:justify-end gap-4">
           <Button asChild className="w-full sm:w-auto">
             <Link href="/events/new">
-              <PlusCircle className="mr-2 h-5 w-5" /> Add New Event
+              <PlusCircle className="mr-2 h-5 w-5" /> {addNewEventText}
             </Link>
           </Button>
         </div>

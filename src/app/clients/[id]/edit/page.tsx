@@ -10,7 +10,11 @@ import { ClientForm } from '@/components/clients/ClientForm';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
+import { useTranslate } from '@/contexts/TranslationContext';
 export default function EditClientPage() {
+  // Translation hooks
+  const { translated: uiEditClientDetailsText } = useTranslate('Edit Client Details');
+
   const params = useParams();
   const router = useRouter();
   const { clients, isDataLoaded } = useAppContext();
@@ -62,7 +66,7 @@ export default function EditClientPage() {
       <div className="flex-1 overflow-y-auto p-4 md:p-6"> {/* Added padding here */}
         <Card className="max-w-2xl mx-auto shadow-xl">
           <CardHeader>
-            <CardTitle>Edit Client Details</CardTitle>
+            <CardTitle>{uiEditClientDetailsText}</CardTitle>
           </CardHeader>
           <CardContent>
             <ClientForm initialData={client} />

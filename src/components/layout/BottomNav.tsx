@@ -9,9 +9,13 @@ import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 import { useAppContext } from '@/contexts/AppContext';
 import { navItems as baseNavItems } from '@/components/layout/navConfig';
 
+import { useTranslate } from '@/contexts/TranslationContext';
 // We’ll derive visible items based on role from the shared config
 
 export function BottomNav() {
+  // Translation hooks
+  const { translated: attrPrimaryText } = useTranslate('Primary');
+
   const { activeIndex, setActiveIndex } = useMobileNav();
   const pathname = usePathname();
   const router = useRouter();
@@ -129,7 +133,7 @@ export function BottomNav() {
         paddingLeft: 'max(env(safe-area-inset-left), 8px)',
         paddingRight: 'max(env(safe-area-inset-right), 8px)'
       }}
-      aria-label="Primary"
+      aria-label={attrPrimaryText}
     >
       <div
         ref={navRef}

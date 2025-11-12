@@ -10,7 +10,45 @@ import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Fee } from '@/types';
 
+import { useTranslate } from '@/contexts/TranslationContext';
 export function FeesContent() {
+  // Translation hooks
+  const { translated: uiCreateFeeText1 } = useTranslate('Create Fee');
+  const { translated: uiNoFeesFoundText } = useTranslate('No Fees Found');
+  const { translated: textInactiveText } = useTranslate('Inactive');
+  const { translated: textActiveText } = useTranslate('Active');
+  const { translated: uiRequiredText } = useTranslate('Required');
+  const { translated: uiCancelText2 } = useTranslate('Cancel');
+  const { translated: uiDeleteText } = useTranslate('Delete');
+  const { translated: uiDeleteFeeText } = useTranslate('Delete Fee');
+  const { translated: uiCancelText1 } = useTranslate('Cancel');
+  const { translated: uiUpdateFeeText } = useTranslate('Update Fee');
+  const { translated: uiEditFeeText } = useTranslate('Edit Fee');
+  const { translated: uiCancelText } = useTranslate('Cancel');
+  const { translated: uiCreateFeeText } = useTranslate('Create Fee');
+  const { translated: attrFeedescriptionText } = useTranslate('Fee description');
+  const { translated: uiDescriptionText } = useTranslate('Description');
+  const { translated: uiPercentageText } = useTranslate('Percentage');
+  const { translated: uiFixedAmountText } = useTranslate('Fixed Amount');
+  const { translated: uiTypeText } = useTranslate('Type');
+  const { translated: attr000Text } = useTranslate('0.00');
+  const { translated: attregDeliverySetupInsurText } = useTranslate('e.g., Delivery, Setup, Insurance');
+  const { translated: uiCategoryText } = useTranslate('Category');
+  const { translated: attrFeenameText } = useTranslate('Fee name');
+  const { translated: uiCreateNewFeeText } = useTranslate('Create New Fee');
+  const { translated: attrSearchfeesText } = useTranslate('Search fees...');
+  const { translated: uiAddFeeText } = useTranslate('Add Fee');
+  const { translated: uiManagefeesthatcanbeaText } = useTranslate('Manage fees that can be added to quotes');
+  const { translated: uiFeesText } = useTranslate('Fees');
+  const { translated: toastFailedtoupdatefDescText } = useTranslate('Failed to update fee');
+  const { translated: toastFeeupdatedsucceDescText } = useTranslate('Fee updated successfully');
+  const { translated: toastFailedtodeletefDescText } = useTranslate('Failed to delete fee');
+  const { translated: toastFeedeletedsucceDescText } = useTranslate('Fee deleted successfully');
+  const { translated: toastFailedtocreatefDescText } = useTranslate('Failed to create fee');
+  const { translated: toastFeecreatedsucceDescText } = useTranslate('Fee created successfully');
+  const { translated: toastPleasefillinallDescText } = useTranslate('Please fill in all required fields');
+  const { translated: toastFailedtofetchfeDescText } = useTranslate('Failed to fetch fees');
+
   const [fees, setFees] = useState<Fee[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -49,7 +87,7 @@ export function FeesContent() {
         throw new Error('Failed to fetch fees');
       }
     } catch (error) {
-      setPopup({ open: true, title: 'Error', description: 'Failed to fetch fees', type: 'error' });
+      setPopup({ open: true, title: 'Error', description: '{toastFailedtofetchfeDescText}', type: 'error' });
     } finally {
       setIsLoading(false);
     }
@@ -57,7 +95,7 @@ export function FeesContent() {
 
   const handleCreateFee = async () => {
     if (!newFee.name || !newFee.amount) {
-      setPopup({ open: true, title: 'Error', description: 'Please fill in all required fields', type: 'error' });
+      setPopup({ open: true, title: 'Error', description: '{toastPleasefillinallDescText}', type: 'error' });
       return;
     }
     try {
@@ -67,7 +105,7 @@ export function FeesContent() {
         body: JSON.stringify({ ...newFee, amount: Number(newFee.amount), isActive: true }),
       });
       if (response.ok) {
-        setPopup({ open: true, title: 'Success', description: 'Fee created successfully', type: 'success' });
+        setPopup({ open: true, title: 'Success', description: '{toastFeecreatedsucceDescText}', type: 'success' });
         setNewFee({ name: '', description: '', amount: 0, type: 'fixed', category: '', isRequired: false });
         setIsCreating(false);
         fetchFees();
@@ -75,7 +113,7 @@ export function FeesContent() {
         throw new Error('Failed to create fee');
       }
     } catch (error) {
-      setPopup({ open: true, title: 'Error', description: 'Failed to create fee', type: 'error' });
+      setPopup({ open: true, title: 'Error', description: '{toastFailedtocreatefDescText}', type: 'error' });
     }
   };
 
@@ -84,13 +122,13 @@ export function FeesContent() {
     try {
       const response = await fetch(`/api/fees/${deleteFeeId}`, { method: 'DELETE' });
       if (response.ok) {
-        setPopup({ open: true, title: 'Success', description: 'Fee deleted successfully', type: 'success' });
+        setPopup({ open: true, title: 'Success', description: '{toastFeedeletedsucceDescText}', type: 'success' });
         fetchFees();
       } else {
         throw new Error('Failed to delete fee');
       }
     } catch (error) {
-      setPopup({ open: true, title: 'Error', description: 'Failed to delete fee', type: 'error' });
+      setPopup({ open: true, title: 'Error', description: '{toastFailedtodeletefDescText}', type: 'error' });
     } finally {
       setIsDeleteOpen(false);
       setDeleteFeeId(null);
@@ -115,7 +153,7 @@ export function FeesContent() {
         body: JSON.stringify({ ...editFee, amount: Number(editFee.amount) }),
       });
       if (response.ok) {
-        setPopup({ open: true, title: 'Success', description: 'Fee updated successfully', type: 'success' });
+        setPopup({ open: true, title: 'Success', description: '{toastFeeupdatedsucceDescText}', type: 'success' });
         setIsEditOpen(false);
         setEditFee(null);
         fetchFees();
@@ -123,7 +161,7 @@ export function FeesContent() {
         throw new Error('Failed to update fee');
       }
     } catch (error) {
-      setPopup({ open: true, title: 'Error', description: 'Failed to update fee', type: 'error' });
+      setPopup({ open: true, title: 'Error', description: '{toastFailedtoupdatefDescText}', type: 'error' });
     }
   };
 
@@ -140,10 +178,9 @@ export function FeesContent() {
           <div className="max-w-7xl mx-auto space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold tracking-tight">Fees</h1>
+                <h1 className="text-3xl font-bold tracking-tight">{uiFeesText}</h1>
                 <p className="text-muted-foreground mt-2">
-                  Manage fees that can be added to quotes
-                </p>
+                  {uiManagefeesthatcanbeaText}     </p>
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -177,15 +214,14 @@ export function FeesContent() {
             </div>
             <Button onClick={() => setIsCreating(!isCreating)}>
               <Plus className="h-4 w-4 mr-2" />
-              Add Fee
-            </Button>
+              {uiAddFeeText}</Button>
           </div>
 
           {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
-              placeholder="Search fees..."
+              placeholder={attrSearchfeesText}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -196,7 +232,7 @@ export function FeesContent() {
           {isCreating && (
             <Card>
               <CardHeader>
-                <CardTitle>Create New Fee</CardTitle>
+                <CardTitle>{uiCreateNewFeeText}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -205,15 +241,15 @@ export function FeesContent() {
                     <Input
                       value={newFee.name}
                       onChange={(e) => setNewFee({ ...newFee, name: e.target.value })}
-                      placeholder="Fee name"
+                      placeholder={attrFeenameText}
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium">Category</label>
+                    <label className="text-sm font-medium">{uiCategoryText}</label>
                     <Input
                       value={newFee.category}
                       onChange={(e) => setNewFee({ ...newFee, category: e.target.value })}
-                      placeholder="e.g., Delivery, Setup, Insurance"
+                      placeholder={attregDeliverySetupInsurText}
                     />
                   </div>
                   <div>
@@ -223,27 +259,27 @@ export function FeesContent() {
                       step="0.01"
                       value={newFee.amount}
                       onChange={(e) => setNewFee({ ...newFee, amount: Number(e.target.value) })}
-                      placeholder="0.00"
+                      placeholder={attr000Text}
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium">Type</label>
+                    <label className="text-sm font-medium">{uiTypeText}</label>
                     <select
                       value={newFee.type}
                       onChange={(e) => setNewFee({ ...newFee, type: e.target.value as 'fixed' | 'percentage' })}
                       className="w-full p-2 border border-input rounded-md bg-background"
                     >
-                      <option value="fixed">Fixed Amount</option>
-                      <option value="percentage">Percentage</option>
+                      <option value="fixed">{uiFixedAmountText}</option>
+                      <option value="percentage">{uiPercentageText}</option>
                     </select>
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium">Description</label>
+                  <label className="text-sm font-medium">{uiDescriptionText}</label>
                   <textarea
                     value={newFee.description}
                     onChange={(e) => setNewFee({ ...newFee, description: e.target.value })}
-                    placeholder="Fee description"
+                    placeholder={attrFeedescriptionText}
                     className="w-full p-2 border border-input rounded-md bg-background min-h-[100px]"
                   />
                 </div>
@@ -257,10 +293,9 @@ export function FeesContent() {
                   </label>
                 </div>
                 <div className="flex space-x-2">
-                  <Button onClick={handleCreateFee}>Create Fee</Button>
+                  <Button onClick={handleCreateFee}>{uiCreateFeeText}</Button>
                   <Button variant="outline" onClick={() => setIsCreating(false)}>
-                    Cancel
-                  </Button>
+                    {uiCancelText}</Button>
                 </div>
               </CardContent>
             </Card>
@@ -291,7 +326,7 @@ export function FeesContent() {
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Fee</DialogTitle>
+            <DialogTitle>{uiEditFeeText}</DialogTitle>
           </DialogHeader>
           {editFee && (
             <div className="space-y-4">
@@ -353,10 +388,9 @@ export function FeesContent() {
                 </label>
               </div>
               <div className="flex space-x-2">
-                <Button onClick={handleUpdateFee}>Update Fee</Button>
+                <Button onClick={handleUpdateFee}>{uiUpdateFeeText}</Button>
                 <Button variant="outline" onClick={() => setIsEditOpen(false)}>
-                  Cancel
-                </Button>
+                  {uiCancelText}</Button>
               </div>
             </div>
           )}
@@ -367,12 +401,12 @@ export function FeesContent() {
       <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Fee</DialogTitle>
+            <DialogTitle>{uiDeleteFeeText}</DialogTitle>
             <DialogDescription>Are you sure you want to delete this fee? This action cannot be undone.</DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="destructive" onClick={handleDeleteFee}>Delete</Button>
-            <Button variant="outline" onClick={() => setIsDeleteOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDeleteFee}>{uiDeleteText}</Button>
+            <Button variant="outline" onClick={() => setIsDeleteOpen(false)}>{uiCancelText}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -400,8 +434,7 @@ export function FeesContent() {
                     )}
                     {fee.isRequired && (
                       <Badge variant="default">
-                        Required
-                      </Badge>
+                        {uiRequiredText}</Badge>
                     )}
                   </div>
 
@@ -427,7 +460,7 @@ export function FeesContent() {
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Status:</span>
                       <Badge variant={fee.isActive ? "default" : "secondary"}>
-                        {fee.isActive ? "Active" : "Inactive"}
+                        {fee.isActive ? textActiveText : textInactiveText}
                       </Badge>
                     </div>
                   </div>
@@ -440,15 +473,14 @@ export function FeesContent() {
             <Card>
               <CardContent className="p-12 text-center">
                 <DollarSign className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No Fees Found</h3>
+                <h3 className="text-lg font-semibold mb-2">{uiNoFeesFoundText}</h3>
                 <p className="text-muted-foreground mb-4">
                   {searchTerm ? 'No fees match your search.' : 'Get started by creating your first fee.'}
                 </p>
                 {!searchTerm && (
                   <Button onClick={() => setIsCreating(true)}>
                     <Plus className="h-4 w-4 mr-2" />
-                    Create Fee
-                  </Button>
+                    {uiCreateFeeText}</Button>
                 )}
               </CardContent>
             </Card>

@@ -8,11 +8,14 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { QuotePDFGenerator } from '@/lib/pdf-generator';
-import { Download, FileText } from 'lucide-react';
+import { Download, FileText, Languages } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Quote } from '@/types';
 import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Language } from '@/lib/translation';
 
+import { useTranslate } from '@/contexts/TranslationContext';
 interface QuotePDFPreviewProps {
   quote: Quote | null;
   isOpen: boolean;
@@ -20,12 +23,20 @@ interface QuotePDFPreviewProps {
 }
 
 export function QuotePDFPreview({ quote, isOpen, onClose }: QuotePDFPreviewProps) {
+  // Translation hooks
+  const { translated: toastTherewasanerrordownlDescText } = useTranslate('There was an error downloading the PDF.');
+  const { translated: toastDownloadFailedTitleText } = useTranslate('Download Failed');
+  const { translated: toastPDFDownloadedTitleText } = useTranslate('PDF Downloaded');
+  const { translated: toastTherewasanerrorgenerDescText } = useTranslate('There was an error generating the PDF preview.');
+  const { translated: toastPDFGenerationFailedTitleText } = useTranslate('PDF Generation Failed');
+
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
   const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState<Language>('en');
 
-  // Generate PDF blob when quote changes
+  // Generate PDF blob when quote changes or language changes
   useEffect(() => {
     if (quote && isOpen) {
       generatePDFBlob();
@@ -36,14 +47,17 @@ export function QuotePDFPreview({ quote, isOpen, onClose }: QuotePDFPreviewProps
         URL.revokeObjectURL(pdfUrl);
       }
     };
-  }, [quote, isOpen]);
+  }, [quote, isOpen, selectedLanguage]);
 
   const generatePDFBlob = async () => {
     if (!quote) return;
 
     try {
       setIsGenerating(true);
-      const blob = await QuotePDFGenerator.generateQuotePDF(quote, { download: false });
+      const blob = await QuotePDFGenerator.generateQuotePDF(quote, { 
+        download: false,
+        language: selectedLanguage
+      });
       setPdfBlob(blob);
       
       // Create URL for PDF preview
@@ -53,8 +67,8 @@ export function QuotePDFPreview({ quote, isOpen, onClose }: QuotePDFPreviewProps
       console.error('Error generating PDF:', error);
       toast({
         variant: "destructive",
-        title: "PDF Generation Failed",
-        description: "There was an error generating the PDF preview."
+        title: toastPDFGenerationFailedTitleText,
+        description: toastTherewasanerrorgenerDescText
       });
     } finally {
       setIsGenerating(false);
@@ -66,21 +80,23 @@ export function QuotePDFPreview({ quote, isOpen, onClose }: QuotePDFPreviewProps
 
     try {
       setIsGenerating(true);
+      const languageSuffix = selectedLanguage === 'pt' ? '_pt' : '';
       await QuotePDFGenerator.generateQuotePDF(quote, {
-        filename: `quote-${quote.quoteNumber}.pdf`,
-        download: true
+        filename: `quote-${quote.quoteNumber}${languageSuffix}.pdf`,
+        download: true,
+        language: selectedLanguage
       });
       
       toast({
-        title: "PDF Downloaded",
+        title: toastPDFDownloadedTitleText,
         description: `Quote ${quote.quoteNumber} has been downloaded successfully.`
       });
     } catch (error) {
       console.error('Error downloading PDF:', error);
       toast({
         variant: "destructive",
-        title: "Download Failed",
-        description: "There was an error downloading the PDF."
+        title: toastDownloadFailedTitleText,
+        description: toastTherewasanerrordownlDescText
       });
     } finally {
       setIsGenerating(false);
@@ -112,7 +128,19 @@ export function QuotePDFPreview({ quote, isOpen, onClose }: QuotePDFPreviewProps
                 Preview and download the professional quote PDF
               </DialogDescription>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
+              <div className="flex items-center gap-2 mr-2">
+                <Languages className="h-4 w-4" />
+                <Select value={selectedLanguage} onValueChange={(value: Language) => setSelectedLanguage(value)}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="pt">Português</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <Button
                 variant="outline"
                 size="sm"

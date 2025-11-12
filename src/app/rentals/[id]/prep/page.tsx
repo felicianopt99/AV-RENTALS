@@ -18,6 +18,7 @@ import { Separator } from '@/components/ui/separator';
 import { QRCodeScanner } from '@/components/rentals/QRCodeScanner';
 import { useToast } from '@/hooks/use-toast';
 
+import { useTranslate } from '@/contexts/TranslationContext';
 type PrepItem = {
   equipmentId: string;
   name: string;
@@ -26,6 +27,14 @@ type PrepItem = {
 };
 
 export default function RentalPrepPage() {
+  // Translation hooks
+  const { translated: toastThescannedQRcodeisnoDescText } = useTranslate('The scanned QR code is not a valid equipment URL.');
+  const { translated: toastInvalidQRCodeTitleText } = useTranslate('Invalid QR Code');
+  const { translated: toastThisequipmentdoesnotDescText } = useTranslate('This equipment does not belong to this event.');
+  const { translated: toastScanErrorTitleText } = useTranslate('Scan Error');
+  const { translated: toastScanLimitReachedTitleText } = useTranslate('Scan Limit Reached');
+  const { translated: toastScanSuccessfulTitleText } = useTranslate('Scan Successful');
+
   const params = useParams();
   const router = useRouter();
   const { events, rentals, equipment, isDataLoaded, clients } = useAppContext();
@@ -105,18 +114,18 @@ export default function RentalPrepPage() {
                 const item = newList[itemIndex];
                 if(item.scannedQuantity < item.quantity) {
                     newList[itemIndex] = { ...item, scannedQuantity: item.scannedQuantity + 1};
-                    toast({title: "Scan Successful", description: `1x ${item.name} scanned.`});
+                    toast({title: toastScanSuccessfulTitleText, description: `1x ${item.name} scanned.`});
                 } else {
-                    toast({variant: "destructive", title: "Scan Limit Reached", description: `All ${item.quantity} units of ${item.name} already scanned.`});
+                    toast({variant: "destructive", title: toastScanLimitReachedTitleText, description: `All ${item.quantity} units of ${item.name} already scanned.`});
                 }
                 return newList;
             });
         } else {
-            toast({variant: "destructive", title: "Scan Error", description: "This equipment does not belong to this event."});
+            toast({variant: "destructive", title: toastScanErrorTitleText, description: toastThisequipmentdoesnotDescText});
         }
     } catch(e) {
         console.error("Invalid QR code data", e);
-        toast({variant: "destructive", title: "Invalid QR Code", description: "The scanned QR code is not a valid equipment URL."});
+        toast({variant: "destructive", title: toastInvalidQRCodeTitleText, description: toastThescannedQRcodeisnoDescText});
     }
   };
 

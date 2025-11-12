@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { prisma } from '@/lib/db';
 
+import { useTranslate } from '@/contexts/TranslationContext';
 const inventoryAnalysisSchema = z.object({
   input: z.string().min(1, 'Product URL or description is required'),
   type: z.enum(['url', 'description']).default('description'),
@@ -44,6 +45,15 @@ function getCategoryIcon(categoryName: string): string {
 }
 
 export async function POST(request: NextRequest) {
+  // Translation hooks
+  const { translated: textPowerspecsifmentioneText } = useTranslate('Power specs if mentioned');
+  const { translated: textDimensionsifmentioneText } = useTranslate('Dimensions if mentioned');
+  const { translated: textBrandnameifmentionedText } = useTranslate('Brand name if mentioned');
+  const { translated: textConnectiontypesasarrText } = useTranslate('Connection types as array');
+  const { translated: textPowerspecsText } = useTranslate('Power specs');
+  const { translated: textWeightwithunitsText } = useTranslate('Weight with units');
+  const { translated: textBrandnameText } = useTranslate('Brand name');
+
   try {
     const body = await request.json();
     console.log('AI request received:', { type: body.type, inputLength: body.input?.length });
@@ -78,12 +88,12 @@ export async function POST(request: NextRequest) {
           "dailyRate": "Estimated daily rental rate in USD (number)",
           "specifications": ["Key specifications as array"],
           "imageUrl": "Product image URL if available",
-          "brand": "Brand name",
+          "brand": {textBrandnameText},
           "model": "Model number/name",
-          "weight": "Weight with units",
+          "weight": {textWeightwithunitsText},
           "dimensions": "Dimensions (L x W x H)",
-          "powerRequirements": "Power specs",
-          "connectivity": ["Connection types as array"]
+          "powerRequirements": {textPowerspecsText},
+          "connectivity": [{textConnectiontypesasarrText}]
         }
         
         For daily rate, estimate based on typical AV equipment rental prices.
@@ -104,11 +114,11 @@ export async function POST(request: NextRequest) {
           "dailyRate": "Estimated daily rental rate in USD (number)",
           "specifications": ["Key specifications as array"],
           "imageUrl": "Product image URL if available",
-          "brand": "Brand name if mentioned",
+          "brand": {textBrandnameifmentionedText},
           "model": "Model number/name if mentioned",
           "weight": "Weight with units if mentioned",
-          "dimensions": "Dimensions if mentioned",
-          "powerRequirements": "Power specs if mentioned",
+          "dimensions": {textDimensionsifmentioneText},
+          "powerRequirements": {textPowerspecsifmentioneText},
           "connectivity": ["Connection types as array if mentioned"]
         }
         

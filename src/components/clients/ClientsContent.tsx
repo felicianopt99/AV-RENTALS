@@ -7,9 +7,14 @@ import { ClientListDisplay } from '@/components/clients/ClientListDisplay';
 import { useAppContext } from '@/contexts/AppContext';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { AlertTriangle } from 'lucide-react';
+import { useTranslate } from '@/contexts/TranslationContext';
 
 export function ClientsContent() {
   const { currentUser } = useAppContext();
+
+  // Translation hooks
+  const { translated: accessDeniedText } = useTranslate('Access Denied');
+  const { translated: noPermissionText } = useTranslate('You do not have permission to view this page.');
 
   if (currentUser?.role !== 'Admin') {
     return (
@@ -20,8 +25,8 @@ export function ClientsContent() {
                 <CardHeader className="flex-row gap-4 items-center">
                     <AlertTriangle className="w-8 h-8 text-destructive" />
                     <div>
-                        <CardTitle className="text-destructive">Access Denied</CardTitle>
-                        <CardDescription>You do not have permission to view this page.</CardDescription>
+                        <CardTitle className="text-destructive">{accessDeniedText}</CardTitle>
+                        <CardDescription>{noPermissionText}</CardDescription>
                     </div>
                 </CardHeader>
             </Card>

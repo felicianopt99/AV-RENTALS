@@ -13,7 +13,20 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 
+import { useTranslate } from '@/contexts/TranslationContext';
 export function InventoryAvailabilityView() {
+  // Translation hooks
+  const { translated: attrSelectEquipmentText } = useTranslate('Select Equipment');
+  const { translated: attrMaxPriceText } = useTranslate('Max Price');
+  const { translated: attrMinPriceText } = useTranslate('Min Price');
+  const { translated: uiMaintenanceText } = useTranslate('Maintenance');
+  const { translated: uiDamagedText } = useTranslate('Damaged');
+  const { translated: uiGoodText } = useTranslate('Good');
+  const { translated: uiAllStatusesText } = useTranslate('All Statuses');
+  const { translated: uiAllCategoriesText } = useTranslate('All Categories');
+  const { translated: attrSearchequipmentText } = useTranslate('Search equipment...');
+  const { translated: uiInventoryAvailabilitText } = useTranslate('Inventory Availability');
+
   const { equipment, rentals, events, isDataLoaded, categories } = useAppContext();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -105,14 +118,14 @@ export function InventoryAvailabilityView() {
   return (
     <Card className="shadow-lg">
       <CardHeader>
-        <CardTitle>Inventory Availability</CardTitle>
+        <CardTitle>{uiInventoryAvailabilitText}</CardTitle>
         <CardDescription>Select an equipment item to view its rental schedule. Booked periods are shown as events. Red events indicate overbooking.</CardDescription>
           <div className="flex flex-col lg:flex-row gap-4 pt-4">
             <div className="flex flex-col sm:flex-row gap-4 flex-grow">
               <div className="relative flex-grow">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search equipment..."
+                  placeholder={attrSearchequipmentText}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -123,7 +136,7 @@ export function InventoryAvailabilityView() {
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="all">{uiAllCategoriesText}</SelectItem>
                   {categories.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id}>
                       {cat.name}
@@ -150,15 +163,15 @@ export function InventoryAvailabilityView() {
                   <SelectValue placeholder="All Statuses" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="good">Good</SelectItem>
-                  <SelectItem value="damaged">Damaged</SelectItem>
-                  <SelectItem value="maintenance">Maintenance</SelectItem>
+                  <SelectItem value="all">{uiAllStatusesText}</SelectItem>
+                  <SelectItem value="good">{uiGoodText}</SelectItem>
+                  <SelectItem value="damaged">{uiDamagedText}</SelectItem>
+                  <SelectItem value="maintenance">{uiMaintenanceText}</SelectItem>
                 </SelectContent>
               </Select>
               <Input
                 type="number"
-                placeholder="Min Price"
+                placeholder={attrMinPriceText}
                 value={priceMin}
                 onChange={(e) => setPriceMin(e.target.value)}
                 className="w-full sm:w-[100px]"
@@ -166,7 +179,7 @@ export function InventoryAvailabilityView() {
               />
               <Input
                 type="number"
-                placeholder="Max Price"
+                placeholder={attrMaxPriceText}
                 value={priceMax}
                 onChange={(e) => setPriceMax(e.target.value)}
                 className="w-full sm:w-[100px]"
@@ -174,7 +187,7 @@ export function InventoryAvailabilityView() {
               />
               <Select value={selectedEquipment} onValueChange={setSelectedEquipment}>
                 <SelectTrigger className="w-full sm:w-[200px]">
-                  <SelectValue placeholder="Select Equipment" />
+                  <SelectValue placeholder={attrSelectEquipmentText} />
                 </SelectTrigger>
                 <SelectContent>
                   {filteredEquipment.map((eq) => (

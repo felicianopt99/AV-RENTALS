@@ -2,24 +2,28 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useAppContext } from '@/contexts/AppContext';
+import { useTranslate } from '@/contexts/TranslationContext';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Package, Users, CalendarClock, Wrench, FileText, PartyPopper } from 'lucide-react';
+import { PlusCircle, Package, Users, CalendarClock, Wrench, FileText, PartyPopper, UserPlus } from 'lucide-react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { isFuture } from 'date-fns';
 import { FloatingActionButton } from '@/components/ui/FloatingActionButton';
 
 const StatCard: React.FC<{ title: string; value: string | number; icon: React.ElementType; description?: string, href?: string }> = ({ title, value, icon: Icon, description, href }) => {
+  const { translated: translatedTitle } = useTranslate(title);
+  const { translated: translatedDesc } = useTranslate(description || '');
+  
   const cardContent = (
     <Card className="shadow-sm hover:shadow-md hover:border-border/50 transition-all duration-200 transform hover:-translate-y-0.5 bg-card/50 border-border/30">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        <CardTitle className="text-sm font-medium">{translatedTitle}</CardTitle>
         <Icon className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
-        {description && <p className="text-xs text-muted-foreground">{description}</p>}
+        {description && <p className="text-xs text-muted-foreground">{translatedDesc}</p>}
       </CardContent>
     </Card>
   );
@@ -31,6 +35,21 @@ const StatCard: React.FC<{ title: string; value: string | number; icon: React.El
 export default function DashboardPage() {
   const { equipment, clients, events, quotes, rentals, isDataLoaded, user } = useAppContext();
   const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false);
+  
+  // Translation hooks
+  const { translated: welcomeText } = useTranslate(`Welcome, ${user?.name || 'User'}!`);
+  const { translated: loadingText } = useTranslate('Loading dashboard data...');
+  const { translated: monthlyRevenueText } = useTranslate('Monthly Revenue');
+  const { translated: revenueDescText } = useTranslate('Revenue from accepted quotes over the last 6 months.');
+  const { translated: topClientsText } = useTranslate('Top Clients by Revenue');
+  const { translated: topClientsDescText } = useTranslate('Your most valuable clients based on accepted quotes.');
+  const { translated: mostRentedText } = useTranslate('Most Rented Equipment');
+  const { translated: mostRentedDescText } = useTranslate('The most popular items in your inventory.');
+  const { translated: quickActionsText } = useTranslate('Quick Actions');
+  const { translated: quickActionsDescText } = useTranslate('Get started by creating new items or managing your inventory.');
+  const { translated: addEquipmentText } = useTranslate('Add New Equipment');
+  const { translated: addClientText } = useTranslate('Add New Client');
+  const { translated: createQuoteText } = useTranslate('Create New Quote');
 
   const analyticsData = useMemo(() => {
     if (!isDataLoaded) return { 
@@ -62,7 +81,7 @@ export default function DashboardPage() {
         <div className="flex flex-col min-h-screen">
             <AppHeader title="Dashboard" />
             <div className="flex-grow flex items-center justify-center p-4 md:p-6">
-                <p className="text-lg text-muted-foreground">Loading dashboard data...</p>
+                <p className="text-lg text-muted-foreground">{loadingText}</p>
             </div>
         </div>
     );
@@ -71,7 +90,7 @@ export default function DashboardPage() {
   return (
       <div className="flex flex-col h-full">
           <AppHeader title="Dashboard" className={isHeaderCollapsed ? 'collapsed' : ''}>
-            <h1 className="text-xl font-bold">Welcome, {user?.name || 'User'}!</h1>
+            <h1 className="text-xl font-bold">{welcomeText}</h1>
           </AppHeader>
           <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-8">
             
@@ -89,8 +108,8 @@ export default function DashboardPage() {
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 <Card className="lg:col-span-3 shadow-xl">
                     <CardHeader>
-                        <CardTitle>Monthly Revenue</CardTitle>
-                        <CardDescription>Revenue from accepted quotes over the last 6 months.</CardDescription>
+                        <CardTitle>{monthlyRevenueText}</CardTitle>
+                        <CardDescription>{revenueDescText}</CardDescription>
                     </CardHeader>
                     <CardContent className="pl-2">
                         {/* <RevenueChart data={analyticsData.monthlyRevenue} /> */}
@@ -98,8 +117,8 @@ export default function DashboardPage() {
                 </Card>
                 <Card className="lg:col-span-2 shadow-xl">
                     <CardHeader>
-                        <CardTitle>Top Clients by Revenue</CardTitle>
-                        <CardDescription>Your most valuable clients based on accepted quotes.</CardDescription>
+                        <CardTitle>{topClientsText}</CardTitle>
+                        <CardDescription>{topClientsDescText}</CardDescription>
                     </CardHeader>
                     <CardContent className="pl-2">
                         {/* <TopClientsChart data={analyticsData.topClients} /> */}
@@ -107,8 +126,8 @@ export default function DashboardPage() {
                 </Card>
                 <Card className="shadow-xl">
                     <CardHeader>
-                        <CardTitle>Most Rented Equipment</CardTitle>
-                        <CardDescription>The most popular items in your inventory.</CardDescription>
+                        <CardTitle>{mostRentedText}</CardTitle>
+                        <CardDescription>{mostRentedDescText}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         {/* <TopEquipmentChart data={analyticsData.topEquipment} /> */}
@@ -118,23 +137,23 @@ export default function DashboardPage() {
 
             <Card className="shadow-xl border-border/60">
               <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-                <CardDescription>Get started by creating new items or managing your inventory.</CardDescription>
+                <CardTitle>{quickActionsText}</CardTitle>
+                <CardDescription>{quickActionsDescText}</CardDescription>
               </CardHeader>
               <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 <Button asChild size="lg" variant="outline" className="w-full h-20 text-base justify-start p-4">
                   <Link href="/equipment/new">
-                    <PlusCircle className="mr-3 h-6 w-6 text-blue-600 dark:text-blue-400" /> Add New Equipment
+                    <PlusCircle className="mr-3 h-6 w-6 text-blue-600 dark:text-blue-400" /> {addEquipmentText}
                   </Link>
                 </Button>
                 <Button asChild size="lg" variant="outline" className="w-full h-20 text-base justify-start p-4">
                   <Link href="/clients/new">
-                    <UserPlus className="mr-3 h-6 w-6 text-blue-600 dark:text-blue-400" /> Add New Client
+                    <UserPlus className="mr-3 h-6 w-6 text-blue-600 dark:text-blue-400" /> {addClientText}
                   </Link>
                 </Button>
                 <Button asChild size="lg" variant="outline" className="w-full h-20 text-base justify-start p-4">
                   <Link href="/quotes/new">
-                    <FileText className="mr-3 h-6 w-6 text-blue-600 dark:text-blue-400" /> Create New Quote
+                    <FileText className="mr-3 h-6 w-6 text-blue-600 dark:text-blue-400" /> {createQuoteText}
                   </Link>
                 </Button>
               </CardContent>

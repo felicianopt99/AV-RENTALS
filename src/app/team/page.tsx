@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAppContext } from '@/contexts/AppContext';
 import ProfileCard from '@/components/ProfileCard';
 import { User } from '@/types';
+import { useTranslate } from '@/contexts/TranslationContext';
 import '../../components/ProfileCard.css';
 import './team.css';
 
@@ -11,6 +12,14 @@ export default function TeamPage() {
   const { isDataLoaded } = useAppContext();
   const [teamMembers, setTeamMembers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Translation hooks
+  const { translated: ourTeamText } = useTranslate('Our Team');
+  const { translated: noTeamMembersText } = useTranslate('No team members have been configured yet.');
+  const { translated: adminCanAddText } = useTranslate('Admin can add team members from the Users page.');
+  const { translated: viewProfileText } = useTranslate('View Profile');
+  const { translated: activeText } = useTranslate('Active');
+  const { translated: inactiveText } = useTranslate('Inactive');
 
   useEffect(() => {
     fetchTeamMembers();
@@ -62,13 +71,13 @@ export default function TeamPage() {
     return (
       <div className="team-page">
         <div className="container mx-auto">
-          <h1 className="text-3xl font-bold text-center mb-8">Our Team</h1>
+          <h1 className="text-3xl font-bold text-center mb-8">{ourTeamText}</h1>
           <div className="text-center py-12">
             <p className="text-lg text-gray-600 dark:text-gray-400">
-              No team members have been configured yet.
+              {noTeamMembersText}
             </p>
             <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
-              Admin can add team members from the Users page.
+              {adminCanAddText}
             </p>
           </div>
         </div>
@@ -79,7 +88,7 @@ export default function TeamPage() {
   return (
     <div className="team-page">
       <div className="container mx-auto">
-        <h1 className="text-3xl font-bold text-center mb-8">Our Team</h1>
+        <h1 className="text-3xl font-bold text-center mb-8">{ourTeamText}</h1>
         <div className="team-grid">
           {teamMembers.map((member) => (
             <div key={member.id} className="team-card-container">
@@ -88,8 +97,8 @@ export default function TeamPage() {
                 name={member.name}
                 title={member.teamTitle || member.role}
                 handle={member.username}
-                status={member.isActive ? 'Active' : 'Inactive'}
-                contactText="View Profile"
+                status={member.isActive ? activeText : inactiveText}
+                contactText={viewProfileText}
                 enableTilt={true}
                 mobileTiltSensitivity={3}
                 onContactClick={() => {

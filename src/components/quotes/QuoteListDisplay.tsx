@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import type { Quote } from '@/types';
 import { useAppContext, useAppDispatch } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
+import { useTranslate } from '@/contexts/TranslationContext';
 import {
   Table,
   TableBody,
@@ -46,6 +47,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { QuoteForm } from '@/components/quotes/QuoteForm';
 
 export function QuoteListDisplay() {
+  // Translation hooks
+  const { translated: toastTherewasanerrorgenerDescText } = useTranslate('There was an error generating the PDF.');
+  const { translated: toastDownloadFailedTitleText } = useTranslate('Download Failed');
+  const { translated: toastPDFDownloadedTitleText } = useTranslate('PDF Downloaded');
+  const { translated: toastApprovalFailedTitleText } = useTranslate('Approval Failed');
+  const { translated: toastQuoteApprovedTitleText } = useTranslate('Quote Approved');
+  const { translated: toastQuoteDeletedTitleText } = useTranslate('Quote Deleted');
+
   const { quotes, isDataLoaded } = useAppContext();
   const { deleteQuote, approveQuote } = useAppDispatch();
   const router = useRouter();
@@ -68,7 +77,7 @@ export function QuoteListDisplay() {
   const confirmDelete = useCallback(() => {
     if (quoteToDelete) {
       deleteQuote(quoteToDelete.id);
-      toast({ title: 'Quote Deleted', description: `Quote "${quoteToDelete.name || quoteToDelete.quoteNumber}" has been removed.` });
+      toast({ title: toastQuoteDeletedTitleText, description: `Quote "${quoteToDelete.name || quoteToDelete.quoteNumber}" has been removed.` });
       setQuoteToDelete(null);
     }
   }, [quoteToDelete, deleteQuote, toast]);
@@ -81,10 +90,10 @@ export function QuoteListDisplay() {
     if (quoteToApprove) {
       const result = await approveQuote(quoteToApprove);
       if (result.success) {
-        toast({ title: 'Quote Approved', description: result.message });
+        toast({ title: toastQuoteApprovedTitleText, description: result.message });
         router.push('/events');
       } else {
-        toast({ variant: "destructive", title: 'Approval Failed', description: result.message });
+        toast({ variant: "destructive", title: toastApprovalFailedTitleText, description: result.message });
       }
       setQuoteToApprove(null);
     }
@@ -104,15 +113,15 @@ export function QuoteListDisplay() {
         download: true
       });
       toast({
-        title: "PDF Downloaded",
+        title: toastPDFDownloadedTitleText,
         description: `Quote ${quote.quoteNumber} has been downloaded successfully.`
       });
     } catch (error) {
       console.error('Error downloading PDF:', error);
       toast({
         variant: "destructive",
-        title: "Download Failed",
-        description: "There was an error generating the PDF."
+        title: toastDownloadFailedTitleText,
+        description: toastTherewasanerrorgenerDescText
       });
     } finally {
       setIsGeneratingPDF(false);

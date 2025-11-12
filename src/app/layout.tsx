@@ -5,6 +5,7 @@ import './globals.css';
 import { ConditionalLayout } from '@/components/layout/ConditionalLayout';
 import { AppProvider } from '@/contexts/AppContext';
 import { ThemeProvider } from '@/contexts/ThemeProvider';
+import { TranslationProvider } from '@/contexts/TranslationContext';
 import { ReactQueryProvider } from '@/providers/ReactQueryProvider';
 import { Toaster } from "@/components/ui/toaster";
 import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
@@ -63,12 +64,14 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased font-sans`}>
         <ReactQueryProvider>
           <ThemeProvider>
-            <AppProvider>
-              <ConditionalLayout>
-                {children}
-              </ConditionalLayout>
-              <PWAInstallPrompt />
-            </AppProvider>
+            <TranslationProvider>
+              <AppProvider>
+                <ConditionalLayout>
+                  {children}
+                </ConditionalLayout>
+                <PWAInstallPrompt />
+              </AppProvider>
+            </TranslationProvider>
           </ThemeProvider>
           <Toaster />
         </ReactQueryProvider>

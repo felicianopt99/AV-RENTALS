@@ -17,7 +17,23 @@ import { format } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useIsMobile } from '@/hooks/use-mobile';
 
+import { useTranslate } from '@/contexts/TranslationContext';
 export default function ClientDetailsPage() {
+  // Translation hooks
+  const { translated: uiStatusText } = useTranslate('Status');
+  const { translated: uiTotalText } = useTranslate('Total');
+  const { translated: uiNameText } = useTranslate('Name');
+  const { translated: uiNumberText } = useTranslate('Number');
+  const { translated: uiQuoteHistoryText } = useTranslate('Quote History');
+  const { translated: uiDateText } = useTranslate('Date');
+  const { translated: uiLocationText } = useTranslate('Location');
+  const { translated: uiEventText } = useTranslate('Event');
+  const { translated: uiEventHistoryText } = useTranslate('Event History');
+  const { translated: uiLifetimeValueText } = useTranslate('Lifetime Value');
+  const { translated: uiClientNotesText } = useTranslate('Client Notes');
+  const { translated: uiEditClientText } = useTranslate('Edit Client');
+  const { translated: uiAccessDeniedText } = useTranslate('Access Denied');
+
   const params = useParams();
   const router = useRouter();
   const { clients, events, quotes, isDataLoaded, currentUser } = useAppContext();
@@ -73,7 +89,7 @@ export default function ClientDetailsPage() {
                 <CardHeader className="flex-row gap-4 items-center">
                     <AlertTriangle className="w-8 h-8 text-destructive" />
                     <div>
-                        <CardTitle className="text-destructive">Access Denied</CardTitle>
+                        <CardTitle className="text-destructive">{uiAccessDeniedText}</CardTitle>
                         <CardDescription>You do not have permission to view client details.</CardDescription>
                     </div>
                 </CardHeader>
@@ -119,8 +135,7 @@ export default function ClientDetailsPage() {
                   {client.contactPerson && <CardDescription className="text-base mt-1">Contact: {client.contactPerson}</CardDescription>}
                 </div>
                 <Button variant="outline" onClick={() => router.push(`/clients/${client.id}/edit`)}>
-                  <Edit className="mr-2 h-4 w-4" /> Edit Client
-                </Button>
+                  <Edit className="mr-2 h-4 w-4" /> {uiEditClientText}</Button>
               </div>
             </CardHeader>
             <CardContent className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 text-sm">
@@ -133,7 +148,7 @@ export default function ClientDetailsPage() {
           <div className="grid md:grid-cols-3 gap-6">
             <Card className="md:col-span-2">
               <CardHeader>
-                <CardTitle>Client Notes</CardTitle>
+                <CardTitle>{uiClientNotesText}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">{client.notes || 'No notes for this client.'}</p>
@@ -141,7 +156,7 @@ export default function ClientDetailsPage() {
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2"><DollarSign className="w-5 h-5 text-primary"/> Lifetime Value</CardTitle>
+                <CardTitle className="flex items-center gap-2"><DollarSign className="w-5 h-5 text-primary"/> {uiLifetimeValueText}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-3xl font-bold">€{clientValue.toFixed(2)}</p>
@@ -152,7 +167,7 @@ export default function ClientDetailsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><PartyPopper className="w-5 h-5 text-primary"/> Event History</CardTitle>
+              <CardTitle className="flex items-center gap-2"><PartyPopper className="w-5 h-5 text-primary"/> {uiEventHistoryText}</CardTitle>
             </CardHeader>
             <CardContent>
                 {clientEvents.length > 0 ? (
@@ -180,7 +195,7 @@ export default function ClientDetailsPage() {
                       <ScrollArea className="h-64">
                         <Table>
                           <TableHeader>
-                            <TableRow><TableHead>Event</TableHead><TableHead>Location</TableHead><TableHead>Date</TableHead></TableRow>
+                            <TableRow><TableHead>{uiEventText}</TableHead><TableHead>{uiLocationText}</TableHead><TableHead>{uiDateText}</TableHead></TableRow>
                           </TableHeader>
                           <TableBody>
                             {clientEvents.map(event => (
@@ -201,7 +216,7 @@ export default function ClientDetailsPage() {
           
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><FileText className="w-5 h-5 text-primary"/> Quote History</CardTitle>
+              <CardTitle className="flex items-center gap-2"><FileText className="w-5 h-5 text-primary"/> {uiQuoteHistoryText}</CardTitle>
             </CardHeader>
             <CardContent>
                 {clientQuotes.length > 0 ? (
@@ -230,7 +245,7 @@ export default function ClientDetailsPage() {
                       <ScrollArea className="h-64">
                         <Table>
                           <TableHeader>
-                            <TableRow><TableHead>Number</TableHead><TableHead>Name</TableHead><TableHead>Total</TableHead><TableHead>Status</TableHead></TableRow>
+                            <TableRow><TableHead>{uiNumberText}</TableHead><TableHead>{uiNameText}</TableHead><TableHead>{uiTotalText}</TableHead><TableHead>{uiStatusText}</TableHead></TableRow>
                           </TableHeader>
                           <TableBody>
                             {clientQuotes.map(quote => (

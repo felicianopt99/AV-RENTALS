@@ -10,6 +10,7 @@ export default function LoginLayout({
 }: {
   children: React.ReactNode;
 }) {
+
   // Simple layout without navigation for login page
   return (
     <div className="min-h-screen bg-background text-foreground">

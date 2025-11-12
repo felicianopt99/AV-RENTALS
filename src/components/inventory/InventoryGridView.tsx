@@ -12,6 +12,7 @@ import { useRouter } from 'next/navigation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { EQUIPMENT_STATUSES } from '@/lib/constants';
+import { useTranslate } from '@/contexts/TranslationContext';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +27,20 @@ import { useToast } from '@/hooks/use-toast';
 import { Separator } from '../ui/separator';
 
 export function InventoryGridView() {
+  // Translation hooks
+  const { translated: uiDeleteText } = useTranslate('Delete');
+  const { translated: uiCancelText } = useTranslate('Cancel');
+  const { translated: uiConfirmDeletionText } = useTranslate('Confirm Deletion');
+  const { translated: uiNextText } = useTranslate('Next');
+  const { translated: uiPreviousText } = useTranslate('Previous');
+  const { translated: uiConsumablesText } = useTranslate('Consumables');
+  const { translated: uiLocationText } = useTranslate('Location');
+  const { translated: uiDailyRateText } = useTranslate('Daily Rate');
+  const { translated: uiStatusText } = useTranslate('Status');
+  const { translated: uiQuantityText } = useTranslate('Quantity');
+  const { translated: uiNameText } = useTranslate('Name');
+  const { translated: toastItemDeletedTitleText } = useTranslate('Item Deleted');
+
   const { equipment, categories, subcategories, rentals, events, isDataLoaded } = useAppContext();
   const { deleteEquipmentItem } = useAppDispatch();
   const { toast } = useToast();
@@ -137,7 +152,7 @@ export function InventoryGridView() {
   const confirmDelete = useCallback(() => {
     if (itemToDelete) {
       deleteEquipmentItem(itemToDelete.id);
-      toast({ title: "Item Deleted", description: `"${itemToDelete.name}" has been removed.` });
+      toast({ title: "{toastItemDeletedTitleText}", description: `"${itemToDelete.name}" has been removed.` });
       setItemToDelete(null);
     }
   }, [itemToDelete, deleteEquipmentItem, toast]);
@@ -184,11 +199,11 @@ export function InventoryGridView() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="name">Name</SelectItem>
-              <SelectItem value="quantity">Quantity</SelectItem>
-              <SelectItem value="status">Status</SelectItem>
-              <SelectItem value="dailyRate">Daily Rate</SelectItem>
-              <SelectItem value="location">Location</SelectItem>
+              <SelectItem value="name">{uiNameText}</SelectItem>
+              <SelectItem value="quantity">{uiQuantityText}</SelectItem>
+              <SelectItem value="status">{uiStatusText}</SelectItem>
+              <SelectItem value="dailyRate">{uiDailyRateText}</SelectItem>
+              <SelectItem value="location">{uiLocationText}</SelectItem>
             </SelectContent>
           </Select>
           <Button variant="outline" size="sm" onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} className="w-full sm:w-auto text-xs sm:text-sm">
@@ -234,8 +249,7 @@ export function InventoryGridView() {
             {consumableItems.length > 0 && (
                 <section className="px-1 sm:px-2 md:px-0">
                     <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 pb-2 border-b border-border/70 text-primary flex items-center">
-                        <Box className="mr-2 sm:mr-3 h-6 w-6 sm:h-8 sm:w-8" /> Consumables
-                    </h2>
+                        <Box className="mr-2 sm:mr-3 h-6 w-6 sm:h-8 sm:w-8" /> {uiConsumablesText}</h2>
               <div className="grid [grid-template-columns:repeat(auto-fill,minmax(180px,1fr))] gap-3 sm:gap-4 md:gap-6">
                         {consumableItems.map(item => (
                             <EquipmentCard
@@ -268,7 +282,7 @@ export function InventoryGridView() {
               className="text-xs sm:text-sm h-8 sm:h-9"
             >
               <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              <span className="hidden xs:inline ml-1">Previous</span>
+              <span className="hidden xs:inline ml-1">{uiPreviousText}</span>
             </Button>
             <span className="px-2 sm:px-3 py-1 text-xs sm:text-sm whitespace-nowrap">
               {currentPage} / {totalPages}
@@ -280,7 +294,7 @@ export function InventoryGridView() {
               disabled={currentPage === totalPages}
               className="text-xs sm:text-sm h-8 sm:h-9"
             >
-              <span className="hidden xs:inline mr-1">Next</span>
+              <span className="hidden xs:inline mr-1">{uiNextText}</span>
               <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </Button>
           </div>
@@ -291,16 +305,15 @@ export function InventoryGridView() {
         <AlertDialog open={!!itemToDelete} onOpenChange={(isOpen) => !isOpen && setItemToDelete(null)}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+              <AlertDialogTitle>{uiConfirmDeletionText}</AlertDialogTitle>
               <AlertDialogDescription>
                 Are you sure you want to delete "{itemToDelete.name}"? This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setItemToDelete(null)}>Cancel</AlertDialogCancel>
+              <AlertDialogCancel onClick={() => setItemToDelete(null)}>{uiCancelText}</AlertDialogCancel>
               <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">
-                Delete
-              </AlertDialogAction>
+                {uiDeleteText}</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

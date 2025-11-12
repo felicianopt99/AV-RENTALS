@@ -6,6 +6,7 @@ import { useAppContext, useAppDispatch } from '@/contexts/AppContext';
 import { EquipmentFilters } from '@/components/equipment/EquipmentFilters';
 import { SearchSlash, Download, ArrowUpDown, Edit, Trash2, Eye, Package, MapPin, DollarSign, Hash, CheckCircle, XCircle, AlertCircle, MoreHorizontal } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useTranslate } from '@/contexts/TranslationContext';
 import {
   Table,
   TableBody,
@@ -35,6 +36,28 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export function InventoryListView() {
+  // Translation hooks
+  const { translated: uiCancelText } = useTranslate('Cancel');
+  const { translated: uiConfirmDeletionText } = useTranslate('Confirm Deletion');
+  const { translated: uiNextText } = useTranslate('Next');
+  const { translated: uiPreviousText } = useTranslate('Previous');
+  const { translated: uiActionsText } = useTranslate('Actions');
+  const { translated: uiAvailabilityText } = useTranslate('Availability');
+  const { translated: uiQtyText } = useTranslate('Qty');
+  const { translated: uiCategoryText } = useTranslate('Category');
+  const { translated: uiDetailsText } = useTranslate('Details');
+  const { translated: uiEquipmentText } = useTranslate('Equipment');
+  const { translated: uiExportCSVText } = useTranslate('Export CSV');
+  const { translated: uiLocationText } = useTranslate('Location');
+  const { translated: uiDailyRateText } = useTranslate('Daily Rate');
+  const { translated: uiStatusText } = useTranslate('Status');
+  const { translated: uiQuantityText } = useTranslate('Quantity');
+  const { translated: uiNameText } = useTranslate('Name');
+  const { translated: uiDeleteText } = useTranslate('Delete');
+  const { translated: uiEditText } = useTranslate('Edit');
+  const { translated: uiViewText } = useTranslate('View');
+  const { translated: toastItemDeletedTitleText } = useTranslate('Item Deleted');
+
   const { equipment, categories, subcategories, rentals, events, isDataLoaded } = useAppContext();
   const { deleteEquipmentItem } = useAppDispatch();
   const router = useRouter();
@@ -176,7 +199,7 @@ export function InventoryListView() {
   const confirmDelete = useCallback(() => {
     if (itemToDelete) {
       deleteEquipmentItem(itemToDelete.id);
-      toast({ title: "Item Deleted", description: `"${itemToDelete.name}" has been removed.` });
+      toast({ title: "{toastItemDeletedTitleText}", description: `"${itemToDelete.name}" has been removed.` });
       setItemToDelete(null);
     }
   }, [itemToDelete, deleteEquipmentItem, toast]);
@@ -268,19 +291,16 @@ export function InventoryListView() {
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => router.push(`/equipment/${item.id}`)}>
                 <Eye className="mr-2 h-3 w-3" />
-                View
-              </DropdownMenuItem>
+                {uiViewText}</DropdownMenuItem>
               <DropdownMenuItem onClick={() => router.push(`/equipment/${item.id}/edit`)}>
                 <Edit className="mr-2 h-3 w-3" />
-                Edit
-              </DropdownMenuItem>
+                {uiEditText}</DropdownMenuItem>
               <DropdownMenuItem 
                 onClick={() => openDeleteConfirmDialog(item)}
                 className="text-destructive focus:text-destructive"
               >
                 <Trash2 className="mr-2 h-3 w-3" />
-                Delete
-              </DropdownMenuItem>
+                {uiDeleteText}</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -330,11 +350,11 @@ export function InventoryListView() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="name">Name</SelectItem>
-              <SelectItem value="quantity">Quantity</SelectItem>
-              <SelectItem value="status">Status</SelectItem>
-              <SelectItem value="dailyRate">Daily Rate</SelectItem>
-              <SelectItem value="location">Location</SelectItem>
+              <SelectItem value="name">{uiNameText}</SelectItem>
+              <SelectItem value="quantity">{uiQuantityText}</SelectItem>
+              <SelectItem value="status">{uiStatusText}</SelectItem>
+              <SelectItem value="dailyRate">{uiDailyRateText}</SelectItem>
+              <SelectItem value="location">{uiLocationText}</SelectItem>
             </SelectContent>
           </Select>
           <Button variant="outline" size="sm" onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} className="w-full sm:w-auto">
@@ -344,8 +364,7 @@ export function InventoryListView() {
         </div>
         <Button onClick={exportToCSV} variant="outline" className="w-full sm:w-auto">
           <Download className="h-4 w-4 mr-2" />
-          Export CSV
-        </Button>
+          {uiExportCSVText}</Button>
       </div>
 
       {noItemsFound ? (
@@ -367,15 +386,15 @@ export function InventoryListView() {
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
-                    <TableHead className="min-w-[180px] font-semibold">Equipment</TableHead>
-                    <TableHead className="min-w-[200px] font-semibold">Details</TableHead>
-                    <TableHead className="min-w-[120px] font-semibold">Category</TableHead>
+                    <TableHead className="min-w-[180px] font-semibold">{uiEquipmentText}</TableHead>
+                    <TableHead className="min-w-[200px] font-semibold">{uiDetailsText}</TableHead>
+                    <TableHead className="min-w-[120px] font-semibold">{uiCategoryText}</TableHead>
                     <TableHead className="min-w-[100px] font-semibold">Status</TableHead>
                     <TableHead className="min-w-[100px] font-semibold">Location</TableHead>
-                    <TableHead className="min-w-[80px] font-semibold">Qty</TableHead>
+                    <TableHead className="min-w-[80px] font-semibold">{uiQtyText}</TableHead>
                     <TableHead className="min-w-[100px] font-semibold">Rate/Day</TableHead>
-                    <TableHead className="min-w-[100px] font-semibold">Availability</TableHead>
-                    <TableHead className="min-w-[120px] font-semibold text-center">Actions</TableHead>
+                    <TableHead className="min-w-[100px] font-semibold">{uiAvailabilityText}</TableHead>
+                    <TableHead className="min-w-[120px] font-semibold text-center">{uiActionsText}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -499,8 +518,7 @@ export function InventoryListView() {
                 disabled={currentPage === 1}
                 className="w-full sm:w-auto"
               >
-                Previous
-              </Button>
+                {uiPreviousText}</Button>
               <span className="px-3 py-1 text-sm">
                 Page {currentPage} of {totalPages}
               </span>
@@ -511,8 +529,7 @@ export function InventoryListView() {
                 disabled={currentPage === totalPages}
                 className="w-full sm:w-auto"
               >
-                Next
-              </Button>
+                {uiNextText}</Button>
             </div>
           </div>
         </>
@@ -522,13 +539,13 @@ export function InventoryListView() {
         <AlertDialog open={!!itemToDelete} onOpenChange={(isOpen) => !isOpen && setItemToDelete(null)}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+              <AlertDialogTitle>{uiConfirmDeletionText}</AlertDialogTitle>
               <AlertDialogDescription>
                 Are you sure you want to delete "{itemToDelete.name}"? This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setItemToDelete(null)}>Cancel</AlertDialogCancel>
+              <AlertDialogCancel onClick={() => setItemToDelete(null)}>{uiCancelText}</AlertDialogCancel>
               <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">
                 Delete
               </AlertDialogAction>
