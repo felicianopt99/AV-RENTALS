@@ -572,6 +572,53 @@ Common HTTP status codes:
 
 ## 🚀 Deployment
 
+### Docker + DuckDNS (Production)
+
+This project includes a full Docker stack with HTTPS via DuckDNS and automatic certificate renewal.
+
+- Services: app (Next.js standalone), nginx (reverse proxy + HTTPS), certbot (auto renew), duckdns (IP updater)
+- Files: `Dockerfile`, `docker-compose.yml`, `nginx/app.conf.template`, `.dockerignore`, `setup-duckdns-ssl.sh`
+
+1. Create a `.env` file in the project root:
+   ```env
+   # Core
+   NODE_ENV=production
+   PORT=3000
+   NEXT_PUBLIC_APP_URL=https://your-subdomain.duckdns.org
+
+   # DuckDNS / SSL
+   DOMAIN=your-subdomain.duckdns.org
+   DUCKDNS_DOMAIN=your-subdomain
+   DUCKDNS_TOKEN=your_duckdns_token
+   SSL_EMAIL=you@example.com
+
+   # Auth (replace with strong secrets)
+   JWT_SECRET=change_me_to_a_random_long_secret
+   NEXTAUTH_SECRET=change_me_to_a_random_long_secret
+
+   # Database (choose one)
+   # DATABASE_URL=postgresql://user:pass@host:5432/db?sslmode=require
+   # DATABASE_URL=file:./prisma/dev.db
+   ```
+
+2. Obtain certificates (one-time):
+   ```bash
+   ./setup-duckdns-ssl.sh
+   ```
+
+3. Start the stack:
+   ```bash
+   docker-compose up -d
+   ```
+
+4. Access the app:
+   - Public: `https://$DOMAIN`
+   - Local (direct app): `http://localhost:3000`
+
+Notes:
+- certbot container auto-renews certificates.
+- duckdns container keeps your IP synced with DuckDNS.
+
 ### Production Deployment Options
 
 #### Firebase App Hosting (Recommended)
