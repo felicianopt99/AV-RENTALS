@@ -1,0 +1,19 @@
+{
+  "timestamp": "2025-11-12T01:06:14.131Z",
+  "status": "error",
+  "error": "\nInvalid `sqlitePrisma.user.findMany()` invocation in\n/home/feli/AV-RENTALS/scripts/migrate-to-postgresql-v2.ts:105:43\n\n  102 \n  103 // 1. Migrate Users\n  104 console.log('👥 Migrating users...')\n→ 105 const users = await sqlitePrisma.user.findMany(\nThe column `main.User.isTeamMember` does not exist in the current database.",
+  "stack": "PrismaClientKnownRequestError: \nInvalid `sqlitePrisma.user.findMany()` invocation in\n/home/feli/AV-RENTALS/scripts/migrate-to-postgresql-v2.ts:105:43\n\n  102 \n  103 // 1. Migrate Users\n  104 console.log('👥 Migrating users...')\n→ 105 const users = await sqlitePrisma.user.findMany(\nThe column `main.User.isTeamMember` does not exist in the current database.\n    at ei.handleRequestError (/home/feli/AV-RENTALS/node_modules/.prisma/sqlite-client/runtime/library.js:124:7268)\n    at ei.handleAndLogRequestError (/home/feli/AV-RENTALS/node_modules/.prisma/sqlite-client/runtime/library.js:124:6593)\n    at ei.request (/home/feli/AV-RENTALS/node_modules/.prisma/sqlite-client/runtime/library.js:124:6300)\n    at async a (/home/feli/AV-RENTALS/node_modules/.prisma/sqlite-client/runtime/library.js:133:9551)\n    at async migrateData (/home/feli/AV-RENTALS/scripts/migrate-to-postgresql-v2.ts:105:19)",
+  "stats": {
+    "users": 0,
+    "categories": 0,
+    "subcategories": 0,
+    "equipment": 0,
+    "clients": 0,
+    "events": 0,
+    "quotes": 0,
+    "rentals": 0,
+    "services": 0,
+    "fees": 0,
+    "notifications": 0
+  }
+}

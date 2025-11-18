@@ -11,14 +11,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 export function LanguageToggle() {
-  const { language, setLanguage } = useTranslation();
+  const { language, setLanguage, tSync } = useTranslation();
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative" title="Change Language">
+        <Button variant="ghost" size="icon" className="relative" title={tSync('Change Language')}>
           <Languages className="h-5 w-5" />
-          <span className="sr-only">{useTranslate('Toggle language')}</span>
+          <span className="sr-only">{tSync('Toggle language')}</span>
           <span className="absolute -bottom-1 -right-1 text-[10px] font-bold uppercase bg-primary text-primary-foreground rounded px-1">
             {language}
           </span>
@@ -29,17 +29,17 @@ export function LanguageToggle() {
           onClick={() => setLanguage('en')}
           className={language === 'en' ? 'bg-accent' : ''}
         >
-          <span className="mr-2">{useTranslate('🇬🇧')}</span>
+          <span className="mr-2">🇬🇧</span>
           English
-          {language === 'en' && <span className="ml-auto">{useTranslate('✓')}</span>}
+          {language === 'en' && <span className="ml-auto">✓</span>}
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => setLanguage('pt')}
           className={language === 'pt' ? 'bg-accent' : ''}
         >
-          <span className="mr-2">{useTranslate('🇵🇹')}</span>
+          <span className="mr-2">🇵🇹</span>
           Português (PT)
-          {language === 'pt' && <span className="ml-auto">{useTranslate('✓')}</span>}
+          {language === 'pt' && <span className="ml-auto">✓</span>}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

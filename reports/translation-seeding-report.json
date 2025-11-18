@@ -1,0 +1,48 @@
+{
+  "generatedAt": "2025-11-11T12:03:34.299Z",
+  "targetLanguage": "pt-PT",
+  "totalTranslations": 903,
+  "newTranslations": 903,
+  "samples": [
+    {
+      "sourceText": "• This quote is valid for 30 days from the date issued.",
+      "translatedText": "• This quote is valid for 30 days from the date issued."
+    },
+    {
+      "sourceText": "• Uses 97% less storage than 30-day retention",
+      "translatedText": "• Uses 97% less storage than 30-day retention"
+    },
+    {
+      "sourceText": "❌ Not available",
+      "translatedText": "❌ Not available"
+    },
+    {
+      "sourceText": "• Always maintains 1-3 days of recent recovery options",
+      "translatedText": "• Always maintains 1-3 days of recent recovery options"
+    },
+    {
+      "sourceText": "• \"Mackie ProFX16v3 16-channel mixer with USB interface\"",
+      "translatedText": "• \"Mackie ProFX16v3 16-channel mixer with USB interface\""
+    },
+    {
+      "sourceText": "• \"Professional LED par can light with RGBW color mixing\"",
+      "translatedText": "• \"Professional LED par can light with RGBW color mixing\""
+    },
+    {
+      "sourceText": "© 2025 Your Company. All rights reserved.",
+      "translatedText": "© 2025 Your Company. All rights reserved."
+    },
+    {
+      "sourceText": "{initialData ? \"Save Changes\" : \"Create Event\"}",
+      "translatedText": "{initialData ? \"Save Changes\" : \"Create Event\"}"
+    },
+    {
+      "sourceText": "© 2024 Your Company Name. All rights reserved.",
+      "translatedText": "© 2024 Your Company Name. All rights reserved."
+    },
+    {
+      "sourceText": "{editingSubcategory ? 'Save Changes' : 'Add Subcategory'}",
+      "translatedText": "{editingSubcategory ? 'Save Changes' : 'Add Subcategory'}"
+    }
+  ]
+}

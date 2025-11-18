@@ -28,5 +28,5 @@ interface ClientOnlyProps {
 export function ClientOnly({ children, fallback = null }: ClientOnlyProps) {
   const isClient = useIsClient();
   
-  return isClient ? <>{children}</>{useTranslate(':')}<>{fallback}</>;
+  return isClient ? <>{children}</> : <>{fallback}</>;
 }

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, X } from 'lucide-react';
 import { useAppContext } from '@/contexts/AppContext';
+import { useTranslation } from '@/contexts/TranslationContext';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -12,6 +13,7 @@ interface BeforeInstallPromptEvent extends Event {
 
 export function PWAInstallPrompt() {
   const { currentUser } = useAppContext();
+  const { tSync } = useTranslation();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [shownThisLogin, setShownThisLogin] = useState(false);
@@ -89,8 +91,8 @@ export function PWAInstallPrompt() {
     <div className="fixed bottom-20 left-4 right-4 z-[9998] md:bottom-4 md:left-auto md:right-4 md:max-w-sm">
       <div className="bg-card border border-border rounded-lg shadow-lg p-4 flex items-center gap-3">
         <div className="flex-1">
-          <p className="text-sm font-medium">{useTranslate('Install AV Rentals')}</p>
-          <p className="text-xs text-muted-foreground">{useTranslate('Add to home screen for quick access')}</p>
+          <p className="text-sm font-medium">{tSync('Install AV Rentals')}</p>
+          <p className="text-xs text-muted-foreground">{tSync('Add to home screen for quick access')}</p>
         </div>
         <Button size="sm" onClick={handleInstallClick} className="shrink-0">
           <Download className="h-4 w-4 mr-1" />

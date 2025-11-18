@@ -54,7 +54,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
             </p>
             {process.env.NODE_ENV === 'development' && this.state.error && (
               <details className="mt-4">
-                <summary className="cursor-pointer text-sm font-medium">{useTranslate('Error Details (Development)')}</summary>
+                <summary className="cursor-pointer text-sm font-medium">Error Details (Development)</summary>
                 <pre className="mt-2 text-xs bg-muted p-2 rounded overflow-auto">
                   {this.state.error.stack}
                 </pre>

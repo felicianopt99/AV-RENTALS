@@ -1,0 +1,40 @@
+{
+  "timestamp": "2025-11-12T01:02:56.427Z",
+  "databaseFile": "./prisma/dev.db",
+  "stats": {
+    "ActivityLog": 0,
+    "Category": 4,
+    "Client": 3,
+    "DataSyncEvent": 0,
+    "EquipmentItem": 8,
+    "Event": 10,
+    "MaintenanceLog": 2,
+    "Notification": 6,
+    "Quote": 6,
+    "QuoteItem": 5,
+    "Rental": 8,
+    "Subcategory": 5,
+    "User": 1,
+    "UserSession": 0,
+    "customization_settings": 1
+  },
+  "totalRecords": 59,
+  "readyForMigration": true,
+  "tables": [
+    "ActivityLog",
+    "Category",
+    "Client",
+    "DataSyncEvent",
+    "EquipmentItem",
+    "Event",
+    "MaintenanceLog",
+    "Notification",
+    "Quote",
+    "QuoteItem",
+    "Rental",
+    "Subcategory",
+    "User",
+    "UserSession",
+    "customization_settings"
+  ]
+}

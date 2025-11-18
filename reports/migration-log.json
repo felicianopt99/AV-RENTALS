@@ -1,0 +1,22 @@
+{
+  "timestamp": "2025-11-12T04:43:33.540Z",
+  "status": "success",
+  "stats": {
+    "User": 1,
+    "Category": 4,
+    "Subcategory": 0,
+    "EquipmentItem": 0,
+    "MaintenanceLog": 0,
+    "Client": 0,
+    "Event": 0,
+    "Rental": 0,
+    "Quote": 0,
+    "QuoteItem": 0,
+    "customization_settings": 0,
+    "UserSession": 0,
+    "ActivityLog": 0,
+    "DataSyncEvent": 0,
+    "Notification": 0
+  },
+  "totalRecords": 5
+}
