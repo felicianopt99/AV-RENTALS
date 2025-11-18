@@ -572,6 +572,24 @@ Common HTTP status codes:
 
 ## 🚀 Deployment
 
+### USB-Based Deployment (No Git)
+
+If you brought the project via USB, you can deploy without cloning from Git:
+
+1. Copy the project folder (e.g., `AV-RENTALS-USB`) from the USB to the server, e.g. `~/AV-RENTALS`.
+2. Place your `.env` in the project root (`~/AV-RENTALS/.env`).
+3. One-time SSL issuance for DuckDNS:
+   ```bash
+   cd ~/AV-RENTALS
+   chmod +x setup-duckdns-ssl.sh
+   ./setup-duckdns-ssl.sh
+   ```
+4. Start the stack with Docker Compose:
+   ```bash
+   docker-compose up -d
+   ```
+5. Access your app at `https://$DOMAIN`.
+
 ### Docker + DuckDNS (Production)
 
 This project includes a full Docker stack with HTTPS via DuckDNS and automatic certificate renewal.
