@@ -1,7 +1,3 @@
-
-
-
-// src/components/quotes/QuoteForm.tsx
 "use client";
 import React from "react";
 
@@ -137,6 +133,44 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
   const { translated: toastSelectfeeTitleText } = useTranslate('Select fee');
   const { translated: toastSelectserviceTitleText } = useTranslate('Select service');
   const { translated: toastSelectequipmentTitleText } = useTranslate('Select equipment');
+  // UI labels/buttons
+  const { translated: editQuoteTitleText } = useTranslate('Edit Quote');
+  const { translated: createQuoteTitleText } = useTranslate('Create New Quote');
+  const { translated: pdfSubtitleText } = useTranslate('Professional AV Equipment & Services');
+  const { translated: quoteInfoTitleText } = useTranslate('Quote Information');
+  const { translated: quoteInfoDescText } = useTranslate('Basic quote details and status');
+  const { translated: quoteNameLabel } = useTranslate('Quote Name *');
+  const { translated: quoteNamePh } = useTranslate('e.g., Summer Music Festival AV Package');
+  const { translated: quoteStatusLabel } = useTranslate('Quote Status *');
+  const { translated: selectStatusPh } = useTranslate('Select quote status');
+  const { translated: eventClientTitle } = useTranslate('Event & Client Details');
+  const { translated: eventClientDesc } = useTranslate('Event location and client contact information');
+  const { translated: eventLocationHeader } = useTranslate('Event Location');
+  const { translated: venueLocationLabel } = useTranslate('Venue / Location *');
+  const { translated: venueLocationPh } = useTranslate('e.g., Grand Ballroom, Convention Center');
+  const { translated: clientInfoHeader } = useTranslate('Client Information');
+  const { translated: selectExistingClientLabel } = useTranslate('Select Existing Client (Optional)');
+  const { translated: selectExistingClientPh } = useTranslate('Select existing client or enter manually...');
+  const { translated: enterNewClientDetails } = useTranslate('Enter New Client Details');
+  const { translated: clientNameRequiredLabel } = useTranslate('Client Name *');
+  const { translated: additionalNotesTitle } = useTranslate('Additional Notes');
+  const { translated: additionalNotesDesc } = useTranslate('Add any special instructions or additional information');
+  const { translated: notesOptionalLabel } = useTranslate('Notes (Optional)');
+  const { translated: notesPh } = useTranslate('Add any special requirements, delivery instructions, setup notes, or other important information...');
+  const { translated: submitUpdating } = useTranslate('Updating...');
+  const { translated: submitCreating } = useTranslate('Creating...');
+  const { translated: submitUpdate } = useTranslate('Update Quote');
+  const { translated: submitCreate } = useTranslate('Create Quote');
+  const { translated: previewPdfBtn } = useTranslate('Preview PDF');
+  const { translated: downloadPdfBtn } = useTranslate('Download PDF');
+  const { translated: generatingLabel } = useTranslate('Generating...');
+  const { translated: draftLabel } = useTranslate('Draft');
+  const { translated: savingLabel } = useTranslate('Saving...');
+  const { translated: savedLabel } = useTranslate('Saved');
+  const { translated: savedAtLabel } = useTranslate('Saved {time}');
+  const { translated: submittingToast } = useTranslate('Submitting quote...');
+  const { translated: draftSavedToast } = useTranslate('Draft saved');
+  const { translated: saveDraftBtn } = useTranslate('Save Draft');
 
   const { equipment, clients, isDataLoaded } = useAppContext();
   // Use sample data as fallback for services/fees
@@ -147,6 +181,128 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
   const { toast } = useToast();
   
   const rentableEquipment = equipment.filter(e => e.type === 'equipment');
+
+  // Show a friendly summary when validation blocks submission and focus first invalid field
+  const onInvalid = (errors: Record<string, any>) => {
+    try {
+      const flat: { path: string; message?: string }[] = [];
+      const walk = (obj: any, prefix = '') => {
+        if (!obj || typeof obj !== 'object') return;
+        for (const key of Object.keys(obj)) {
+          const val: any = obj[key];
+          const path = prefix ? `${prefix}.${key}` : key;
+          if (val && typeof val === 'object') {
+            if (typeof val.message === 'string') flat.push({ path, message: val.message });
+            walk(val, path);
+          }
+        }
+      };
+      walk(errors);
+
+      const messages = flat.map(f => f.message).filter(Boolean) as string[];
+      const msg = messages.length ? messages.slice(0, 3).join('; ') : 'Please review the highlighted fields.';
+      const detail = flat.length ? `Fields: ${flat.slice(0, 3).map(f => f.path).join(', ')}` : '';
+
+      const first = flat[0];
+      if (first && typeof document !== 'undefined') {
+        const el = document.querySelector(`[name="${first.path}"]`) as HTMLElement | null;
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // @ts-ignore
+          if (typeof el.focus === 'function') el.focus();
+        }
+      }
+
+      toast({ variant: 'destructive', title: 'Please fix form errors', description: detail ? `${msg} ${detail}` : msg });
+    } catch {
+      toast({ variant: 'destructive', title: 'Please fix form errors' });
+    }
+  };
+
+  // Save Draft with relaxed validation (server accepts draft=true)
+  async function onSubmitDraft(data: QuoteFormValues) {
+    try {
+      const currentDays = rentalDays();
+      const processedItems: QuoteItem[] = (data.items || []).map((item) => {
+        if (item.type === 'equipment') {
+          const eq = equipment.find(e => e.id === item.equipmentId);
+          const quantity = item.quantity ?? 1;
+          const unitPrice = item.unitPrice ?? eq?.dailyRate ?? 0;
+          const lineTotal = quantity * unitPrice * currentDays;
+          return {
+            id: item.id || crypto.randomUUID(),
+            type: 'equipment',
+            equipmentId: item.equipmentId,
+            equipmentName: eq?.name || 'Unknown Equipment',
+            quantity,
+            unitPrice,
+            days: currentDays,
+            lineTotal: isNaN(lineTotal) ? 0 : lineTotal,
+          };
+        } else if (item.type === 'service') {
+          const svc = services.find((s: any) => s.id === item.serviceId);
+          const quantity = item.quantity ?? 1;
+          const unitPrice = item.unitPrice ?? svc?.unitPrice ?? 0;
+          const lineTotal = quantity * unitPrice * currentDays;
+          return {
+            id: item.id || crypto.randomUUID(),
+            type: 'service',
+            serviceId: item.serviceId,
+            serviceName: svc?.name || 'Unknown Service',
+            quantity,
+            unitPrice,
+            days: currentDays,
+            lineTotal: isNaN(lineTotal) ? 0 : lineTotal,
+          };
+        } else {
+          const fee = fees.find((f: any) => f.id === item.feeId);
+          return {
+            id: item.id || crypto.randomUUID(),
+            type: 'fee',
+            feeId: item.feeId,
+            feeName: fee?.name || 'Unknown Fee',
+            amount: item.amount ?? fee?.amount ?? 0,
+            feeType: item.feeType ?? fee?.type ?? 'fixed',
+            lineTotal: item.feeType === 'percentage' ? 0 : (item.amount ?? fee?.amount ?? 0),
+          };
+        }
+      });
+
+      const totals = calculateTotals();
+      const finalClientId = data.clientId === MANUAL_CLIENT_ENTRY_VALUE ? undefined : data.clientId;
+      const payload = {
+        ...data,
+        draft: true,
+        status: 'Draft' as QuoteStatus,
+        clientId: finalClientId,
+        items: processedItems,
+        subTotal: totals.subTotal || 0,
+        discountAmount: data.discountAmount || 0,
+        discountType: data.discountType || 'fixed',
+        taxAmount: totals.taxAmount || 0,
+        totalAmount: totals.totalAmount || 0,
+        taxRate: (data.taxRate || 0) / 100,
+        startDate: data.startDate instanceof Date ? data.startDate : (data.startDate ? new Date(data.startDate) : undefined),
+        endDate: data.endDate instanceof Date ? data.endDate : (data.endDate ? new Date(data.endDate) : undefined),
+      };
+
+      if (initialData) {
+        await updateQuote({
+          ...initialData,
+          ...payload,
+          startDate: (payload.startDate as Date | undefined) ?? initialData.startDate,
+          endDate: (payload.endDate as Date | undefined) ?? initialData.endDate,
+          updatedAt: new Date(),
+        });
+      } else {
+        await addQuote(payload as any);
+      }
+      toast({ title: draftSavedToast });
+    } catch (err) {
+      toast({ variant: 'destructive', title: toastErrorTitleText, description: toastFailedtosavequotePleDescText });
+      console.error('Error saving draft:', err);
+    }
+  }
   // Fallback for services/fees if not in context
   // (You may want to fetch these from API if not present)
 
@@ -157,26 +313,29 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
       ...initialData,
       startDate: new Date(initialData.startDate),
       endDate: new Date(initialData.endDate),
-      items: initialData.items.map(item => ({
-        id: item.id,
-        type: item.type as 'equipment' | 'service' | 'fee',
-        // Equipment fields
-        equipmentId: item.equipmentId,
-        equipmentName: item.equipmentName,
-        // Service fields
-        serviceId: item.serviceId,
-        serviceName: item.serviceName,
-        // Fee fields
-        feeId: item.feeId,
-        feeName: item.feeName,
-        amount: item.amount,
-        feeType: item.feeType as 'fixed' | 'percentage' | undefined,
-        // Common fields
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        days: item.days,
-        lineTotal: item.lineTotal,
-      })),
+      items: initialData.items.map(item => {
+        const t = (item.type as 'equipment' | 'service' | 'fee') || (item.equipmentId ? 'equipment' : item.serviceId ? 'service' : 'fee');
+        return {
+          id: item.id,
+          type: t,
+          // Equipment fields (null -> undefined, clear when not equipment)
+          equipmentId: t === 'equipment' ? (item.equipmentId || undefined) : undefined,
+          equipmentName: t === 'equipment' ? (item.equipmentName || undefined) : undefined,
+          // Service fields
+          serviceId: t === 'service' ? (item.serviceId || undefined) : undefined,
+          serviceName: t === 'service' ? (item.serviceName || undefined) : undefined,
+          // Fee fields
+          feeId: t === 'fee' ? (item.feeId || undefined) : undefined,
+          feeName: t === 'fee' ? (item.feeName || undefined) : undefined,
+          amount: t === 'fee' ? (item.amount ?? undefined) : undefined,
+          feeType: t === 'fee' ? (item.feeType as 'fixed' | 'percentage' | undefined) : undefined,
+          // Common fields
+          quantity: t !== 'fee' ? (item.quantity ?? undefined) : undefined,
+          unitPrice: t !== 'fee' ? (item.unitPrice ?? undefined) : undefined,
+          days: t !== 'fee' ? (item.days ?? undefined) : undefined,
+          lineTotal: item.lineTotal ?? 0,
+        };
+      }),
       clientName: initialData.clientName || '',
       clientEmail: initialData.clientEmail || '',
       clientPhone: initialData.clientPhone || '',
@@ -221,6 +380,8 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
 
   // Clean up any invalid items without a type field (safety check for corrupted data)
   useEffect(() => {
+    // Skip cleanup for existing quotes to preserve legacy items; mapping above infers missing types
+    if (initialData) return;
     const invalidIndices: number[] = [];
     fields.forEach((field, index) => {
       if (!field.type) {
@@ -395,6 +556,8 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
 
 
   function onSubmit(data: QuoteFormValues) {
+    // Submit-start toast to debug update button not working
+    toast({ title: submittingToast });
     const currentDays = rentalDays();
     const processedItems: QuoteItem[] = data.items.map((item) => {
       if (item.type === 'equipment') {
@@ -587,7 +750,7 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
   return (
     <>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="space-y-6">
         {/* Header Section */}
         <Card className="shadow-xl border-border/60">
           <CardHeader>
@@ -596,10 +759,10 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                 <FileText className="h-5 w-5 text-muted-foreground" />
                 <div>
                   <CardTitle>
-                    {initialData ? 'Edit Quote' : 'Create New Quote'}
+                    {initialData ? editQuoteTitleText : createQuoteTitleText}
                   </CardTitle>
                   <CardDescription>
-                    Professional AV Equipment & Services
+                    {pdfSubtitleText}
                   </CardDescription>
                 </div>
               </div>
@@ -632,9 +795,9 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                       'text-gray-600 dark:text-gray-400'
                     }`}>
                       {autoSaveStatus === 'saved' && lastSaved ? 
-                        `Saved ${lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` :
-                        autoSaveStatus === 'saving' ? 'Saving...' :
-                        'Draft'
+                        (savedAtLabel || 'Saved {time}').replace('{time}', lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })) :
+                        autoSaveStatus === 'saving' ? savingLabel :
+                        draftLabel
                       }
                     </span>
                   </div>
@@ -646,8 +809,8 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
         {/* Quote Information Section */}
         <Card className="shadow-xl border-border/60">
           <CardHeader>
-            <CardTitle>Quote Information</CardTitle>
-            <CardDescription>Basic quote details and status</CardDescription>
+            <CardTitle>{quoteInfoTitleText}</CardTitle>
+            <CardDescription>{quoteInfoDescText}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -656,10 +819,10 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Quote Name *</FormLabel>
+                    <FormLabel>{quoteNameLabel}</FormLabel>
                     <FormControl>
                       <Input 
-                        placeholder="e.g., Summer Music Festival AV Package" 
+                        placeholder={quoteNamePh}
                         {...field} 
                       />
                     </FormControl>
@@ -672,11 +835,11 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                 name="status"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Quote Status *</FormLabel>
+                    <FormLabel>{quoteStatusLabel}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select quote status" />
+                          <SelectValue placeholder={selectStatusPh} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -707,24 +870,24 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
         {/* Event & Client Information Section */}
         <Card className="shadow-xl border-border/60">
           <CardHeader>
-            <CardTitle>Event & Client Details</CardTitle>
-            <CardDescription>Event location and client contact information</CardDescription>
+            <CardTitle>{eventClientTitle}</CardTitle>
+            <CardDescription>{eventClientDesc}</CardDescription>
           </CardHeader>
           <CardContent>
             
             <div className="space-y-6">
               {/* Event Location */}
               <div>
-                <h4 className="font-medium mb-4">Event Location</h4>
+                <h4 className="font-medium mb-4">{eventLocationHeader}</h4>
                 <FormField
                   control={form.control}
                   name="location"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Venue / Location *</FormLabel>
+                      <FormLabel>{venueLocationLabel}</FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="e.g., Grand Ballroom, Convention Center" 
+                          placeholder={venueLocationPh}
                           {...field} 
                         />
                       </FormControl>
@@ -738,14 +901,14 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
 
               {/* Client Selection */}
               <div>
-                <h4 className="font-medium mb-4">Client Information</h4>
+                <h4 className="font-medium mb-4">{clientInfoHeader}</h4>
 
                 <FormField
                   control={form.control}
                   name="clientId"
                   render={({ field }) => (
                     <FormItem className="mb-4">
-                      <FormLabel>Select Existing Client (Optional)</FormLabel>
+                      <FormLabel>{selectExistingClientLabel}</FormLabel>
                       <Select
                         onValueChange={(value) => {
                           field.onChange(value);
@@ -760,14 +923,14 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select existing client or enter manually..." />
+                            <SelectValue placeholder={selectExistingClientPh} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           <SelectItem value={MANUAL_CLIENT_ENTRY_VALUE}>
                             <div className="flex items-center gap-2">
                               <PlusCircle className="h-4 w-4" />
-                              Enter New Client Details
+                              {enterNewClientDetails}
                             </div>
                           </SelectItem>
                           {clients.map(client => (
@@ -782,22 +945,6 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                           ))}
                         </SelectContent>
                       </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  <FormField control={form.control} name="clientName" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Client Name *</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Client's Full Name or Company" 
-                          {...field} 
-                          disabled={!!watchClientId && watchClientId !== MANUAL_CLIENT_ENTRY_VALUE}
-                        />
-                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
@@ -847,7 +994,6 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                   )} />
                 </div>
               </div>
-            </div>
           </CardContent>
         </Card>
 
@@ -1472,18 +1618,16 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
         {/* Notes Section */}
         <Card className="shadow-xl border-border/60">
           <CardHeader>
-            <CardTitle>Additional Notes</CardTitle>
-            <CardDescription>Add any special instructions or additional information</CardDescription>
+            <CardTitle>{additionalNotesTitle}</CardTitle>
+            <CardDescription>{additionalNotesDesc}</CardDescription>
           </CardHeader>
           <CardContent>
             <FormField control={form.control} name="notes" render={({ field }) => (
               <FormItem className="space-y-3">
-                <FormLabel className="text-sm font-semibold">
-                  Notes (Optional)
-                </FormLabel>
+                <FormLabel className="text-sm font-semibold">{notesOptionalLabel}</FormLabel>
                 <FormControl>
                   <Textarea 
-                    placeholder="Add any special requirements, delivery instructions, setup notes, or other important information..."
+                    placeholder={notesPh}
                     {...field} 
                     rows={4}
                     className="min-h-[120px] resize-vertical"
@@ -1509,12 +1653,12 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                   {form.formState.isSubmitting ? (
                     <div className="flex items-center gap-3">
                       <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                      {initialData ? "Updating..." : "Creating..."}
+                      {initialData ? submitUpdating : submitCreating}
                     </div>
                   ) : (
                     <div className="flex items-center gap-3">
                       <FileText className="h-5 w-5" />
-                      {initialData ? "Update Quote" : "Create Quote"}
+                      {initialData ? submitUpdate : submitCreate}
                     </div>
                   )}
                 </Button>
@@ -1526,11 +1670,21 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                   variant="outline"
                   size="lg"
                   className="hover:bg-gray-50 dark:hover:bg-gray-800 active:scale-95 transition-all duration-200"
+                  onClick={form.handleSubmit(onSubmitDraft, onInvalid)}
+                  disabled={form.formState.isSubmitting}
+                >
+                  {saveDraftBtn}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="lg"
+                  className="hover:bg-gray-50 dark:hover:bg-gray-800 active:scale-95 transition-all duration-200"
                   onClick={handlePreviewPDF}
                   disabled={form.formState.isSubmitting}
                 >
                   <Eye className="h-5 w-5 mr-2" />
-                  Preview PDF
+                  {previewPdfBtn}
                 </Button>
                 
                 <Button
@@ -1546,7 +1700,7 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                   ) : (
                     <Download className="h-5 w-5 mr-2" />
                   )}
-                  {isGeneratingPDF ? "Generating..." : "Download PDF"}
+                  {isGeneratingPDF ? generatingLabel : downloadPdfBtn}
                 </Button>
               </div>
             </div>

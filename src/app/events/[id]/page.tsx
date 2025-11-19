@@ -37,6 +37,33 @@ export default function EventDetailsPage() {
   const { translated: toastEquipmentRemovedTitleText } = useTranslate('Equipment Removed');
   const { translated: toastEventnotfoundDescText } = useTranslate('Event not found.');
   const { translated: toastErrorTitleText } = useTranslate('Error');
+  const { translated: loadingEventData } = useTranslate('Loading event data...');
+  const { translated: eventNotFound } = useTranslate('Event not found or could not be loaded.');
+  const { translated: forLabel } = useTranslate('For:');
+  const { translated: unknownClient } = useTranslate('Unknown Client');
+  const { translated: prepareEvent } = useTranslate('Prepare Event');
+  const { translated: editEvent } = useTranslate('Edit Event');
+  const { translated: locationLabel } = useTranslate('Location:');
+  const { translated: fromLabel } = useTranslate('From:');
+  const { translated: toLabel } = useTranslate('To:');
+  const { translated: rentedEquipment } = useTranslate('Rented Equipment');
+  const { translated: equipmentHeader } = useTranslate('Equipment');
+  const { translated: quantityHeader } = useTranslate('Quantity');
+  const { translated: statusHeader } = useTranslate('Status');
+  const { translated: actionsHeader } = useTranslate('Actions');
+  const { translated: qtyShort } = useTranslate('Qty:');
+  const { translated: unknownText } = useTranslate('Unknown');
+  const { translated: noEquipmentYet } = useTranslate('No equipment rented for this event yet.');
+  const { translated: clickAddEquipment } = useTranslate('Click "Add Equipment" to get started.');
+  const { translated: addEquipment } = useTranslate('Add Equipment');
+  const { translated: deleteEventLabel } = useTranslate('Delete Event');
+  const { translated: confirmRemoval } = useTranslate('Confirm Removal');
+  const { translated: confirmRemovalDescBase } = useTranslate('Are you sure you want to remove "{item}" from this event?');
+  const { translated: removeLabel } = useTranslate('Remove');
+  const { translated: confirmEventDeletion } = useTranslate('Confirm Event Deletion');
+  const { translated: confirmEventDeletionDescBase } = useTranslate('Are you sure you want to delete the event "{event}"? This will also delete all rental records associated with it. This action cannot be undone.');
+  const { translated: cancelLabel } = useTranslate('Cancel');
+  const { translated: theEventDeletedDescBase } = useTranslate('The event "{eventName}" and all its rentals have been deleted.');
 
   const params = useParams();
   const router = useRouter();
@@ -114,7 +141,7 @@ export default function EventDetailsPage() {
     return (
         <div className="flex flex-col min-h-screen">
             <div className="flex-grow flex items-center justify-center p-4 md:p-6">
-                <p className="text-lg text-muted-foreground">Loading event data...</p>
+                <p className="text-lg text-muted-foreground">{loadingEventData}</p>
             </div>
         </div>
     );
@@ -125,7 +152,7 @@ export default function EventDetailsPage() {
         <div className="flex flex-col min-h-screen">
             
             <div className="flex-grow flex items-center justify-center p-4 md:p-6">
-                <p className="text-lg text-destructive">Event not found or could not be loaded.</p>
+                <p className="text-lg text-destructive">{eventNotFound}</p>
             </div>
         </div>
     );
@@ -141,24 +168,24 @@ export default function EventDetailsPage() {
                     <div>
                         <CardTitle className="text-3xl">{event.name}</CardTitle>
                         <CardDescription className="mt-2 text-base">
-                            For: <Link
+                            {forLabel} <Link
                             href={`/clients/${client?.id}/edit`}
-                            className="text-primary hover:underline">{client?.name || 'Unknown Client'}</Link>
+                            className="text-primary hover:underline">{client?.name || unknownClient}</Link>
                         </CardDescription>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-2 flex-shrink-0">
-                      <Button variant="outline" onClick={() => router.push(`/rentals/${event.id}/prep`)}><ListChecks className="mr-2 h-4 w-4" /> Prepare Event</Button>
-                      <Button variant="outline" onClick={() => setIsEditFormOpen(true)}><Edit className="mr-2 h-4 w-4" /> Edit Event</Button>
+                      <Button variant="outline" onClick={() => router.push(`/rentals/${event.id}/prep`)}><ListChecks className="mr-2 h-4 w-4" /> {prepareEvent}</Button>
+                      <Button variant="outline" onClick={() => setIsEditFormOpen(true)}><Edit className="mr-2 h-4 w-4" /> {editEvent}</Button>
                     </div>
                 </div>
                 <div className="text-sm text-muted-foreground pt-4 flex flex-wrap gap-x-6 gap-y-2">
-                    <span><strong>Location:</strong> {event.location}</span>
-                    <span><strong>From:</strong> {format(new Date(event.startDate), "PPP")}</span>
-                    <span><strong>To:</strong> {format(new Date(event.endDate), "PPP")}</span>
+                    <span><strong>{locationLabel}</strong> {event.location}</span>
+                    <span><strong>{fromLabel}</strong> {format(new Date(event.startDate), "PPP")}</span>
+                    <span><strong>{toLabel}</strong> {format(new Date(event.endDate), "PPP")}</span>
                 </div>
               </CardHeader>
               <CardContent>
-                <h3 className="text-xl font-semibold mb-4">Rented Equipment</h3>
+                <h3 className="text-xl font-semibold mb-4">{rentedEquipment}</h3>
                 <div className="border rounded-md">
                      {eventRentals.length > 0 ? (
                        <>
@@ -171,10 +198,10 @@ export default function EventDetailsPage() {
                                    <div className="flex-1 min-w-0">
                                      <h4 className="font-medium text-sm truncate">{rental.equipment?.name || 'N/A'}</h4>
                                      <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
-                                       <span>Qty: {rental.quantityRented}</span>
+                                       <span>{qtyShort} {rental.quantityRented}</span>
                                        <span>•</span>
                                        <div className={`w-2 h-2 rounded-full ${rental.equipment?.status === 'good' ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                                       <span>{rental.equipment?.status || 'Unknown'}</span>
+                                       <span>{rental.equipment?.status || unknownText}</span>
                                      </div>
                                    </div>
                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setRentalToDelete(rental)}>
@@ -189,12 +216,12 @@ export default function EventDetailsPage() {
                            <Table>
                              <TableHeader>
                                <TableRow>
-                                 <TableHead>Equipment</TableHead>
-                                 <TableHead>Quantity</TableHead>
-                                 <TableHead>Status</TableHead>
-                                 <TableHead className="text-right">Actions</TableHead>
-                               </TableRow>
-                             </TableHeader>
+                                <TableHead>{equipmentHeader}</TableHead>
+                                <TableHead>{quantityHeader}</TableHead>
+                                <TableHead>{statusHeader}</TableHead>
+                                <TableHead className="text-right">{actionsHeader}</TableHead>
+                                 </TableRow>
+                               </TableHeader>
                              <TableBody>
                                {eventRentals.map((rental, index) => (
                                  <TableRow key={`${rental.id}-${index}`}>
@@ -202,7 +229,7 @@ export default function EventDetailsPage() {
                                    <TableCell>{rental.quantityRented}</TableCell>
                                    <TableCell>
                                      <Badge variant={rental.equipment?.status === 'good' ? 'secondary' : 'destructive'}>
-                                       {rental.equipment?.status || 'Unknown'}
+                                       {rental.equipment?.status || unknownText}
                                      </Badge>
                                    </TableCell>
                                    <TableCell className="text-right">
@@ -219,18 +246,18 @@ export default function EventDetailsPage() {
                      ) : (
                         <div className="text-center py-12 text-muted-foreground flex flex-col items-center">
                             <PackageSearch className="w-16 h-16 mb-4 text-primary/50" />
-                            <p className="text-lg mb-1">No equipment rented for this event yet.</p>
-                            <p className="text-sm">Click "Add Equipment" to get started.</p>
+                            <p className="text-lg mb-1">{noEquipmentYet}</p>
+                            <p className="text-sm">{clickAddEquipment}</p>
                         </div>
-                    )}
+                     )}
                 </div>
                  <Button className="mt-6" onClick={() => setIsAddEquipmentOpen(true)}>
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add Equipment
+                    <PlusCircle className="mr-2 h-4 w-4" /> {addEquipment}
                 </Button>
               </CardContent>
               <CardFooter className="flex justify-end border-t pt-6">
                 <Button variant="destructive" onClick={() => setIsDeleteEventOpen(true)}>
-                  <Trash2 className="mr-2 h-4 w-4" /> Delete Event
+                  <Trash2 className="mr-2 h-4 w-4" /> {deleteEventLabel}
                 </Button>
               </CardFooter>
             </Card>
@@ -252,15 +279,15 @@ export default function EventDetailsPage() {
              <AlertDialog open={!!rentalToDelete} onOpenChange={() => setRentalToDelete(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                    <AlertDialogTitle>Confirm Removal</AlertDialogTitle>
+                    <AlertDialogTitle>{confirmRemoval}</AlertDialogTitle>
                     <AlertDialogDescription>
-                        Are you sure you want to remove "{rentalToDelete.equipment?.name}" from this event?
+                        {(confirmRemovalDescBase || '').replace('{item}', rentalToDelete.equipment?.name || '')}
                     </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                    <AlertDialogCancel onClick={() => setRentalToDelete(null)}>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel onClick={() => setRentalToDelete(null)}>{cancelLabel}</AlertDialogCancel>
                     <AlertDialogAction onClick={handleDeleteRental} className="bg-destructive hover:bg-destructive/90">
-                        Remove
+                        {removeLabel}
                     </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -270,15 +297,15 @@ export default function EventDetailsPage() {
              <AlertDialog open={isDeleteEventOpen} onOpenChange={setIsDeleteEventOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                    <AlertDialogTitle>Confirm Event Deletion</AlertDialogTitle>
+                    <AlertDialogTitle>{confirmEventDeletion}</AlertDialogTitle>
                     <AlertDialogDescription>
-                        Are you sure you want to delete the event "{event.name}"? This will also delete all rental records associated with it. This action cannot be undone.
+                        {(confirmEventDeletionDescBase || '').replace('{event}', event.name)}
                     </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel>{cancelLabel}</AlertDialogCancel>
                     <AlertDialogAction onClick={handleDeleteEvent} className="bg-destructive hover:bg-destructive/90">
-                        Delete Event
+                        {deleteEventLabel}
                     </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

@@ -3,6 +3,7 @@
 import { useTranslation } from '@/contexts/TranslationContext';
 import { Button } from '@/components/ui/button';
 import { Languages } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +13,18 @@ import {
 
 export function LanguageToggle() {
   const { language, setLanguage, tSync } = useTranslation();
+  const pathname = usePathname() || '/';
+
+  function applyLang(lang: 'en' | 'pt') {
+    setLanguage(lang);
+    try {
+      document.cookie = `app-language=${lang}; Path=/; Max-Age=31536000`;
+    } catch {}
+    // If on login, force reload to get SSR-rendered strings immediately
+    if (pathname.startsWith('/login')) {
+      window.location.reload();
+    }
+  }
 
   return (
     <DropdownMenu>
@@ -26,7 +39,7 @@ export function LanguageToggle() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem
-          onClick={() => setLanguage('en')}
+          onClick={() => applyLang('en')}
           className={language === 'en' ? 'bg-accent' : ''}
         >
           <span className="mr-2">🇬🇧</span>
@@ -34,7 +47,7 @@ export function LanguageToggle() {
           {language === 'en' && <span className="ml-auto">✓</span>}
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={() => setLanguage('pt')}
+          onClick={() => applyLang('pt')}
           className={language === 'pt' ? 'bg-accent' : ''}
         >
           <span className="mr-2">🇵🇹</span>

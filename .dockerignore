@@ -27,3 +27,6 @@ yarn-error.log*
 .idea
 .vscode
 coverage
+
+# Ensure prisma directory is included
+!prisma/

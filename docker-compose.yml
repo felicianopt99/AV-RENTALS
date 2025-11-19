@@ -14,11 +14,32 @@ services:
     expose:
       - "3000"
 
+  postgres:
+    image: postgres:16-alpine
+    container_name: av-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=avrentals_db
+      - POSTGRES_USER=avrentals_user
+      - POSTGRES_PASSWORD=avrentals_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U avrentals_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - default
+
   nginx:
     image: nginx:alpine
     container_name: av-nginx
     depends_on:
       - app
+      - postgres
     ports:
       - "80:80"
       - "443:443"
@@ -51,3 +72,6 @@ services:
       - TOKEN=${DUCKDNS_TOKEN}
       - LOG_FILE=true
     restart: unless-stopped
+
+volumes:
+  postgres_data:

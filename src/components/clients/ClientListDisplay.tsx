@@ -41,6 +41,28 @@ import { Input } from '@/components/ui/input';
 export function ClientListDisplay() {
   // Translation hooks
   const { translated: toastClientDeletedTitleText } = useTranslate('Client Deleted');
+  const { translated: loadingClientData } = useTranslate('Loading client data...');
+  const { translated: clientsHeading } = useTranslate('Clients');
+  const { translated: addNewClient } = useTranslate('Add New Client');
+  const { translated: clientList } = useTranslate('Client List');
+  const { translated: viewSearchManageClients } = useTranslate('View, search, and manage all your clients.');
+  const { translated: searchClientsPlaceholder } = useTranslate('Search clients (name, contact, email, phone)...');
+  const { translated: noClientsMatch } = useTranslate('No clients match your search.');
+  const { translated: tryDifferentSearch } = useTranslate('Try a different search term or clear the search.');
+  const { translated: noClientsYet } = useTranslate('No clients yet.');
+  const { translated: clickAddNewClient } = useTranslate('Click "Add New Client" to get started.');
+  const { translated: nameHeader } = useTranslate('Name');
+  const { translated: contactPersonHeader } = useTranslate('Contact Person');
+  const { translated: emailHeader } = useTranslate('Email');
+  const { translated: phoneHeader } = useTranslate('Phone');
+  const { translated: actionsHeader } = useTranslate('Actions');
+  const { translated: viewDetails } = useTranslate('View Details');
+  const { translated: editLabel } = useTranslate('Edit');
+  const { translated: deleteLabel } = useTranslate('Delete');
+  const { translated: confirmDeletion } = useTranslate('Confirm Deletion');
+  const { translated: confirmDeletionDesc } = useTranslate('Are you sure you want to delete this client? This action cannot be undone.');
+  const { translated: cancelLabel } = useTranslate('Cancel');
+  const { translated: deleteClientLabel } = useTranslate('Delete Client');
 
   const { clients, isDataLoaded } = useAppContext();
   const { deleteClient } = useAppDispatch();
@@ -73,7 +95,7 @@ export function ClientListDisplay() {
     return (
         <div className="flex flex-col"> {/* Adjust height as needed */}
             <div className="flex-grow flex items-center justify-center">
-                <p className="text-lg text-muted-foreground">Loading client data...</p>
+                <p className="text-lg text-muted-foreground">{loadingClientData}</p>
             </div>
         </div>
     );
@@ -82,22 +104,22 @@ export function ClientListDisplay() {
   return (
     <div className="space-y-4 md:space-y-6">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <h2 className="text-xl md:text-2xl font-semibold">Clients</h2>
+        <h2 className="text-xl md:text-2xl font-semibold">{clientsHeading}</h2>
         <Button asChild variant="glass" className="w-full sm:w-auto">
           <Link href="/clients/new">
-            <PlusCircle className="mr-2 h-4 w-4" /> Add New Client
+            <PlusCircle className="mr-2 h-4 w-4" /> {addNewClient}
           </Link>
         </Button>
       </div>
       <Card className="glass-card bg-card text-card-foreground shadow-xl border border-border/40">
         <CardHeader>
-          <CardTitle>Client List</CardTitle>
-          <CardDescription>View, search, and manage all your clients.</CardDescription>
+          <CardTitle>{clientList}</CardTitle>
+          <CardDescription>{viewSearchManageClients}</CardDescription>
           <div className="mt-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input 
-                placeholder="Search clients (name, contact, email, phone)..."
+                placeholder={searchClientsPlaceholder}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full sm:max-w-sm md:max-w-md pl-10 bg-background/70 border border-border/30 focus:border-primary/60"
@@ -111,14 +133,14 @@ export function ClientListDisplay() {
               {searchTerm ? (
                 <>
                   <SearchSlash className="w-16 h-16 mb-4 text-primary/50" />
-                  <p className="text-xl mb-1">No clients match your search.</p>
-                  <p className="text-sm">Try a different search term or clear the search.</p>
+                  <p className="text-xl mb-1">{noClientsMatch}</p>
+                  <p className="text-sm">{tryDifferentSearch}</p>
                 </>
               ) : (
                 <>
                   <Users className="w-16 h-16 mb-4 text-primary/50" />
-                  <p className="text-xl mb-1">No clients yet.</p>
-                  <p className="text-sm">Click "Add New Client" to get started.</p>
+                  <p className="text-xl mb-1">{noClientsYet}</p>
+                  <p className="text-sm">{clickAddNewClient}</p>
                 </>
               )}
             </div>
@@ -170,11 +192,11 @@ export function ClientListDisplay() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Contact Person</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>{nameHeader}</TableHead>
+                    <TableHead>{contactPersonHeader}</TableHead>
+                    <TableHead>{emailHeader}</TableHead>
+                    <TableHead>{phoneHeader}</TableHead>
+                    <TableHead className="text-right">{actionsHeader}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -194,13 +216,13 @@ export function ClientListDisplay() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={(e) => {e.stopPropagation(); router.push(`/clients/${client.id}`)}}>
-                              <Eye className="mr-2 h-4 w-4" /> View Details
+                              <Eye className="mr-2 h-4 w-4" /> {viewDetails}
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={(e) => {e.stopPropagation(); router.push(`/clients/${client.id}/edit`)}}>
-                              <Edit className="mr-2 h-4 w-4" /> Edit
+                              <Edit className="mr-2 h-4 w-4" /> {editLabel}
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={(e) => {e.stopPropagation(); openDeleteDialog(client)}} className="text-destructive focus:text-destructive focus:bg-destructive/10">
-                              <Trash2 className="mr-2 h-4 w-4" /> Delete
+                              <Trash2 className="mr-2 h-4 w-4" /> {deleteLabel}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -218,16 +240,15 @@ export function ClientListDisplay() {
         <AlertDialog open={!!clientToDelete} onOpenChange={(isOpen) => !isOpen && setClientToDelete(null)}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+              <AlertDialogTitle>{confirmDeletion}</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete the client "{clientToDelete.name}"? 
-                This action cannot be undone.
+                {confirmDeletionDesc}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setClientToDelete(null)}>Cancel</AlertDialogCancel>
+              <AlertDialogCancel onClick={() => setClientToDelete(null)}>{cancelLabel}</AlertDialogCancel>
               <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">
-                Delete Client
+                {deleteClientLabel}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

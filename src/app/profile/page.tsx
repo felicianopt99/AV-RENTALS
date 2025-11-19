@@ -18,6 +18,31 @@ import '../../components/ProfileCard.css';
 export default function ProfilePage() {
   // Translation hooks
   const { translated: profileText } = useTranslate('Profile');
+  const { translated: editProfileText } = useTranslate('Edit Profile');
+  const { translated: statusActiveText } = useTranslate('Active');
+  const { translated: dialogTitleText } = useTranslate('Edit Profile');
+  const { translated: dialogDescText } = useTranslate('Update your profile information below.');
+  const { translated: profilePhotoLabel } = useTranslate('Profile Photo');
+  const { translated: nameLabel } = useTranslate('Name');
+  const { translated: usernameLabel } = useTranslate('Username');
+  const { translated: nifLabel } = useTranslate('NIF');
+  const { translated: ibanLabel } = useTranslate('IBAN');
+  const { translated: contactPhoneLabel } = useTranslate('Contact Phone');
+  const { translated: contactEmailLabel } = useTranslate('Contact Email');
+  const { translated: emergencyPhoneLabel } = useTranslate('Emergency Phone');
+  const { translated: phEnterNif } = useTranslate('Enter NIF');
+  const { translated: phEnterIban } = useTranslate('Enter IBAN');
+  const { translated: phEnterContactPhone } = useTranslate('Enter contact phone');
+  const { translated: phEnterContactEmail } = useTranslate('Enter contact email');
+  const { translated: phEnterEmergencyPhone } = useTranslate('Enter emergency phone');
+  const { translated: toastSuccessTitle } = useTranslate('Success');
+  const { translated: toastProfileUpdated } = useTranslate('Profile updated successfully');
+  const { translated: toastErrorTitle } = useTranslate('Error');
+  const { translated: toastFailedLoadProfile } = useTranslate('Failed to load profile');
+  const { translated: toastInvalidResponse } = useTranslate('Invalid response from server');
+  const { translated: toastFailedUpdateProfile } = useTranslate('Failed to update profile');
+  const { translated: savingLabel } = useTranslate('Saving...');
+  const { translated: saveProfileLabel } = useTranslate('Save Profile');
 
   const { currentUser, isDataLoaded } = useAppContext();
   const router = useRouter();
@@ -59,23 +84,23 @@ export default function ProfilePage() {
           errorData = { error: `HTTP ${response.status}: ${response.statusText}` };
         }
         toast({
-          title: 'Error',
-          description: errorData.error || 'Failed to load profile',
+          title: toastErrorTitle,
+          description: errorData.error || toastFailedLoadProfile,
           variant: 'destructive',
         });
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
-      let errorMessage = 'Failed to load profile';
+      let errorMessage = toastFailedLoadProfile;
       
       if (error instanceof SyntaxError && error.message.includes('JSON')) {
-        errorMessage = 'Invalid response from server';
+        errorMessage = toastInvalidResponse;
       } else if (error instanceof Error) {
         errorMessage = error.message;
       }
       
       toast({
-        title: 'Error',
+        title: toastErrorTitle,
         description: errorMessage,
         variant: 'destructive',
       });
@@ -122,22 +147,22 @@ export default function ProfilePage() {
         setProfile(updatedProfile);
         setPhotoFile(null);
         toast({
-          title: 'Success',
-          description: 'Profile updated successfully',
+          title: toastSuccessTitle,
+          description: toastProfileUpdated,
         });
       } else {
         const error = await response.json();
         toast({
-          title: 'Error',
-          description: error.error || 'Failed to update profile',
+          title: toastErrorTitle,
+          description: error.error || toastFailedUpdateProfile,
           variant: 'destructive',
         });
       }
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to update profile',
+        title: toastErrorTitle,
+        description: toastFailedUpdateProfile,
         variant: 'destructive',
       });
     } finally {
@@ -170,8 +195,8 @@ export default function ProfilePage() {
         name={profile?.name || 'User'}
         title={profileText}
         handle={profile?.username || ''}
-        status="Active"
-        contactText="Edit Profile"
+        status={statusActiveText}
+        contactText={editProfileText}
         onContactClick={() => setIsDialogOpen(true)}
         enableTilt={true}
         mobileTiltSensitivity={3}
@@ -179,8 +204,8 @@ export default function ProfilePage() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Edit Profile</DialogTitle>
-            <DialogDescription>Update your profile information below.</DialogDescription>
+            <DialogTitle>{dialogTitleText}</DialogTitle>
+            <DialogDescription>{dialogDescText}</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Photo Upload */}
@@ -190,7 +215,7 @@ export default function ProfilePage() {
                 <AvatarFallback>{profile?.name?.charAt(0) || 'U'}</AvatarFallback>
               </Avatar>
               <div>
-                <Label htmlFor="photo">Profile Photo</Label>
+                <Label htmlFor="photo">{profilePhotoLabel}</Label>
                 <Input
                   id="photo"
                   type="file"
@@ -204,7 +229,7 @@ export default function ProfilePage() {
             {/* Basic Info (Read-only) */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="name">Name</Label>
+                <Label htmlFor="name">{nameLabel}</Label>
                 <Input
                   id="name"
                   value={profile?.name || ''}
@@ -212,7 +237,7 @@ export default function ProfilePage() {
                 />
               </div>
               <div>
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="username">{usernameLabel}</Label>
                 <Input
                   id="username"
                   value={profile?.username || ''}
@@ -224,59 +249,59 @@ export default function ProfilePage() {
             {/* Profile Fields */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="nif">NIF</Label>
+                <Label htmlFor="nif">{nifLabel}</Label>
                 <Input
                   id="nif"
                   value={profile?.nif || ''}
                   onChange={(e) => handleInputChange('nif', e.target.value)}
-                  placeholder="Enter NIF"
+                  placeholder={phEnterNif}
                 />
               </div>
               <div>
-                <Label htmlFor="iban">IBAN</Label>
+                <Label htmlFor="iban">{ibanLabel}</Label>
                 <Input
                   id="iban"
                   value={profile?.iban || ''}
                   onChange={(e) => handleInputChange('iban', e.target.value)}
-                  placeholder="Enter IBAN"
+                  placeholder={phEnterIban}
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="contactPhone">Contact Phone</Label>
+                <Label htmlFor="contactPhone">{contactPhoneLabel}</Label>
                 <Input
                   id="contactPhone"
                   value={profile?.contactPhone || ''}
                   onChange={(e) => handleInputChange('contactPhone', e.target.value)}
-                  placeholder="Enter contact phone"
+                  placeholder={phEnterContactPhone}
                 />
               </div>
               <div>
-                <Label htmlFor="contactEmail">Contact Email</Label>
+                <Label htmlFor="contactEmail">{contactEmailLabel}</Label>
                 <Input
                   id="contactEmail"
                   value={profile?.contactEmail || ''}
                   onChange={(e) => handleInputChange('contactEmail', e.target.value)}
-                  placeholder="Enter contact email"
+                  placeholder={phEnterContactEmail}
                   type="email"
                 />
               </div>
             </div>
 
             <div>
-              <Label htmlFor="emergencyPhone">Emergency Phone</Label>
+              <Label htmlFor="emergencyPhone">{emergencyPhoneLabel}</Label>
               <Input
                 id="emergencyPhone"
                 value={profile?.emergencyPhone || ''}
                 onChange={(e) => handleInputChange('emergencyPhone', e.target.value)}
-                placeholder="Enter emergency phone"
+                placeholder={phEnterEmergencyPhone}
               />
             </div>
 
             <Button type="submit" disabled={saving} className="w-full">
-              {saving ? 'Saving...' : 'Save Profile'}
+              {saving ? savingLabel : saveProfileLabel}
             </Button>
           </form>
         </DialogContent>

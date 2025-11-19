@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Lock, Building, Eye, EyeOff } from 'lucide-react';
+import { LanguageToggle } from '@/components/LanguageToggle';
 import LightRays from '@/components/LightRays';
 
 const loginSchema = z.object({
@@ -62,7 +63,19 @@ interface CustomizationSettings {
   loginLightRaysDistortion?: number;
 }
 
-export default function CustomizableLoginPage() {
+interface LoginI18n {
+  displayName?: string;
+  welcomeMessage?: string;
+  welcomeSubtitle?: string;
+  usernameLabel?: string;
+  usernamePlaceholder?: string;
+  passwordLabel?: string;
+  passwordPlaceholder?: string;
+  signIn?: string;
+  forgotPassword?: string;
+}
+
+export default function CustomizableLoginPage({ i18n }: { i18n?: LoginI18n } = {}) {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [settings, setSettings] = useState<CustomizationSettings>({});
@@ -233,9 +246,9 @@ export default function CustomizableLoginPage() {
     }
   };
     
-  const displayName = settings.companyName || 'AV Rentals';
-  const welcomeMessage = settings.loginWelcomeMessage || 'Welcome back';
-  const welcomeSubtitle = settings.loginWelcomeSubtitle || 'Sign in to your account';
+  const displayName = i18n?.displayName || settings.companyName || 'AV Rentals';
+  const welcomeMessage = i18n?.welcomeMessage || settings.loginWelcomeMessage || 'Welcome back';
+  const welcomeSubtitle = i18n?.welcomeSubtitle || settings.loginWelcomeSubtitle || 'Sign in to your account';
   const logoSize = settings.loginLogoSize || 80;
 
   if (!isSettingsLoaded) {
@@ -251,6 +264,9 @@ export default function CustomizableLoginPage() {
       className="min-h-screen flex px-4 relative transition-all duration-300 items-center justify-center overflow-hidden"
       style={getBackgroundStyle()}
     >
+      <div className="absolute top-4 right-4 z-20">
+        <LanguageToggle />
+      </div>
       {/* LightRays Background */}
       {settings.loginBackgroundType === 'lightrays' && (
         <div className="absolute inset-0 z-0">
@@ -345,11 +361,11 @@ export default function CustomizableLoginPage() {
                   name="username"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-foreground">Username</FormLabel>
+                      <FormLabel className="text-foreground">{i18n?.usernameLabel || 'Username'}</FormLabel>
                       <FormControl>
                         <Input
                           type="text"
-                          placeholder="Enter your username"
+                          placeholder={i18n?.usernamePlaceholder || 'Enter your username'}
                           {...field}
                           disabled={isLoading}
                           className={getInputClasses()}
@@ -364,12 +380,12 @@ export default function CustomizableLoginPage() {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-foreground">Password</FormLabel>
+                      <FormLabel className="text-foreground">{i18n?.passwordLabel || 'Password'}</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <Input
                             type={showPassword ? "text" : "password"}
-                            placeholder="Enter your password"
+                            placeholder={i18n?.passwordPlaceholder || 'Enter your password'}
                             {...field}
                             disabled={isLoading}
                             className={getInputClasses() + ' pr-10'}
@@ -396,7 +412,7 @@ export default function CustomizableLoginPage() {
                   style={{ backgroundColor: settings.primaryColor || 'hsl(var(--primary))' }}
                 >
                   {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Sign In
+                  {i18n?.signIn || 'Sign In'}
                 </Button>
                 
                 <div className="text-center">
@@ -404,7 +420,7 @@ export default function CustomizableLoginPage() {
                     href="#" 
                     className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    Forgot your password?
+                    {i18n?.forgotPassword || 'Forgot your password?'}
                   </a>
                 </div>
               </form>

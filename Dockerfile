@@ -18,6 +18,8 @@ WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 
 COPY --from=deps /app/node_modules ./node_modules
+# Copy prisma directory for migrations and client generation (before COPY . .)
+COPY ./prisma ./prisma
 COPY . .
 
 # Generate Prisma client (if used)
@@ -27,12 +29,18 @@ RUN npx prisma generate || true
 RUN npm run build
 
 # 3) Runner: minimal image serving the app
+
+# 3) Runner: minimal image serving the app, with OpenSSL installed
 FROM node:20-bookworm-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production \
-    NEXT_TELEMETRY_DISABLED=1 \
-    PORT=3000 \
-    HOSTNAME=0.0.0.0
+  NEXT_TELEMETRY_DISABLED=1 \
+  PORT=3000 \
+  HOSTNAME=0.0.0.0
+
+# Install OpenSSL for Prisma and runtime needs
+RUN apt-get update -y && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
+
 
 # Copy standalone server output
 COPY --from=builder /app/.next/standalone ./
@@ -40,6 +48,12 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/public ./public
 # Copy .next/static for client assets
 COPY --from=builder /app/.next/static ./.next/static
+# Copy prisma directory for migrations and seeding
+COPY --from=builder /app/prisma ./prisma
+# Copy package.json and package-lock.json for npm install
+COPY package.json package-lock.json ./
+# Install ALL dependencies (not just production) so dev tools like tsx and bcryptjs are available
+RUN npm install --legacy-peer-deps
 
 EXPOSE 3000
 

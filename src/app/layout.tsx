@@ -6,6 +6,9 @@ import { ConditionalLayout } from '@/components/layout/ConditionalLayout';
 import { AppProvider } from '@/contexts/AppContext';
 import { ThemeProvider } from '@/contexts/ThemeProvider';
 import { TranslationProvider } from '@/contexts/TranslationContext';
+import BackgroundTranslationProvider from '@/components/translation/BackgroundTranslation';
+import TranslationPreloader from '@/components/translation/TranslationPreloader';
+import RouteTranslationPreloader from '@/components/translation/RouteTranslationPreloader';
 import { ReactQueryProvider } from '@/providers/ReactQueryProvider';
 import { Toaster } from "@/components/ui/toaster";
 import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
@@ -65,12 +68,16 @@ export default function RootLayout({
         <ReactQueryProvider>
           <ThemeProvider>
             <TranslationProvider>
-              <AppProvider>
-                <ConditionalLayout>
-                  {children}
-                </ConditionalLayout>
-                <PWAInstallPrompt />
-              </AppProvider>
+              <BackgroundTranslationProvider>
+                <AppProvider>
+                  <ConditionalLayout>
+                    {children}
+                  </ConditionalLayout>
+                  <PWAInstallPrompt />
+                  <TranslationPreloader />
+                  <RouteTranslationPreloader />
+                </AppProvider>
+              </BackgroundTranslationProvider>
             </TranslationProvider>
           </ThemeProvider>
           <Toaster />

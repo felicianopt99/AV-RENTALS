@@ -30,6 +30,25 @@ function getCacheKey(text: string, targetLang: Language): string {
   return `${targetLang}:${text}`;
 }
 
+// Simple glossary overrides for Portuguese (PT)
+// Ensures specific business terms use desired wording instead of generic DeepL choices
+const PT_GLOSSARY: Array<{ pattern: RegExp; replace: string }> = [
+  // Whole-word replacements with case sensitivity preserved via explicit patterns
+  { pattern: /\bQuotes\b/g, replace: 'Orçamentos' },
+  { pattern: /\bQuote\b/g, replace: 'Orçamento' },
+  { pattern: /\bquotes\b/g, replace: 'orçamentos' },
+  { pattern: /\bquote\b/g, replace: 'orçamento' },
+];
+
+function applyGlossary(text: string, targetLang: Language): string {
+  if (targetLang !== 'pt') return text;
+  let out = text;
+  for (const rule of PT_GLOSSARY) {
+    out = out.replace(rule.pattern, rule.replace);
+  }
+  return out;
+}
+
 // No rate limiting logic needed for DeepL here; handled by DeepL API or can be added if needed.
 
 /**
@@ -227,7 +246,9 @@ export async function translateText(
 
       // 5. Not in database, translate with DeepL
       console.log(`🔄 Translating "${text}" with DeepL...`);
-      const translated = await translateTextWithDeepL(text, targetLang);
+      let translated = await translateTextWithDeepL(text, targetLang);
+      // Apply glossary overrides
+      translated = applyGlossary(translated, targetLang);
       console.log(`✅ DeepL result: "${text}" → "${translated}"`);
 
       // 6. Save to database permanently (await for reliability)
@@ -346,9 +367,30 @@ export async function translateBatch(
     const aiResults = await batchTranslateWithAI(stillMissing, targetLang);
     stillMissing.forEach((text, i) => {
       const index = missingIndices[i];
-      const translated = aiResults.get(text) || text;
+      const translatedRaw = aiResults.get(text) || text;
+      const translated = applyGlossary(translatedRaw, targetLang);
       results[index] = translated;
     });
+
+    // 3b. Persist newly translated results to database (bulk insert, skip duplicates)
+    try {
+      const data = stillMissing.map((text) => ({
+        sourceText: text,
+        targetLang: targetLang,
+        translatedText: applyGlossary(aiResults.get(text) || text, targetLang),
+        model: 'deepl',
+      }));
+      if (data.length > 0) {
+        await prisma.translation.createMany({ data, skipDuplicates: true });
+      }
+      // Update in-memory cache as well
+      data.forEach((row) => {
+        const cacheKey = getCacheKey(row.sourceText, row.targetLang);
+        translationCache.set(cacheKey, row.translatedText);
+      });
+    } catch (err) {
+      console.error('Failed to persist batch translations:', err);
+    }
   }
 
   return results;
@@ -386,12 +428,32 @@ async function translateBatchBackground(
       const aiResults = await batchTranslateWithAI(stillMissing, targetLang, 15); // Larger batches for background
       
       stillMissing.forEach(text => {
-        const translated = aiResults.get(text) || text;
+        const translated = applyGlossary(aiResults.get(text) || text, targetLang);
         const originalIndex = texts.indexOf(text);
         if (originalIndex !== -1) {
           results[indices[originalIndex]] = translated;
         }
       });
+
+      // Persist background translations as well (bulk insert, skip duplicates)
+      try {
+        const data = stillMissing.map((text) => ({
+          sourceText: text,
+          targetLang: targetLang,
+          translatedText: applyGlossary(aiResults.get(text) || text, targetLang),
+          model: 'deepl',
+        }));
+        if (data.length > 0) {
+          await prisma.translation.createMany({ data, skipDuplicates: true });
+        }
+        // Warm in-memory cache
+        data.forEach((row) => {
+          const cacheKey = `${row.targetLang}:${row.sourceText}`;
+          translationCache.set(cacheKey, row.translatedText);
+        });
+      } catch (e) {
+        console.error('Failed to persist background batch translations:', e);
+      }
     }
   } catch (error) {
     console.error('Background translation error:', error);

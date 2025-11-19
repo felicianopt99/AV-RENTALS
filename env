@@ -1,0 +1,20 @@
+# Development Environment Configuration
+DATABASE_URL="postgresql://avrentals_user:avrentals_pass@localhost:5432/avrentals_db"
+JWT_SECRET="your-super-secret-jwt-key-change-this-in-production"
+
+# Google AI API Keys (Optional)
+GOOGLE_GENERATIVE_AI_API_KEY=""
+GOOGLE_GENERATIVE_AI_API_KEY_2=""
+GOOGLE_GENERATIVE_AI_API_KEY_3=""
+
+# DeepL and Gemini API Keys (Optional)
+DEEPL_API_KEY=3ca0c43d-7f6b-0a9d-eb49-45132322a270:fx
+GEMINI_API_KEY=AIzaSyAN8yv7LMnZgUMTZekHDP5KKRsgBGqcXTw
+
+# Environment
+NODE_ENV="development"
+
+# Local PostgreSQL Configuration
+POSTGRES_DB="avrentals_db"
+POSTGRES_USER="avrentals_user"
+POSTGRES_PASSWORD="avrentals_pass"

@@ -7,8 +7,10 @@ import { useEffect, useState } from 'react';
 import type { Quote } from '@/types';
 import { useAppContext } from '@/contexts/AppContext';
 import { QuoteForm } from '@/components/quotes/QuoteForm';
-import { FileText } from 'lucide-react';
+import { FileText, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 import { useTranslate } from '@/contexts/TranslationContext';
 export default function EditQuotePage() {
@@ -16,6 +18,11 @@ export default function EditQuotePage() {
   const { translated: toastNoquoteIDprovidedDescText } = useTranslate('No quote ID provided.');
   const { translated: toastQuotenotfoundDescText } = useTranslate('Quote not found.');
   const { translated: toastErrorTitleText } = useTranslate('Error');
+  const { translated: loadingQuoteData } = useTranslate('Loading quote data...');
+  const { translated: quoteNotFound } = useTranslate('Quote not found or could not be loaded.');
+  const { translated: editQuoteTitle } = useTranslate('Edit Quote');
+  const { translated: editingQuoteBase } = useTranslate('Editing Quote #{number} • Created {date}');
+  const { translated: backToQuotesText } = useTranslate('Back to Quotes');
 
   const params = useParams();
   const router = useRouter();
@@ -55,7 +62,7 @@ export default function EditQuotePage() {
     return (
         <div className="flex flex-col min-h-screen">
             <div className="flex-grow flex items-center justify-center p-4 md:p-6">
-                <p className="text-lg text-muted-foreground">Loading quote data...</p>
+                <p className="text-lg text-muted-foreground">{loadingQuoteData}</p>
             </div>
         </div>
     );
@@ -65,7 +72,7 @@ export default function EditQuotePage() {
     return (
         <div className="flex flex-col min-h-screen">
             <div className="flex-grow flex items-center justify-center p-4 md:p-6">
-                <p className="text-lg text-destructive">Quote not found or could not be loaded.</p>
+                <p className="text-lg text-destructive">{quoteNotFound}</p>
             </div>
         </div>
     );
@@ -75,14 +82,22 @@ export default function EditQuotePage() {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="mb-8">
+          <div className="mb-4">
+            <Link href="/quotes">
+              <Button variant="ghost" className="px-0 text-muted-foreground hover:text-foreground">
+                <ArrowLeft className="h-5 w-5 mr-2" />
+                {backToQuotesText}
+              </Button>
+            </Link>
+          </div>
           <div className="flex items-center gap-3 mb-3">
             <div className="h-12 w-12 rounded-xl flex items-center justify-center shadow-lg bg-gray-800 dark:bg-gray-700">
               <FileText className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Edit Quote</h1>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{editQuoteTitle}</h1>
               <p className="text-gray-600 dark:text-gray-400">
-                Editing Quote #{quote.quoteNumber} • Created {new Date(quote.createdAt).toLocaleDateString()}
+                {(editingQuoteBase || '').replace('{number}', String(quote.quoteNumber)).replace('{date}', new Date(quote.createdAt).toLocaleDateString())}
               </p>
             </div>
           </div>

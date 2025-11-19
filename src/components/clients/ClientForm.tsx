@@ -45,6 +45,21 @@ export function ClientForm({ initialData, onSubmitSuccess }: ClientFormProps) {
   const { translated: toastErrorTitleText } = useTranslate('Error');
   const { translated: toastClientAddedTitleText } = useTranslate('Client Added');
   const { translated: toastClientUpdatedTitleText } = useTranslate('Client Updated');
+  const { translated: labelClientName } = useTranslate('Client Name / Company');
+  const { translated: phClientName } = useTranslate('e.g., Acme Corp or John Doe');
+  const { translated: labelContactPerson } = useTranslate('Contact Person (Optional)');
+  const { translated: phContactPerson } = useTranslate('e.g., Jane Smith');
+  const { translated: labelEmail } = useTranslate('Email (Optional)');
+  const { translated: phEmail } = useTranslate('e.g., contact@example.com');
+  const { translated: labelPhone } = useTranslate('Phone (Optional)');
+  const { translated: phPhone } = useTranslate('e.g., 555-123-4567');
+  const { translated: labelAddress } = useTranslate('Address (Optional)');
+  const { translated: phAddress } = useTranslate('e.g., 123 Main St, Anytown, USA');
+  const { translated: labelNotes } = useTranslate('Notes (Optional)');
+  const { translated: phNotes } = useTranslate('Any relevant notes about the client...');
+  const { translated: notesDescription } = useTranslate('Internal notes for client management.');
+  const { translated: btnUpdateClient } = useTranslate('Update Client');
+  const { translated: btnAddClient } = useTranslate('Add Client');
 
   const { addClient, updateClient } = useAppDispatch();
   const router = useRouter();
@@ -86,9 +101,9 @@ export function ClientForm({ initialData, onSubmitSuccess }: ClientFormProps) {
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Client Name / Company</FormLabel>
+              <FormLabel>{labelClientName}</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., Acme Corp or John Doe" {...field} />
+                <Input placeholder={phClientName} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -99,9 +114,9 @@ export function ClientForm({ initialData, onSubmitSuccess }: ClientFormProps) {
           name="contactPerson"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Contact Person (Optional)</FormLabel>
+              <FormLabel>{labelContactPerson}</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., Jane Smith" {...field} />
+                <Input placeholder={phContactPerson} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -112,9 +127,9 @@ export function ClientForm({ initialData, onSubmitSuccess }: ClientFormProps) {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email (Optional)</FormLabel>
+              <FormLabel>{labelEmail}</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="e.g., contact@example.com" {...field} />
+                <Input type="email" placeholder={phEmail} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -125,9 +140,9 @@ export function ClientForm({ initialData, onSubmitSuccess }: ClientFormProps) {
           name="phone"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Phone (Optional)</FormLabel>
+              <FormLabel>{labelPhone}</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., 555-123-4567" {...field} />
+                <Input placeholder={phPhone} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -138,9 +153,9 @@ export function ClientForm({ initialData, onSubmitSuccess }: ClientFormProps) {
           name="address"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Address (Optional)</FormLabel>
+              <FormLabel>{labelAddress}</FormLabel>
               <FormControl>
-                <Textarea placeholder="e.g., 123 Main St, Anytown, USA" {...field} />
+                <Textarea placeholder={phAddress} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -151,17 +166,17 @@ export function ClientForm({ initialData, onSubmitSuccess }: ClientFormProps) {
           name="notes"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Notes (Optional)</FormLabel>
+              <FormLabel>{labelNotes}</FormLabel>
               <FormControl>
-                <Textarea placeholder="Any relevant notes about the client..." {...field} rows={4} />
+                <Textarea placeholder={phNotes} {...field} rows={4} />
               </FormControl>
-              <FormDescription>Internal notes for client management.</FormDescription>
+              <FormDescription>{notesDescription}</FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
         <Button type="submit" className="w-full md:w-auto">
-          {initialData ? "Update Client" : "Add Client"}
+          {initialData ? btnUpdateClient : btnAddClient}
         </Button>
       </form>
     </Form>

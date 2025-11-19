@@ -12,17 +12,43 @@ import { shouldTranslateText } from '@/lib/translationRules';
 class BackgroundTranslationService {
   private isRunning = false;
   private queue: Set<string> = new Set();
+  // Attribute translation queue items
+  private attrQueue: Array<{ element: Element; attr: string; text: string }> = [];
   private processedElements = new WeakSet<Element>();
+  private processedAttributes = new WeakMap<Element, Set<string>>();
   private lastScanTime = 0;
   private scanInterval = 2000; // Scan every 2 seconds
   private tBatch: ((texts: string[], progressive?: boolean) => Promise<string[]>) | null = null;
   private language: string = 'en';
+  private readonly allowedAttributes: string[] = ['placeholder', 'aria-label', 'title', 'alt'];
 
   constructor() {
     // Start background scanning when page is idle
     if (typeof window !== 'undefined') {
       this.scheduleNextScan();
     }
+  }
+
+  // Less strict guard for attributes: allow placeholders/titles/aria/alt on inputs and general elements,
+  // but still avoid obvious user data or IDs/codes.
+  private isTranslatableAttribute(value: string, element: Element, attr: string): boolean {
+    if (!value) return false;
+    if (value.length > 200) return false;
+    // Respect explicit opt-out
+    if ((element as HTMLElement).dataset?.noTranslate !== undefined || element.classList.contains('no-translate')) {
+      return false;
+    }
+    const v = value.trim();
+    // Skip emails/URLs/phones/mostly numbers
+    if (/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/.test(v)) return false;
+    if (/^https?:\/\//i.test(v)) return false;
+    if (/^[\d\s+().-]{5,}$/.test(v)) return false;
+    // Skip short all-caps codes (IDs/SKUs)
+    if (/^[A-Z0-9_-]{3,20}$/.test(v) && /[A-Z]/.test(v) && /\d/.test(v)) return false;
+    // Common UI attributes are okay to translate
+    if (['placeholder','title','aria-label','alt'].includes(attr)) return true;
+    // Fallback: reuse shouldTranslateText decision
+    return shouldTranslateText(v, element);
   }
 
   setTranslationFunction(tBatch: (texts: string[], progressive?: boolean) => Promise<string[]>, language: string) {
@@ -105,20 +131,86 @@ class BackgroundTranslationService {
     if (processedCount > 0) {
       console.log(`🔍 Background scan found ${processedCount} new texts to translate`);
     }
+
+    // Attribute scan: translate safe allowlist of attributes
+    try {
+      const selector = this.allowedAttributes.map(a => `[${a}]`).join(',');
+      const elements = document.body.querySelectorAll(selector);
+
+      let attrProcessed = 0;
+      for (const el of Array.from(elements)) {
+        if (attrProcessed >= 80) break; // conservative per-scan cap for attributes
+
+        for (const attr of this.allowedAttributes) {
+          const raw = el.getAttribute(attr);
+          const value = raw?.trim() || '';
+          if (!value) continue;
+
+          // Avoid reprocessing same attribute on same element
+          const doneSet = this.processedAttributes.get(el) || new Set<string>();
+          if (doneSet.has(attr)) continue;
+
+          if (this.isTranslatableAttribute(value, el, attr)) {
+            // Queue attribute for translation and mark as processed (to avoid duplicates)
+            this.attrQueue.push({ element: el, attr, text: value });
+            doneSet.add(attr);
+            this.processedAttributes.set(el, doneSet);
+            attrProcessed++;
+            // Also enqueue the text for batch deduplication
+            this.queue.add(value);
+          }
+        }
+      }
+
+      if (attrProcessed > 0) {
+        console.log(`🧩 Background scan queued ${attrProcessed} attribute(s) for translation`);
+      }
+    } catch (e) {
+      // Fail-safe: attribute scanning is optional
+      console.debug('Attribute scan skipped due to error:', e);
+    }
   }
 
   private async processTranslationQueue() {
-    if (this.queue.size === 0 || !this.tBatch) return;
+    if ((this.queue.size === 0 && this.attrQueue.length === 0) || !this.tBatch) return;
 
-    const textsToTranslate = Array.from(this.queue);
+    // Combine text and attribute values, dedupe
+    const textsArray = Array.from(this.queue);
+    const attrTexts = this.attrQueue.map(i => i.text);
+    const allTexts = [...textsArray, ...attrTexts];
+    const uniqueTexts = Array.from(new Set(allTexts));
+
+    // Clear queues before processing to avoid duplication on retries
     this.queue.clear();
+    const currentAttrQueue = this.attrQueue.splice(0, this.attrQueue.length);
 
-    console.log(`⚡ Background processing ${textsToTranslate.length} texts`);
+    console.log(`⚡ Background processing ${uniqueTexts.length} texts (including ${currentAttrQueue.length} attribute(s))`);
 
     try {
-      // Use progressive translation (non-blocking)
-      await this.tBatch(textsToTranslate, true);
-      console.log(`✅ Background translation completed for ${textsToTranslate.length} texts`);
+      // Progressive/async-friendly translation; fills client cache
+      const translated = await this.tBatch(uniqueTexts, true);
+
+      // Build map: original -> translated
+      const map = new Map<string, string>();
+      uniqueTexts.forEach((txt, idx) => {
+        map.set(txt, translated[idx] ?? txt);
+      });
+
+      // Apply translations to attributes immediately
+      let applied = 0;
+      for (const item of currentAttrQueue) {
+        const newVal = map.get(item.text) ?? item.text;
+        if (newVal && newVal !== item.text) {
+          try {
+            item.element.setAttribute(item.attr, newVal);
+            applied++;
+          } catch (e) {
+            // ignore DOM write errors
+          }
+        }
+      }
+
+      console.log(`✅ Background translation completed. Attributes updated: ${applied}`);
     } catch (error) {
       console.error('Background translation queue processing error:', error);
     }
