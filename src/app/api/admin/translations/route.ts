@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { clearTranslationCache } from '@/lib/translation';
 
 interface TranslationStats {
   total: number;
@@ -176,6 +177,8 @@ export async function POST(request: NextRequest) {
     const translation = await prisma.translation.create({
       data: translationData,
     });
+    // Invalidate cache so new translation is visible immediately
+    clearTranslationCache();
     
     return NextResponse.json({ translation });
     
@@ -223,6 +226,8 @@ export async function PUT(request: NextRequest) {
       },
       data: updateData,
     });
+    // Invalidate in-memory cache so bulk updates reflect immediately
+    clearTranslationCache();
     
     return NextResponse.json({
       updated: updated.count,
@@ -256,6 +261,8 @@ export async function DELETE(request: NextRequest) {
         id: { in: ids },
       },
     });
+    // Invalidate in-memory cache so deletions reflect immediately
+    clearTranslationCache();
     
     return NextResponse.json({
       deleted: deleted.count,

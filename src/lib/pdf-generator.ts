@@ -20,8 +20,14 @@ interface CustomizationSettings {
   companyTagline?: string;
   contactEmail?: string;
   contactPhone?: string;
+  pdfCompanyName?: string;
+  pdfCompanyTagline?: string;
+  pdfContactEmail?: string;
+  pdfContactPhone?: string;
   logoUrl?: string;
   useTextLogo?: boolean;
+  pdfLogoUrl?: string;
+  pdfUseTextLogo?: boolean;
 }
 
 export class QuotePDFGenerator {
@@ -125,22 +131,134 @@ export class QuotePDFGenerator {
     this.doc.line(x1, y1, x2, y2);
   }
 
+  private async loadImageAsBase64(url: string): Promise<{ data: string; width: number; height: number } | null> {
+    try {
+      let base64Data: string;
+      let imgWidth: number;
+      let imgHeight: number;
+
+      // If it's already a data URL, extract dimensions
+      if (url.startsWith('data:')) {
+        base64Data = url;
+        // Create an image element to get dimensions
+        const img = new Image();
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+          img.src = url;
+        });
+        imgWidth = img.width;
+        imgHeight = img.height;
+      } else {
+        // Fetch the image and convert to base64
+        const response = await fetch(url, { mode: 'cors' });
+        if (!response.ok) {
+          throw new Error('Failed to fetch image');
+        }
+        
+        const blob = await response.blob();
+        base64Data = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+
+        // Get image dimensions
+        const img = new Image();
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+          img.src = base64Data;
+        });
+        imgWidth = img.width;
+        imgHeight = img.height;
+      }
+
+      return { data: base64Data, width: imgWidth, height: imgHeight };
+    } catch (error) {
+      console.error('Error loading image for PDF:', error);
+      return null;
+    }
+  }
+
   private async addHeader(quote: Quote) {
     const settings = await this.fetchCustomizationSettings();
     
     this.currentY = 20;
     
-    // Company Info (Right side) - Clean typography
-    const companyName = settings.companyName || 'AV RENTALS';
-    this.addText(companyName, this.pageWidth - this.margin, this.currentY, {
-      fontSize: 22,
-      fontWeight: 'bold',
-      align: 'right'
-    });
+    // Company Info (Right side) - Clean typography or Logo
+    const companyName = settings.pdfCompanyName ?? settings.companyName ?? 'AV RENTALS';
+    const effectiveUseTextLogo = settings.pdfUseTextLogo ?? settings.useTextLogo ?? true;
+    const effectiveLogoUrl = settings.pdfLogoUrl ?? settings.logoUrl;
+    const shouldUseLogo = !effectiveUseTextLogo && !!effectiveLogoUrl;
     
-    this.currentY += 8;
-    if (settings.companyTagline) {
-      this.addText(settings.companyTagline, this.pageWidth - this.margin, this.currentY, {
+    if (shouldUseLogo) {
+      // Render logo image
+      try {
+        const logoData = await this.loadImageAsBase64(effectiveLogoUrl!);
+        if (logoData) {
+          // Calculate logo dimensions (max width: 50mm, max height: 20mm, maintain aspect ratio)
+          const maxLogoWidth = 50;
+          const maxLogoHeight = 20;
+          
+          // Convert pixels to mm (assuming 96 DPI: 1px = 0.264583mm)
+          // For better quality, assume 300 DPI for print: 1px = 0.084667mm
+          const pxToMm = 0.264583; // 96 DPI conversion
+          let logoWidth = logoData.width * pxToMm;
+          let logoHeight = logoData.height * pxToMm;
+          
+          // Scale down if too large, maintaining aspect ratio
+          if (logoWidth > maxLogoWidth || logoHeight > maxLogoHeight) {
+            const widthScale = maxLogoWidth / logoWidth;
+            const heightScale = maxLogoHeight / logoHeight;
+            const scale = Math.min(widthScale, heightScale);
+            logoWidth = logoWidth * scale;
+            logoHeight = logoHeight * scale;
+          }
+          
+          // Determine image format from base64 data
+          let format: 'PNG' | 'JPEG' = 'PNG';
+          if (logoData.data.startsWith('data:image/jpeg') || logoData.data.startsWith('data:image/jpg')) {
+            format = 'JPEG';
+          }
+          
+          // Add logo to PDF (right-aligned)
+          const logoX = this.pageWidth - this.margin - logoWidth;
+          this.doc.addImage(logoData.data, format, logoX, this.currentY, logoWidth, logoHeight);
+          this.currentY += logoHeight + 5;
+        } else {
+          // Fallback to text if image loading fails
+          this.addText(companyName, this.pageWidth - this.margin, this.currentY, {
+            fontSize: 22,
+            fontWeight: 'bold',
+            align: 'right'
+          });
+          this.currentY += 8;
+        }
+      } catch (error) {
+        console.error('Error adding logo to PDF, falling back to text:', error);
+        // Fallback to text if logo fails
+        this.addText(companyName, this.pageWidth - this.margin, this.currentY, {
+          fontSize: 22,
+          fontWeight: 'bold',
+          align: 'right'
+        });
+        this.currentY += 8;
+      }
+    } else {
+      // Use text logo
+      this.addText(companyName, this.pageWidth - this.margin, this.currentY, {
+        fontSize: 22,
+        fontWeight: 'bold',
+        align: 'right'
+      });
+      this.currentY += 8;
+    }
+    
+    const effectiveTagline = settings.pdfCompanyTagline ?? settings.companyTagline;
+    if (effectiveTagline) {
+      this.addText(effectiveTagline, this.pageWidth - this.margin, this.currentY, {
         fontSize: 10,
         align: 'right'
       });
@@ -148,16 +266,18 @@ export class QuotePDFGenerator {
     }
     
     // Contact info - simple and clean
-    if (settings.contactEmail) {
-      this.addText(settings.contactEmail, this.pageWidth - this.margin, this.currentY, {
+    const effectiveEmail = settings.pdfContactEmail ?? settings.contactEmail;
+    if (effectiveEmail) {
+      this.addText(effectiveEmail, this.pageWidth - this.margin, this.currentY, {
         fontSize: 9,
         align: 'right'
       });
       this.currentY += 4;
     }
     
-    if (settings.contactPhone) {
-      this.addText(settings.contactPhone, this.pageWidth - this.margin, this.currentY, {
+    const effectivePhone = settings.pdfContactPhone ?? settings.contactPhone;
+    if (effectivePhone) {
+      this.addText(effectivePhone, this.pageWidth - this.margin, this.currentY, {
         fontSize: 9,
         align: 'right'
       });

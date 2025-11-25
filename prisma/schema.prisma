@@ -227,6 +227,11 @@ model CustomizationSettings {
   companyTagline               String?
   contactEmail                 String?
   contactPhone                 String?
+  // PDF-specific branding (separate from platform)
+  pdfCompanyName               String?
+  pdfCompanyTagline            String?
+  pdfContactEmail              String?
+  pdfContactPhone              String?
   useTextLogo                  Boolean  @default(true)
   primaryColor                 String?
   secondaryColor               String?
@@ -234,6 +239,8 @@ model CustomizationSettings {
   darkMode                     Boolean  @default(false)
   logoUrl                      String?
   faviconUrl                   String?
+  pdfLogoUrl                   String?
+  pdfUseTextLogo               Boolean?
   loginBackgroundType          String   @default("gradient")
   loginBackgroundColor1        String?
   loginBackgroundColor2        String?

@@ -53,6 +53,25 @@ export function proxy(request: NextRequest) {
     }
   }
 
+  // Admin-only routes: require Admin role
+  if (pathname.startsWith('/admin')) {
+    if (!token) {
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+    try {
+      const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
+      if (decoded.role !== 'Admin') {
+        return NextResponse.redirect(new URL('/unauthorized', request.url));
+      }
+    } catch (error) {
+      const response = NextResponse.redirect(new URL('/login', request.url));
+      response.cookies.delete('auth-token');
+      return response;
+    }
+  }
+
   // Redirect root to login if not authenticated, dashboard if authenticated
   if (pathname === '/') {
     const isMobile = /mobile/i.test(request.headers.get('user-agent') || '');

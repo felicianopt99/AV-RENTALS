@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
+import { requireReadAccess, requirePermission } from '@/lib/api-auth'
 
 const CategorySchema = z.object({
   name: z.string().min(1),
@@ -8,7 +9,13 @@ const CategorySchema = z.object({
 })
 
 // GET /api/categories - Get all categories with subcategories
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Allow any authenticated user to view categories
+  const authResult = requireReadAccess(request)
+  if (authResult instanceof NextResponse) {
+    return authResult
+  }
+
   try {
     const categories = await prisma.category.findMany({
       include: {
@@ -29,6 +36,12 @@ export async function GET() {
 
 // POST /api/categories - Create new category
 export async function POST(request: NextRequest) {
+  // Categories are part of equipment management
+  const authResult = requirePermission(request, 'canManageEquipment')
+  if (authResult instanceof NextResponse) {
+    return authResult
+  }
+
   try {
     const body = await request.json()
     const validatedData = CategorySchema.parse(body)
@@ -52,6 +65,12 @@ export async function POST(request: NextRequest) {
 
 // PUT /api/categories - Update category
 export async function PUT(request: NextRequest) {
+  // Categories are part of equipment management
+  const authResult = requirePermission(request, 'canManageEquipment')
+  if (authResult instanceof NextResponse) {
+    return authResult
+  }
+
   try {
     const body = await request.json()
     const { id, ...updateData } = body
@@ -79,6 +98,12 @@ export async function PUT(request: NextRequest) {
 
 // DELETE /api/categories - Delete category
 export async function DELETE(request: NextRequest) {
+  // Categories are part of equipment management
+  const authResult = requirePermission(request, 'canManageEquipment')
+  if (authResult instanceof NextResponse) {
+    return authResult
+  }
+
   try {
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')

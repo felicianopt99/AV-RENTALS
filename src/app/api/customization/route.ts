@@ -13,6 +13,11 @@ const customizationSchema = z.object({
   companyTagline: z.string().optional(),
   contactEmail: z.string().email().optional().or(z.literal('')),
   contactPhone: z.string().optional(),
+  // PDF-specific branding (separate from platform)
+  pdfCompanyName: z.string().optional(),
+  pdfCompanyTagline: z.string().optional(),
+  pdfContactEmail: z.string().email().optional().or(z.literal('')),
+  pdfContactPhone: z.string().optional(),
   
   // Logo Options
   useTextLogo: z.boolean().optional(),
@@ -26,6 +31,8 @@ const customizationSchema = z.object({
   // Logos (fallback options)
   logoUrl: z.string().optional(),
   faviconUrl: z.string().optional(),
+  pdfLogoUrl: z.string().optional(),
+  pdfUseTextLogo: z.boolean().optional(),
   
   // Login Page Customization
   loginBackgroundType: z.enum(['gradient', 'solid', 'image', 'lightrays']).optional(),
@@ -154,6 +161,9 @@ export async function GET() {
           autoBackup: true,
           backupFrequency: 'daily',
           backupRetention: 30,
+          // Ensure logos are not mixed
+          logoUrl: '', // platform logo only
+          pdfLogoUrl: '', // pdf branding logo only
         },
       });
     }
@@ -231,7 +241,6 @@ export async function POST(request: NextRequest) {
     if (action === 'reset') {
       // Delete existing settings and create new defaults
       await prisma.customizationSettings.deleteMany();
-      
       const defaultSettings = await prisma.customizationSettings.create({
         data: {
           companyName: 'AV Rentals',
@@ -258,9 +267,11 @@ export async function POST(request: NextRequest) {
           autoBackup: true,
           backupFrequency: 'daily',
           backupRetention: 30,
+          // Ensure logos are not mixed
+          logoUrl: '', // platform logo only
+          pdfLogoUrl: '', // pdf branding logo only
         },
       });
-      
       return NextResponse.json(defaultSettings);
     }
     

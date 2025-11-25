@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
+import { requireReadAccess, requirePermission } from '@/lib/api-auth'
 
 const RentalSchema = z.object({
   eventId: z.string(),
@@ -21,7 +22,13 @@ const SingleRentalUpdateSchema = z.object({
 })
 
 // GET /api/rentals - Get all rentals
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Allow any authenticated user to view rentals
+  const authResult = requireReadAccess(request)
+  if (authResult instanceof NextResponse) {
+    return authResult
+  }
+
   try {
     const rentals = await prisma.rental.findMany({
       include: {
@@ -49,6 +56,11 @@ export async function GET() {
 
 // POST /api/rentals - Create new rentals
 export async function POST(request: NextRequest) {
+  const authResult = requirePermission(request, 'canManageRentals')
+  if (authResult instanceof NextResponse) {
+    return authResult
+  }
+
   try {
     const body = await request.json()
     const validatedData = RentalSchema.parse(body)
@@ -106,6 +118,11 @@ export async function POST(request: NextRequest) {
 
 // PUT /api/rentals - Update rental
 export async function PUT(request: NextRequest) {
+  const authResult = requirePermission(request, 'canManageRentals')
+  if (authResult instanceof NextResponse) {
+    return authResult
+  }
+
   try {
     const body = await request.json()
     const { id, ...updateData } = body
@@ -138,6 +155,11 @@ export async function PUT(request: NextRequest) {
 
 // DELETE /api/rentals - Delete rental
 export async function DELETE(request: NextRequest) {
+  const authResult = requirePermission(request, 'canManageRentals')
+  if (authResult instanceof NextResponse) {
+    return authResult
+  }
+
   try {
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')

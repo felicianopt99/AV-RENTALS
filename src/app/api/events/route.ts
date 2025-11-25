@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
+import { requireReadAccess, requirePermission } from '@/lib/api-auth'
 
 const EventSchema = z.object({
   name: z.string().min(1),
@@ -11,7 +12,13 @@ const EventSchema = z.object({
 })
 
 // GET /api/events - Get all events
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Allow any authenticated user to view events
+  const authResult = requireReadAccess(request)
+  if (authResult instanceof NextResponse) {
+    return authResult
+  }
+
   try {
     const events = await prisma.event.findMany({
       include: {
@@ -37,6 +44,11 @@ export async function GET() {
 
 // POST /api/events - Create new event
 export async function POST(request: NextRequest) {
+  const authResult = requirePermission(request, 'canManageEvents')
+  if (authResult instanceof NextResponse) {
+    return authResult
+  }
+
   try {
     const body = await request.json()
     const validatedData = EventSchema.parse(body)
@@ -61,6 +73,11 @@ export async function POST(request: NextRequest) {
 
 // PUT /api/events - Update event
 export async function PUT(request: NextRequest) {
+  const authResult = requirePermission(request, 'canManageEvents')
+  if (authResult instanceof NextResponse) {
+    return authResult
+  }
+
   try {
     const body = await request.json()
     const { id, ...updateData } = body
@@ -89,6 +106,11 @@ export async function PUT(request: NextRequest) {
 
 // DELETE /api/events - Delete event
 export async function DELETE(request: NextRequest) {
+  const authResult = requirePermission(request, 'canManageEvents')
+  if (authResult instanceof NextResponse) {
+    return authResult
+  }
+
   try {
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')

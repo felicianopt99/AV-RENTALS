@@ -16,7 +16,9 @@ export function ClientsContent() {
   const { translated: accessDeniedText } = useTranslate('Access Denied');
   const { translated: noPermissionText } = useTranslate('You do not have permission to view this page.');
 
-  if (currentUser?.role !== 'Admin') {
+  // Allow Admin, Manager, and Employee to access clients (matches navigation)
+  const allowedRoles = ['Admin', 'Manager', 'Employee'];
+  if (!currentUser || !allowedRoles.includes(currentUser.role)) {
     return (
       <div className="flex flex-col min-h-screen">
 

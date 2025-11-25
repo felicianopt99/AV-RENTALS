@@ -1,4 +1,5 @@
 import { batchTranslateWithDeepL, translateTextWithDeepL } from './deepl';
+import { loadTranslationRules } from './translation-rules';
 import { prisma } from '@/lib/db';
 
 export type Language = 'en' | 'pt';
@@ -219,6 +220,15 @@ export async function translateText(
     return cached;
   }
 
+  // 1a. Check translation rules for override
+  const rules = loadTranslationRules();
+  if (rules[text] !== undefined) {
+    if (rules[text] === "NO_TRANSLATE") {
+      return text;
+    }
+    return rules[text];
+  }
+
   // 2. Check if translation is already in progress (deduplicate)
   const pending = pendingTranslations.get(cacheKey);
   if (pending) {
@@ -249,6 +259,14 @@ export async function translateText(
       let translated = await translateTextWithDeepL(text, targetLang);
       // Apply glossary overrides
       translated = applyGlossary(translated, targetLang);
+      // Apply translation rules post-glossary (in case rules are for output)
+      if (rules[translated] !== undefined) {
+        if (rules[translated] === "NO_TRANSLATE") {
+          translated = text;
+        } else {
+          translated = rules[translated];
+        }
+      }
       console.log(`✅ DeepL result: "${text}" → "${translated}"`);
 
       // 6. Save to database permanently (await for reliability)

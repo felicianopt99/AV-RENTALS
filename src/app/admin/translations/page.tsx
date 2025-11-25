@@ -23,6 +23,7 @@ import {
   Eye, ThumbsUp, ThumbsDown, MessageSquare, Copy, ExternalLink, Package
 } from 'lucide-react';
 import { TranslationAnalytics } from '@/components/admin/TranslationAnalytics';
+import PdfTranslationManager from './pdf-translation';
 
 interface Translation {
   id: string;
@@ -53,17 +54,6 @@ interface TranslationStats {
   needsReview: number;
   autoTranslated: number;
   totalUsage: number;
-}
-
-interface TranslationsResponse {
-  translations: Translation[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    pages: number;
-  };
-  stats: TranslationStats;
 }
 
 const TRANSLATION_CATEGORIES = [
@@ -106,13 +96,12 @@ const getQualityBadge = (score: number) => {
     if (score >= 70) return 'bg-yellow-100 text-yellow-800';
     return 'bg-red-100 text-red-800';
   };
-  
   return <Badge className={getColor(score)}>{score}%</Badge>;
 };
 
 export default function AdminTranslationsPage() {
-  const { toast } = useToast();
-  
+  // Core data state
+
   // Core data state
   const [translations, setTranslations] = useState<Translation[]>([]);
   const [stats, setStats] = useState<TranslationStats>({
@@ -124,19 +113,151 @@ export default function AdminTranslationsPage() {
     autoTranslated: 0,
     totalUsage: 0,
   });
-  
+
   // UI state
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedTab, setSelectedTab] = useState('list');
-  
+
+
+  // Translation Rules state
+  const [rules, setRules] = useState<string>('');
+  const [rulesLoading, setRulesLoading] = useState(false);
+  const [rulesError, setRulesError] = useState<string | null>(null);
+  const [rulesEdit, setRulesEdit] = useState('');
+  const [rulesEditOpen, setRulesEditOpen] = useState(false);
+  const [rulesMode, setRulesMode] = useState<'simple' | 'advanced'>('simple');
+  const [ruleRows, setRuleRows] = useState<Array<{ source: string; translation: string }>>([]);
+  const [rulesValidationError, setRulesValidationError] = useState<string | null>(null);
+
+  const { toast } = useToast();
+
+
+  // ...existing code...
+
   // Search and filters
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('updatedAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
+  // Fetch translations from API
+  const fetchTranslations = async (page: number) => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams({
+        page: String(page),
+        limit: '50',
+        search: searchTerm || '',
+        targetLang: 'pt',
+        status: selectedStatus,
+        category: selectedCategory,
+        sortBy,
+        sortOrder,
+      });
+
+      const res = await fetch(`/api/admin/translations?${params.toString()}`);
+      if (!res.ok) throw new Error('Failed to fetch translations');
+      const data = await res.json();
+
+      setTranslations(data.translations || []);
+      setStats(data.stats || stats);
+      setTotalPages(data.pagination?.pages || 1);
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message || 'Failed to load translations', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTranslations(currentPage);
+  }, [currentPage]);
+
+  // Auto-refresh search with debounce
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (currentPage === 1) {
+        fetchTranslations(1);
+      } else {
+        setCurrentPage(1);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm, selectedStatus, selectedCategory, sortBy, sortOrder]);
+
+  // Fetch translation rules from API
+  const fetchRules = async () => {
+    setRulesLoading(true);
+    setRulesError(null);
+    try {
+      const res = await fetch('/api/admin/translation-rules');
+      if (!res.ok) throw new Error('Failed to fetch rules');
+      const data = await res.text();
+      setRules(data);
+      setRulesEdit(data);
+    } catch (e: any) {
+      setRulesError(e.message);
+    } finally {
+      setRulesLoading(false);
+    }
+  };
+
+  // Save translation rules to API
+  const saveRules = async () => {
+    setRulesLoading(true);
+    setRulesError(null);
+    try {
+      // Ensure rulesEdit reflects the current mode
+      let bodyToSend = rulesEdit;
+      if (rulesMode === 'simple') {
+        const obj: Record<string, string> = {};
+        for (const r of ruleRows) {
+          if (!r.source) continue;
+          obj[r.source] = r.translation ?? '';
+        }
+        bodyToSend = JSON.stringify(obj, null, 2);
+        setRulesEdit(bodyToSend);
+      }
+
+      const res = await fetch('/api/admin/translation-rules', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: bodyToSend,
+      });
+      if (!res.ok) throw new Error('Failed to save rules');
+      setRules(bodyToSend);
+      setRulesEditOpen(false);
+      toast({ title: 'Success', description: 'Translation rules updated.' });
+    } catch (e: any) {
+      setRulesError(e.message);
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
+    } finally {
+      setRulesLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRules();
+  }, []);
+
+  // Keep ruleRows in sync with rulesEdit when switching modes or when rules are fetched
+  useEffect(() => {
+    try {
+      const obj = JSON.parse(rulesEdit || rules || '{}') as Record<string, string>;
+      const rows = Object.entries(obj).map(([source, translation]) => ({ source, translation }));
+      setRuleRows(rows);
+      setRulesValidationError(null);
+    } catch (err: any) {
+      // If JSON invalid, surface error in advanced mode; simple mode will show empty rows
+      setRulesValidationError('Invalid JSON detected. Fix in Advanced mode or switch to Simple and Save to normalize.');
+    }
+  }, [rulesEdit, rules]);
+  
+  
   
   // Bulk operations
   const [selectedTranslations, setSelectedTranslations] = useState<Set<string>>(new Set());
@@ -201,77 +322,6 @@ export default function AdminTranslationsPage() {
     return filtered;
   }, [translations, searchTerm, selectedStatus, selectedCategory, sortBy, sortOrder]);
 
-  const fetchTranslations = async (page = 1) => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({
-        page: page.toString(),
-        limit: '50',
-        targetLang: 'pt',
-        ...(searchTerm && { search: searchTerm }),
-        ...(selectedStatus !== 'all' && { status: selectedStatus }),
-        ...(selectedCategory !== 'all' && { category: selectedCategory }),
-        sortBy,
-        sortOrder,
-      });
-
-      const response = await fetch(`/api/admin/translations?${params}`);
-      
-      if (response.ok) {
-        const data: TranslationsResponse = await response.json();
-        setTranslations(data.translations);
-        setCurrentPage(data.pagination.page);
-        setTotalPages(data.pagination.pages);
-        
-        // Handle both old and new stats format
-        if (data.stats) {
-          if (typeof data.stats.total === 'number') {
-            // New format
-            setStats(data.stats);
-          } else {
-            // Old format - convert to new format
-            setStats({
-              total: data.stats.total || 0,
-              byStatus: {},
-              byCategory: {},
-              averageQuality: 100,
-              needsReview: 0,
-              autoTranslated: 0,
-              totalUsage: 0,
-            });
-          }
-        }
-      } else {
-        throw new Error('Failed to fetch translations');
-      }
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to load translations',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchTranslations(currentPage);
-  }, [currentPage]);
-
-  // Auto-refresh search with debounce
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (currentPage === 1) {
-        fetchTranslations(1);
-      } else {
-        setCurrentPage(1);
-      }
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [searchTerm, selectedStatus, selectedCategory, sortBy, sortOrder]);
-
   const handleSelectTranslation = (id: string, checked: boolean) => {
     const newSelected = new Set(selectedTranslations);
     if (checked) {
@@ -319,253 +369,86 @@ export default function AdminTranslationsPage() {
     }
   };
 
-  const handleBulkApprove = async () => {
-    if (selectedTranslations.size === 0) return;
-
-    try {
-      const response = await fetch('/api/admin/translations/bulk', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ids: Array.from(selectedTranslations),
-          action: 'approve',
-        }),
-      });
-
-      if (response.ok) {
-        fetchTranslations(currentPage);
-        setSelectedTranslations(new Set());
-        setShowBulkActions(false);
-        toast({
-          title: 'Success',
-          description: `Approved ${selectedTranslations.size} translation(s)`,
-        });
-      } else {
-        throw new Error('Failed to approve translations');
-      }
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to approve translations',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleBulkDelete = async () => {
-    if (selectedTranslations.size === 0) return;
-    if (!confirm(`Are you sure you want to delete ${selectedTranslations.size} translation(s)?`)) return;
-
-    try {
-      const response = await fetch('/api/admin/translations/bulk', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ids: Array.from(selectedTranslations),
-        }),
-      });
-
-      if (response.ok) {
-        fetchTranslations(currentPage);
-        setSelectedTranslations(new Set());
-        setShowBulkActions(false);
-        toast({
-          title: 'Success',
-          description: `Deleted ${selectedTranslations.size} translation(s)`,
-        });
-      } else {
-        throw new Error('Failed to delete translations');
-      }
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to delete translations',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleExport = async () => {
-    try {
-      const response = await fetch('/api/admin/translations/export');
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        a.download = `translations_${new Date().toISOString().split('T')[0]}.json`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-        toast({
-          title: 'Success',
-          description: 'Translations exported successfully',
-        });
-      } else {
-        throw new Error('Failed to export translations');
-      }
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to export translations',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleUpdateTranslation = async () => {
-    if (!editingId || !editData.sourceText || !editData.translatedText) {
-      toast({
-        title: 'Error',
-        description: 'Source text and translation are required',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/admin/translations/${editingId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sourceText: editData.sourceText,
-          translatedText: editData.translatedText,
-          category: editData.category,
-          context: editData.context,
-          tags: editData.tags || [],
-          status: editData.status,
-        }),
-      });
-
-      if (response.ok) {
-        const { translation } = await response.json();
-        setTranslations(prev => prev.map(t => t.id === editingId ? translation : t));
-        setEditingId(null);
-        setEditData({});
-        toast({
-          title: 'Success',
-          description: 'Translation updated successfully',
-        });
-      } else {
-        throw new Error('Failed to update translation');
-      }
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update translation',
-        variant: 'destructive',
-      });
-    }
-  };
-
+  // Create new translation
   const handleCreate = async () => {
-    if (!newTranslation.sourceText || !newTranslation.translatedText) {
-      toast({
-        title: 'Error',
-        description: 'Both source text and translation are required',
-        variant: 'destructive',
-      });
-      return;
-    }
-
     try {
-      const response = await fetch('/api/admin/translations', {
+      const res = await fetch('/api/admin/translations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newTranslation),
+        body: JSON.stringify({
+          sourceText: newTranslation.sourceText,
+          translatedText: newTranslation.translatedText,
+          targetLang: 'pt',
+          category: newTranslation.category,
+          context: newTranslation.context,
+          tags: newTranslation.tags,
+        }),
       });
-
-      if (response.ok) {
-        const { translation } = await response.json();
-        setTranslations(prev => [translation, ...prev]);
-        setStats(prev => ({ ...prev, total: prev.total + 1 }));
-        setNewTranslation({ 
-          sourceText: '', 
-          translatedText: '', 
-          category: 'general', 
-          context: '', 
-          tags: [] 
-        });
-        setIsCreateDialogOpen(false);
-        toast({
-          title: 'Success',
-          description: 'Translation created successfully',
-        });
-      } else {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to create translation');
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.error || 'Failed to create translation');
       }
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to create translation',
-        variant: 'destructive',
-      });
+      const { translation } = await res.json();
+      setTranslations(prev => [translation, ...prev]);
+      setStats(prev => ({ ...prev, total: prev.total + 1 }));
+      setIsCreateDialogOpen(false);
+      toast({ title: 'Success', description: 'Translation created.' });
+      // refresh list to respect sorting/pagination
+      fetchTranslations(currentPage);
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message || 'Failed to create translation', variant: 'destructive' });
     }
+  };
+
+  // Bulk approve selected
+  const handleBulkApprove = async () => {
+    if (selectedTranslations.size === 0) return;
+    try {
+      const ids = Array.from(selectedTranslations);
+      const res = await fetch('/api/admin/translations', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids, updates: { status: 'approved' } }),
+      });
+      if (!res.ok) throw new Error('Failed to approve');
+      setTranslations(prev => prev.map(t => ids.includes(t.id) ? { ...t, status: 'approved' } : t));
+      setSelectedTranslations(new Set());
+      setShowBulkActions(false);
+      toast({ title: 'Success', description: 'Selected translations approved.' });
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message || 'Bulk approve failed', variant: 'destructive' });
+    }
+  };
+
+  // Bulk delete selected
+  const handleBulkDelete = async () => {
+    if (selectedTranslations.size === 0) return;
+    if (!confirm('Delete selected translations?')) return;
+    try {
+      const ids = Array.from(selectedTranslations);
+      const res = await fetch(`/api/admin/translations?ids=${ids.join(',')}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete');
+      setTranslations(prev => prev.filter(t => !ids.includes(t.id)));
+      setStats(prev => ({ ...prev, total: Math.max(0, prev.total - ids.length) }));
+      setSelectedTranslations(new Set());
+      setShowBulkActions(false);
+      toast({ title: 'Success', description: 'Selected translations deleted.' });
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message || 'Bulk delete failed', variant: 'destructive' });
+    }
+  };
+
+  // Export translations
+  const handleExport = () => {
+    const url = `/api/admin/translations/export?format=json&status=${encodeURIComponent(selectedStatus)}&category=${encodeURIComponent(selectedCategory)}`;
+    window.open(url, '_blank');
   };
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Enhanced Header */}
-      <div className="flex items-center justify-between border-b border-border pb-6">
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <Languages className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">Translation Management</h1>
-              <p className="text-muted-foreground">
-                Professional translation workflow with quality controls and analytics
-              </p>
-            </div>
-          </div>
-          {stats.total > 0 && (
-            <div className="flex items-center gap-6 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <Database className="h-4 w-4" />
-                {stats.total.toLocaleString()} translations
-              </span>
-              <span className="flex items-center gap-1">
-                <Star className="h-4 w-4" />
-                {stats.averageQuality}% avg quality
-              </span>
-              {stats.needsReview > 0 && (
-                <span className="flex items-center gap-1 text-yellow-600">
-                  <AlertTriangle className="h-4 w-4" />
-                  {stats.needsReview} need review
-                </span>
-              )}
-            </div>
-          )}
-        </div>
-        
-        <div className="flex gap-3">
-          <Button onClick={() => fetchTranslations(currentPage)} variant="outline" disabled={loading} size="sm">
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            {loading ? 'Refreshing...' : 'Refresh'}
-          </Button>
-          
-          <Button onClick={() => setIsImportDialogOpen(true)} variant="outline" size="sm">
-            <Upload className="h-4 w-4 mr-2" />
-            Import
-          </Button>
-          
-          <Button onClick={handleExport} variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
-          
+    <div>
+    {/* Removed redundant closing div */}
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-primary hover:bg-primary/90">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Translation
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Create New Translation</DialogTitle>
                 <DialogDescription>
@@ -738,8 +621,6 @@ export default function AdminTranslationsPage() {
               </div>
             </DialogContent>
           </Dialog>
-        </div>
-      </div>
 
       {/* Enhanced Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -810,10 +691,14 @@ export default function AdminTranslationsPage() {
 
       {/* Enhanced Main Interface */}
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-        <TabsList className="grid w-full max-w-md grid-cols-3 h-11">
+        <TabsList className="grid w-full max-w-lg grid-cols-5 h-11">
           <TabsTrigger value="list" className="text-sm font-medium">
             <FileText className="h-4 w-4 mr-2" />
             Translations
+          </TabsTrigger>
+          <TabsTrigger value="rules" className="text-sm font-medium">
+            <FileText className="h-4 w-4 mr-2" />
+            Rules
           </TabsTrigger>
           <TabsTrigger value="analytics" className="text-sm font-medium">
             <BarChart3 className="h-4 w-4 mr-2" />
@@ -823,7 +708,158 @@ export default function AdminTranslationsPage() {
             <Settings className="h-4 w-4 mr-2" />
             Settings
           </TabsTrigger>
+          <TabsTrigger value="pdf" className="text-sm font-medium">
+            <FileText className="h-4 w-4 mr-2" />
+            PDF Generator
+          </TabsTrigger>
         </TabsList>
+        <TabsContent value="rules">
+          <Card>
+            <CardHeader>
+              <CardTitle>Translation Rules</CardTitle>
+              <CardDescription>
+                Choose a mode below. Simple Builder is client-friendly; Advanced allows raw JSON editing.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {rulesLoading ? (
+                <div>Loading...</div>
+              ) : rulesError ? (
+                <div className="text-red-600">{rulesError}</div>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Button variant={rulesMode === 'simple' ? 'default' : 'outline'} size="sm" onClick={() => setRulesMode('simple')}>Simple Builder</Button>
+                    <Button variant={rulesMode === 'advanced' ? 'default' : 'outline'} size="sm" onClick={() => { setRulesMode('advanced'); setRulesEditOpen(false); }}>Advanced JSON</Button>
+                    <div className="ml-auto text-xs text-muted-foreground">{
+                      (() => {
+                        try {
+                          return Object.keys(JSON.parse(rulesEdit || rules || '{}')).length;
+                        } catch {
+                          return ruleRows.length;
+                        }
+                      })()
+                    } rule(s)</div>
+                  </div>
+
+                  {rulesMode === 'simple' ? (
+                    <div className="space-y-3">
+                      {rulesValidationError && (
+                        <div className="text-yellow-700 bg-yellow-50 border border-yellow-200 text-sm rounded p-2">{rulesValidationError}</div>
+                      )}
+                      <div className="grid grid-cols-12 gap-2 font-medium text-sm text-muted-foreground">
+                        <div className="col-span-5">Source Text (exact match)</div>
+                        <div className="col-span-6">Desired Translation</div>
+                        <div className="col-span-1"></div>
+                      </div>
+                      <div className="space-y-2">
+                        {ruleRows.length === 0 && (
+                          <div className="text-sm text-muted-foreground">No rules yet. Click "Add Rule" to get started.</div>
+                        )}
+                        {ruleRows.map((row, idx) => (
+                          <div key={idx} className="grid grid-cols-12 gap-2 items-start">
+                            <Textarea
+                              value={row.source}
+                              onChange={(e) => {
+                                const next = [...ruleRows];
+                                next[idx] = { ...next[idx], source: e.target.value };
+                                setRuleRows(next);
+                              }}
+                              rows={2}
+                              className="col-span-5"
+                              placeholder="e.g. Hello"
+                            />
+                            <Textarea
+                              value={row.translation}
+                              onChange={(e) => {
+                                const next = [...ruleRows];
+                                next[idx] = { ...next[idx], translation: e.target.value };
+                                setRuleRows(next);
+                              }}
+                              rows={2}
+                              className="col-span-6"
+                              placeholder="e.g. Olá"
+                            />
+                            <div className="col-span-1 flex justify-end">
+                              <Button variant="outline" size="sm" onClick={() => setRuleRows(prev => prev.filter((_, i) => i !== idx))}>Remove</Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={() => setRuleRows(prev => [...prev, { source: '', translation: '' }])}>Add Rule</Button>
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            try {
+                              const obj: Record<string, string> = {};
+                              for (const r of ruleRows) {
+                                if (!r.source) continue;
+                                obj[r.source] = r.translation ?? '';
+                              }
+                              const normalized = JSON.stringify(obj, null, 2);
+                              setRulesEdit(normalized);
+                              setRulesValidationError(null);
+                              toast({ title: 'Validated', description: 'Rules look good and were normalized.' });
+                            } catch (err: any) {
+                              setRulesValidationError('Validation failed.');
+                            }
+                          }}
+                        >Validate</Button>
+                        <div className="ml-auto flex gap-2">
+                          <Button variant="outline" size="sm" onClick={() => {
+                            try {
+                              const data = JSON.parse(prompt('Paste rules JSON here:') || '{}');
+                              const rows = Object.entries(data).map(([source, translation]) => ({ source, translation: String(translation) }));
+                              setRuleRows(rows);
+                              setRulesEdit(JSON.stringify(data, null, 2));
+                            } catch {}
+                          }}>Import JSON</Button>
+                          <Button variant="outline" size="sm" onClick={() => {
+                            const obj: Record<string, string> = {};
+                            for (const r of ruleRows) { if (r.source) obj[r.source] = r.translation ?? ''; }
+                            const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url; a.download = 'translation-rules.json'; a.click();
+                            URL.revokeObjectURL(url);
+                          }}>Export JSON</Button>
+                          <Button size="sm" onClick={saveRules} disabled={rulesLoading}>Save</Button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <Textarea
+                        value={rulesEditOpen ? rulesEdit : rules}
+                        onChange={e => setRulesEdit(e.target.value)}
+                        disabled={!rulesEditOpen}
+                        rows={14}
+                        className="font-mono"
+                      />
+                      {rulesValidationError && (
+                        <div className="text-yellow-700 bg-yellow-50 border border-yellow-200 text-sm rounded p-2">{rulesValidationError}</div>
+                      )}
+                      <div className="mt-2 flex gap-2">
+                        {!rulesEditOpen ? (
+                          <Button onClick={() => setRulesEditOpen(true)} variant="outline">Edit</Button>
+                        ) : (
+                          <>
+                            <Button onClick={saveRules} variant="default">Save</Button>
+                            <Button onClick={() => { setRulesEdit(rules); setRulesEditOpen(false); }} variant="outline">Cancel</Button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="pdf" className="space-y-6">
+          <PdfTranslationManager />
+        </TabsContent>
 
         <TabsContent value="list" className="space-y-6">
           {/* Enhanced Search and Filters */}
@@ -1272,68 +1308,72 @@ export default function AdminTranslationsPage() {
                                             value={editData.translatedText || ''}
                                             onChange={(e) => setEditData(prev => ({ ...prev, translatedText: e.target.value }))}
                                           />
-                                        </div>
-                                      </div>
-                                      
-                                      <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                          <Label htmlFor="edit-category">Category</Label>
-                                          <Select 
-                                            value={editData.category || 'general'} 
-                                            onValueChange={(value) => setEditData(prev => ({ ...prev, category: value }))}
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            style={{ marginTop: '0.5rem' }}
+                                            onClick={async () => {
+                                              try {
+                                                setEditData(prev => ({ ...prev, translatedText: 'Translating...' }));
+                                                const res = await fetch('/api/translate', {
+                                                  method: 'POST',
+                                                  headers: { 'Content-Type': 'application/json' },
+                                                  body: JSON.stringify({ text: editData.sourceText, targetLang: 'pt' }),
+                                                });
+                                                if (!res.ok) throw new Error('Translation failed');
+                                                const data = await res.json();
+                                                setEditData(prev => ({ ...prev, translatedText: data.translated }));
+                                                toast({
+                                                  title: 'Translation Successful',
+                                                  description: 'Suggestion filled from DeepL.',
+                                                });
+                                              } catch (err) {
+                                                setEditData(prev => ({ ...prev, translatedText: '' }));
+                                                toast({
+                                                  title: 'Translation Error',
+                                                  description: 'Failed to fetch suggestion. Please try again.',
+                                                  variant: 'destructive',
+                                                  action: (
+                                                    <Button
+                                                      size="sm"
+                                                      variant="outline"
+                                                      onClick={async () => {
+                                                        // Retry logic
+                                                        try {
+                                                          setEditData(prev => ({ ...prev, translatedText: 'Translating...' }));
+                                                          const res = await fetch('/api/translate', {
+                                                            method: 'POST',
+                                                            headers: { 'Content-Type': 'application/json' },
+                                                            body: JSON.stringify({ text: editData.sourceText, targetLang: 'pt' }),
+                                                          });
+                                                          if (!res.ok) throw new Error('Translation failed');
+                                                          const data = await res.json();
+                                                          setEditData(prev => ({ ...prev, translatedText: data.translated }));
+                                                          toast({
+                                                            title: 'Translation Successful',
+                                                            description: 'Suggestion filled from DeepL.',
+                                                          });
+                                                        } catch (err) {
+                                                          setEditData(prev => ({ ...prev, translatedText: '' }));
+                                                          toast({
+                                                            title: 'Translation Error',
+                                                            description: 'Retry failed. Please check your connection or try later.',
+                                                            variant: 'destructive',
+                                                          });
+                                                        }
+                                                      }}
+                                                    >Retry</Button>
+                                                  ),
+                                                });
+                                              }
+                                            }}
+                                            title="Suggest translation using DeepL"
                                           >
-                                            <SelectTrigger>
-                                              <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                              {TRANSLATION_CATEGORIES.map((cat) => (
-                                                <SelectItem key={cat.value} value={cat.value}>
-                                                  {cat.label}
-                                                </SelectItem>
-                                              ))}
-                                            </SelectContent>
-                                          </Select>
+                                            Suggest Translation
+                                          </Button>
                                         </div>
-                                        
-                                        <div>
-                                          <Label htmlFor="edit-status">Status</Label>
-                                          <Select 
-                                            value={editData.status || 'approved'} 
-                                            onValueChange={(value) => setEditData(prev => ({ ...prev, status: value }))}
-                                          >
-                                            <SelectTrigger>
-                                              <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                              {TRANSLATION_STATUSES.map((status) => (
-                                                <SelectItem key={status.value} value={status.value}>
-                                                  {status.label}
-                                                </SelectItem>
-                                              ))}
-                                            </SelectContent>
-                                          </Select>
-                                        </div>
-                                      </div>
-                                      
-                                      <div>
-                                        <Label htmlFor="edit-context">Context (optional)</Label>
-                                        <Textarea
-                                          id="edit-context"
-                                          placeholder="Provide context for translators..."
-                                          value={editData.context || ''}
-                                          onChange={(e) => setEditData(prev => ({ ...prev, context: e.target.value }))}
-                                        />
                                       </div>
                                     </div>
-                                    <DialogFooter>
-                                      <Button variant="outline" onClick={() => setEditingId(null)}>
-                                        Cancel
-                                      </Button>
-                                      <Button onClick={handleUpdateTranslation}>
-                                        <Save className="h-4 w-4 mr-2" />
-                                        Save Changes
-                                      </Button>
-                                    </DialogFooter>
                                   </DialogContent>
                                 </Dialog>
                                 <Button
@@ -1480,5 +1520,6 @@ export default function AdminTranslationsPage() {
         </TabsContent>
       </Tabs>
     </div>
+    
   );
 }

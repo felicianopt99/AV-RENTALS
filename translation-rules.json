@@ -1,0 +1,10 @@
+{
+  // Add custom translation rules here.
+  // Format: "source_text": "desired_translation"
+  // Example:
+  "quotes": "orçamentos",
+  "invoice": "fatura"
+  // To prevent a translation, set value to "NO_TRANSLATE"
+  // Example:
+  "citações": "NO_TRANSLATE"
+}

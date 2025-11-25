@@ -52,6 +52,8 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 # Copy package.json and package-lock.json for npm install
 COPY package.json package-lock.json ./
+# Copy our custom server.js with Socket.IO support (overrides Next.js generated server.js)
+COPY --from=builder /app/server.js ./server.js
 # Install ALL dependencies (not just production) so dev tools like tsx and bcryptjs are available
 RUN npm install --legacy-peer-deps
 

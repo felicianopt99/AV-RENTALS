@@ -36,7 +36,7 @@ export function AppHeader({ title, children, className }: AppHeaderProps) {
 
   useEffect(() => {
     if (isAuthenticated && currentUser) {
-      fetch(`/api/notifications?userId=${currentUser.id}&limit=20`, {
+      fetch(`/api/notifications?limit=20`, {
         credentials: 'include'
       })
         .then(res => {

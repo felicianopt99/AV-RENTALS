@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
+import { requireReadAccess, requirePermission } from '@/lib/api-auth'
 
 const ClientSchema = z.object({
   name: z.string().min(1),
@@ -12,7 +13,13 @@ const ClientSchema = z.object({
 })
 
 // GET /api/clients - Get all clients
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Allow any authenticated user to view clients
+  const authResult = requireReadAccess(request)
+  if (authResult instanceof NextResponse) {
+    return authResult
+  }
+
   try {
     const clients = await prisma.client.findMany({
       include: {
@@ -37,6 +44,11 @@ export async function GET() {
 
 // POST /api/clients - Create new client
 export async function POST(request: NextRequest) {
+  const authResult = requirePermission(request, 'canManageClients')
+  if (authResult instanceof NextResponse) {
+    return authResult
+  }
+
   try {
     const body = await request.json()
     const validatedData = ClientSchema.parse(body)
@@ -60,6 +72,11 @@ export async function POST(request: NextRequest) {
 
 // PUT /api/clients - Update client
 export async function PUT(request: NextRequest) {
+  const authResult = requirePermission(request, 'canManageClients')
+  if (authResult instanceof NextResponse) {
+    return authResult
+  }
+
   try {
     const body = await request.json()
     const { id, ...updateData } = body
@@ -87,6 +104,11 @@ export async function PUT(request: NextRequest) {
 
 // DELETE /api/clients - Delete client
 export async function DELETE(request: NextRequest) {
+  const authResult = requirePermission(request, 'canManageClients')
+  if (authResult instanceof NextResponse) {
+    return authResult
+  }
+
   try {
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')

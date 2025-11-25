@@ -1,32 +1,52 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { isSocketIOAvailable } from '@/lib/realtime-broadcast'
 
-// Socket.IO functionality for real-time updates
+/**
+ * Socket.IO health check endpoint
+ * The actual Socket.IO server is initialized in server.js
+ * This endpoint provides status information about the Socket.IO server
+ */
 export async function GET(request: NextRequest) {
   try {
-    // In App Router, Socket.IO initialization should be handled differently
-    // This endpoint can be used for health checks or WebSocket handshake
+    const io = (global as any).io
+    const isAvailable = isSocketIOAvailable()
+    
+    let connectedClients = 0
+    if (io) {
+      connectedClients = io.sockets.sockets.size
+    }
+
     return NextResponse.json({ 
       success: true, 
-      message: 'Socket endpoint available',
+      message: 'Socket.IO server status',
+      available: isAvailable,
+      connectedClients,
+      path: '/api/socket',
       timestamp: new Date().toISOString()
     })
   } catch (error) {
     console.error('Socket route error:', error)
     return NextResponse.json(
-      { success: false, error: 'Socket initialization failed' },
+      { success: false, error: 'Socket status check failed' },
       { status: 500 }
     )
   }
 }
 
+/**
+ * POST endpoint for Socket.IO event handling (if needed)
+ * Most Socket.IO communication happens via WebSocket, not HTTP POST
+ */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     
-    // Handle socket events or real-time sync requests
+    // This endpoint can be used for server-side event triggering
+    // For example, triggering a broadcast from an external system
     return NextResponse.json({ 
       success: true, 
-      message: 'Socket event processed',
+      message: 'Socket event endpoint',
+      note: 'Socket.IO communication happens via WebSocket at /api/socket',
       data: body
     })
   } catch (error) {

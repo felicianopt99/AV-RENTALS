@@ -6,6 +6,8 @@ interface CustomizationSettings {
   companyName?: string;
   logoUrl?: string;
   useTextLogo?: boolean;
+  pdfLogoUrl?: string;
+  pdfUseTextLogo?: boolean;
   primaryColor?: string;
   secondaryColor?: string;
   accentColor?: string;

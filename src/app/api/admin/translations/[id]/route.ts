@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { clearTranslationCache } from '@/lib/translation';
 
 // GET /api/admin/translations/[id] - Get specific translation
 export async function GET(
@@ -69,6 +70,8 @@ export async function PUT(
         updatedAt: new Date(),
       },
     });
+    // Invalidate in-memory cache so updated translation is picked up immediately
+    clearTranslationCache();
     
     return NextResponse.json({ translation });
     
@@ -107,6 +110,8 @@ export async function DELETE(
     await prisma.translation.delete({
       where: { id },
     });
+    // Invalidate in-memory cache so deletion is reflected
+    clearTranslationCache();
     
     return NextResponse.json({
       message: 'Translation deleted successfully',

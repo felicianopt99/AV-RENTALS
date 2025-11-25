@@ -1,33 +1,45 @@
-"use client";
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import jwt from 'jsonwebtoken';
+import { prisma } from '@/lib/db';
 import { DashboardContent } from '@/components/dashboard/DashboardContent';
-import { useAppContext } from '@/contexts/AppContext';
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 
-export default function DashboardPage() {
-  const { currentUser, isAuthLoading } = useAppContext();
-  const router = useRouter();
+export default async function DashboardPage() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('auth-token')?.value;
 
-  // Only allow Admin and Manager
-  const allowedRoles = ['Admin', 'Manager'];
-
-  useEffect(() => {
-    if (!isAuthLoading && currentUser && !allowedRoles.includes(currentUser.role)) {
-      // Redirect unauthorized users to home or show error
-      router.replace('/unauthorized');
-    }
-  }, [currentUser, isAuthLoading, router]);
-
-  if (isAuthLoading) {
-    return <div className="flex items-center justify-center min-h-screen text-lg">Loading...</div>;
+  if (!token) {
+    redirect('/login');
   }
 
-  if (!currentUser) {
-    return <div className="flex items-center justify-center min-h-screen text-lg">Not authenticated.</div>;
+  let userId: string | null = null;
+  try {
+    const decoded = jwt.verify(token!, process.env.JWT_SECRET!) as any;
+    userId = decoded.userId as string;
+  } catch {
+    redirect('/login');
   }
 
-  if (!allowedRoles.includes(currentUser.role)) {
-    return <div className="flex items-center justify-center min-h-screen text-lg text-red-600">You do not have permission to access the dashboard.</div>;
+  if (!userId) {
+    redirect('/login');
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      role: true,
+      isActive: true,
+    },
+  });
+
+  if (!user || !user.isActive) {
+    redirect('/login');
+  }
+
+  const allowedRoles = ['Admin', 'Manager', 'Technician', 'Employee', 'Viewer'];
+  if (!allowedRoles.includes(user.role as any)) {
+    redirect('/unauthorized');
   }
 
   return <DashboardContent />;

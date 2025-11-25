@@ -47,7 +47,9 @@ export function NotificationsSection({ noCard = false }: { noCard?: boolean }) {
 
   const fetchNotifications = async () => {
     try {
-      const response = await fetch(`/api/notifications?userId=${currentUser?.id}&limit=20&unreadOnly=false`);
+      const response = await fetch(`/api/notifications?limit=20&unreadOnly=false`, {
+        credentials: 'include'
+      });
       if (response.ok) {
         const data = await response.json();
         setNotifications(data.notifications);

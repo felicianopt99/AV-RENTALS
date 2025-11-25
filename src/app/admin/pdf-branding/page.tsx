@@ -12,12 +12,19 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 
 interface PDFBrandingSettings {
+  pdfCompanyName?: string;
+  pdfCompanyTagline?: string;
+  pdfContactEmail?: string;
+  pdfContactPhone?: string;
+  pdfLogoUrl?: string;
+  pdfUseTextLogo?: boolean;
+  // legacy fields for fallback
+  logoUrl?: string;
+  useTextLogo?: boolean;
   companyName?: string;
   companyTagline?: string;
   contactEmail?: string;
   contactPhone?: string;
-  logoUrl?: string;
-  useTextLogo?: boolean;
 }
 
 export default function PDFBrandingPage() {
@@ -30,12 +37,12 @@ export default function PDFBrandingPage() {
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   
   // PDF Branding Settings
-  const [companyName, setCompanyName] = useState('');
-  const [companyTagline, setCompanyTagline] = useState('');
-  const [contactEmail, setContactEmail] = useState('');
-  const [contactPhone, setContactPhone] = useState('');
-  const [logoUrl, setLogoUrl] = useState('');
-  const [useTextLogo, setUseTextLogo] = useState(true);
+  const [pdfCompanyName, setPdfCompanyName] = useState('');
+  const [pdfCompanyTagline, setPdfCompanyTagline] = useState('');
+  const [pdfContactEmail, setPdfContactEmail] = useState('');
+  const [pdfContactPhone, setPdfContactPhone] = useState('');
+  const [pdfLogoUrl, setPdfLogoUrl] = useState('');
+  const [pdfUseTextLogo, setPdfUseTextLogo] = useState(true);
 
   // Load current settings
   useEffect(() => {
@@ -53,12 +60,13 @@ export default function PDFBrandingPage() {
 
       const data: PDFBrandingSettings = await response.json();
       
-      setCompanyName(data.companyName || 'AV RENTALS');
-      setCompanyTagline(data.companyTagline || '');
-      setContactEmail(data.contactEmail || '');
-      setContactPhone(data.contactPhone || '');
-      setLogoUrl(data.logoUrl || '');
-      setUseTextLogo(data.useTextLogo ?? true);
+      setPdfCompanyName(data.pdfCompanyName ?? data.companyName ?? 'AV RENTALS');
+      setPdfCompanyTagline(data.pdfCompanyTagline ?? data.companyTagline ?? '');
+      setPdfContactEmail(data.pdfContactEmail ?? data.contactEmail ?? '');
+      setPdfContactPhone(data.pdfContactPhone ?? data.contactPhone ?? '');
+      // Prefer PDF-specific fields; fall back to legacy ones without writing back implicitly
+      setPdfLogoUrl(data.pdfLogoUrl ?? data.logoUrl ?? '');
+      setPdfUseTextLogo(data.pdfUseTextLogo ?? data.useTextLogo ?? true);
 
     } catch (error) {
       console.error('Failed to load PDF branding settings:', error);
@@ -77,12 +85,12 @@ export default function PDFBrandingPage() {
       setIsSaving(true);
 
       const settings: PDFBrandingSettings = {
-        companyName,
-        companyTagline,
-        contactEmail,
-        contactPhone,
-        logoUrl,
-        useTextLogo,
+        pdfCompanyName,
+        pdfCompanyTagline,
+        pdfContactEmail,
+        pdfContactPhone,
+        pdfLogoUrl,
+        pdfUseTextLogo,
       };
 
       const response = await fetch('/api/customization', {
@@ -116,12 +124,12 @@ export default function PDFBrandingPage() {
   };
 
   const handleReset = async () => {
-    setCompanyName('AV RENTALS');
-    setCompanyTagline('Professional AV Equipment Rental');
-    setContactEmail('info@av-rentals.com');
-    setContactPhone('+1 (555) 123-4567');
-    setLogoUrl('');
-    setUseTextLogo(true);
+    setPdfCompanyName('AV RENTALS');
+    setPdfCompanyTagline('Professional AV Equipment Rental');
+    setPdfContactEmail('info@av-rentals.com');
+    setPdfContactPhone('+1 (555) 123-4567');
+    setPdfLogoUrl('');
+    setPdfUseTextLogo(true);
 
     toast({
       title: 'Reset',
@@ -170,7 +178,7 @@ export default function PDFBrandingPage() {
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
-        setLogoUrl(base64String);
+        setPdfLogoUrl(base64String);
         toast({
           title: 'Logo Uploaded',
           description: 'Your logo has been uploaded. Don\'t forget to save changes!',
@@ -191,7 +199,7 @@ export default function PDFBrandingPage() {
   };
 
   const handleRemoveLogo = () => {
-    setLogoUrl('');
+    setPdfLogoUrl('');
     toast({
       title: 'Logo Removed',
       description: 'Logo has been removed. Don\'t forget to save changes!',
@@ -241,11 +249,11 @@ export default function PDFBrandingPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="companyName">Company Name *</Label>
+              <Label htmlFor="pdfCompanyName">PDF Company Name *</Label>
               <Input
-                id="companyName"
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
+                id="pdfCompanyName"
+                value={pdfCompanyName}
+                onChange={(e) => setPdfCompanyName(e.target.value)}
                 placeholder="Your Company Name"
                 required
               />
@@ -255,11 +263,11 @@ export default function PDFBrandingPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="companyTagline">Company Tagline</Label>
+              <Label htmlFor="pdfCompanyTagline">PDF Company Tagline</Label>
               <Input
-                id="companyTagline"
-                value={companyTagline}
-                onChange={(e) => setCompanyTagline(e.target.value)}
+                id="pdfCompanyTagline"
+                value={pdfCompanyTagline}
+                onChange={(e) => setPdfCompanyTagline(e.target.value)}
                 placeholder="Professional AV Equipment Rental"
               />
               <p className="text-xs text-muted-foreground">
@@ -279,23 +287,23 @@ export default function PDFBrandingPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="contactEmail">Contact Email</Label>
+              <Label htmlFor="pdfContactEmail">PDF Contact Email</Label>
               <Input
-                id="contactEmail"
+                id="pdfContactEmail"
                 type="email"
-                value={contactEmail}
-                onChange={(e) => setContactEmail(e.target.value)}
+                value={pdfContactEmail}
+                onChange={(e) => setPdfContactEmail(e.target.value)}
                 placeholder="info@yourcompany.com"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="contactPhone">Contact Phone</Label>
+              <Label htmlFor="pdfContactPhone">PDF Contact Phone</Label>
               <Input
-                id="contactPhone"
+                id="pdfContactPhone"
                 type="tel"
-                value={contactPhone}
-                onChange={(e) => setContactPhone(e.target.value)}
+                value={pdfContactPhone}
+                onChange={(e) => setPdfContactPhone(e.target.value)}
                 placeholder="+1 (555) 123-4567"
               />
             </div>
@@ -313,19 +321,19 @@ export default function PDFBrandingPage() {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="useTextLogo">Use Text Logo</Label>
+                <Label htmlFor="pdfUseTextLogo">Use Text Logo</Label>
                 <p className="text-xs text-muted-foreground">
                   Display company name as text instead of image logo
                 </p>
               </div>
               <Switch
-                id="useTextLogo"
-                checked={useTextLogo}
-                onCheckedChange={setUseTextLogo}
+                id="pdfUseTextLogo"
+                checked={pdfUseTextLogo}
+                onCheckedChange={setPdfUseTextLogo}
               />
             </div>
 
-            {!useTextLogo && (
+            {!pdfUseTextLogo && (
               <div className="space-y-4">
                 {/* Best Resolution Guidelines */}
                 <div className="p-4 border rounded-lg bg-blue-50 dark:bg-blue-900/20">
@@ -383,13 +391,13 @@ export default function PDFBrandingPage() {
 
                 {/* Or URL Input */}
                 <div className="space-y-2">
-                  <Label htmlFor="logoUrl">Or Enter Logo URL</Label>
+                  <Label htmlFor="pdfLogoUrl">Or Enter Logo URL</Label>
                   <Input
-                    id="logoUrl"
-                    value={logoUrl && !logoUrl.startsWith('data:') ? logoUrl : ''}
-                    onChange={(e) => setLogoUrl(e.target.value)}
+                    id="pdfLogoUrl"
+                    value={pdfLogoUrl && !pdfLogoUrl.startsWith('data:') ? pdfLogoUrl : ''}
+                    onChange={(e) => setPdfLogoUrl(e.target.value)}
                     placeholder="https://example.com/logo.png"
-                    disabled={logoUrl.startsWith('data:')}
+                    disabled={pdfLogoUrl.startsWith('data:')}
                   />
                   <p className="text-xs text-muted-foreground">
                     Alternatively, provide a direct URL to your logo
@@ -397,12 +405,12 @@ export default function PDFBrandingPage() {
                 </div>
 
                 {/* Logo Preview */}
-                {logoUrl && (
+                {pdfLogoUrl && (
                   <div className="space-y-2">
                     <Label>Logo Preview</Label>
                     <div className="relative p-6 border-2 rounded-lg bg-muted/30 flex items-center justify-center">
                       <img
-                        src={logoUrl}
+                        src={pdfLogoUrl}
                         alt="Logo preview"
                         className="max-h-24 max-w-full object-contain"
                         onError={(e) => {
@@ -440,15 +448,15 @@ export default function PDFBrandingPage() {
           <CardContent className="space-y-4">
             <div className="p-6 border-2 border-dashed rounded-lg bg-muted/30">
               <div className="text-right space-y-1">
-                <h2 className="text-2xl font-bold">{companyName || 'Company Name'}</h2>
-                {companyTagline && (
-                  <p className="text-sm text-muted-foreground">{companyTagline}</p>
+                <h2 className="text-2xl font-bold">{pdfCompanyName || 'Company Name'}</h2>
+                {pdfCompanyTagline && (
+                  <p className="text-sm text-muted-foreground">{pdfCompanyTagline}</p>
                 )}
-                {contactEmail && (
-                  <p className="text-xs text-muted-foreground">{contactEmail}</p>
+                {pdfContactEmail && (
+                  <p className="text-xs text-muted-foreground">{pdfContactEmail}</p>
                 )}
-                {contactPhone && (
-                  <p className="text-xs text-muted-foreground">{contactPhone}</p>
+                {pdfContactPhone && (
+                  <p className="text-xs text-muted-foreground">{pdfContactPhone}</p>
                 )}
               </div>
               <div className="mt-6 pt-6 border-t">
@@ -502,7 +510,7 @@ export default function PDFBrandingPage() {
           
           <Button
             onClick={handleSave}
-            disabled={isSaving || !companyName}
+            disabled={isSaving || !pdfCompanyName}
           >
             {isSaving ? (
               <>

@@ -4,7 +4,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "NEXT_CONFIG_RELOAD=false next dev --turbo",
+    "dev": "node server.js",
+    "dev:next": "NEXT_CONFIG_RELOAD=false next dev --turbo",
     "dev:fast": "NEXT_CONFIG_RELOAD=false TURBOPACK=1 next dev --turbo",
     "dev:cached": "NEXT_CONFIG_RELOAD=false next dev --turbo --experimental-https",
     "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
@@ -36,7 +37,8 @@
     "translate:filter": "tsx scripts/filter-translations.ts",
     "translate:seed": "tsx scripts/seed-translations.ts",
     "translate:seed-all": "npm run translate:extract && npm run translate:filter && npm run translate:seed",
-    "translate:smart": "npm run translate:extract && npm run translate:filter"
+    "translate:smart": "npm run translate:extract && npm run translate:filter",
+    "deploy:docker": "bash scripts/docker-redeploy.sh"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

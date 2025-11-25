@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db-enhanced'
-import { emitDataChange } from '@/lib/realtime-sync'
+import { broadcastDataChange } from '@/lib/realtime-broadcast'
 import { z } from 'zod'
-import jwt from 'jsonwebtoken'
 import fs from 'fs/promises'
 import path from 'path'
+import { requireReadAccess, requirePermission } from '@/lib/api-auth'
 
 const EquipmentSchema = z.object({
   name: z.string().min(1),
@@ -47,21 +47,15 @@ async function downloadImage(imageUrl: string): Promise<string> {
   }
 }
 
-// Helper function to get user from token
-function getUserFromRequest(request: NextRequest): { userId: string; username: string } | null {
-  try {
-    const token = request.cookies.get('auth-token')?.value
-    if (!token) return null
-    
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any
-    return { userId: decoded.userId, username: decoded.username }
-  } catch {
-    return null
-  }
-}
 
 // GET /api/equipment - Get equipment with pagination
 export async function GET(request: NextRequest) {
+  // Allow any authenticated user to view equipment
+  const authResult = requireReadAccess(request)
+  if (authResult instanceof NextResponse) {
+    return authResult
+  }
+
   try {
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
@@ -116,14 +110,15 @@ export async function GET(request: NextRequest) {
 
 // POST /api/equipment - Create new equipment
 export async function POST(request: NextRequest) {
+  const authResult = requirePermission(request, 'canManageEquipment')
+  if (authResult instanceof NextResponse) {
+    return authResult
+  }
+  const user = authResult
+
   try {
     const body = await request.json()
     let validatedData = EquipmentSchema.parse(body)
-    const user = getUserFromRequest(request)
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
 
     // Download image if external URL provided
     if (validatedData.imageUrl && validatedData.imageUrl.startsWith('http')) {
@@ -148,8 +143,8 @@ export async function POST(request: NextRequest) {
       return newEquipment
     })
 
-    // Emit real-time update
-    await emitDataChange('EquipmentItem', 'CREATE', equipment, user.userId)
+    // Broadcast real-time update
+    broadcastDataChange('EquipmentItem', 'CREATE', equipment, user.userId)
     
     return NextResponse.json(equipment, { status: 201 })
   } catch (error) {
@@ -165,14 +160,15 @@ export async function POST(request: NextRequest) {
 
 // PUT /api/equipment - Update equipment with optimistic locking
 export async function PUT(request: NextRequest) {
+  const authResult = requirePermission(request, 'canManageEquipment')
+  if (authResult instanceof NextResponse) {
+    return authResult
+  }
+  const user = authResult
+
   try {
     const body = await request.json()
     const { id, version, ...updateData } = body
-    const user = getUserFromRequest(request)
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
 
     if (!id) {
       return NextResponse.json({ error: 'Equipment ID is required' }, { status: 400 })
@@ -221,8 +217,8 @@ export async function PUT(request: NextRequest) {
         },
       })
 
-      // Emit real-time update
-      await emitDataChange('EquipmentItem', 'UPDATE', equipment, user.userId)
+      // Broadcast real-time update
+      broadcastDataChange('EquipmentItem', 'UPDATE', equipment, user.userId)
       
       return NextResponse.json(equipment)
     } catch (error: any) {
@@ -242,14 +238,15 @@ export async function PUT(request: NextRequest) {
 
 // DELETE /api/equipment - Delete equipment
 export async function DELETE(request: NextRequest) {
+  const authResult = requirePermission(request, 'canManageEquipment')
+  if (authResult instanceof NextResponse) {
+    return authResult
+  }
+  const user = authResult
+
   try {
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
-    const user = getUserFromRequest(request)
-    
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
     
     if (!id) {
       return NextResponse.json({ error: 'Equipment ID is required' }, { status: 400 })
@@ -267,9 +264,9 @@ export async function DELETE(request: NextRequest) {
       })
     })
 
-    // Emit real-time update
+    // Broadcast real-time update
     if (equipment) {
-      await emitDataChange('EquipmentItem', 'DELETE', { ...equipment }, user.userId)
+      broadcastDataChange('EquipmentItem', 'DELETE', { ...equipment }, user.userId)
     }
     
     return NextResponse.json({ success: true })

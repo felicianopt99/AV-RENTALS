@@ -89,43 +89,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   // Authentication functions
-  const login = useCallback(async (username: string, password: string) => {
-    const response = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Login failed');
-    }
-
-    const result = await response.json();
-    setCurrentUser(result.user);
-    setIsAuthenticated(true);
-  }, []);
-
-  const logout = useCallback(async () => {
-    try {
-      const response = await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
-      console.log('Logout response status:', response.status);
-      if (!response.ok) {
-        console.error('Logout failed:', response.statusText);
-      }
-    } catch (error) {
-      console.error('Logout fetch error:', error);
-    }
-    setCurrentUser(null);
-    setIsAuthenticated(false);
-    setIsDataLoaded(false);
-  }, []);
-
   const checkAuth = useCallback(async () => {
     try {
       setIsAuthLoading(true);
-      const response = await fetch('/api/auth/me');
-      
+      const response = await fetch('/api/auth/me', {
+        credentials: 'include', // Include cookies in the request
+      });
       if (response.ok) {
         const result = await response.json();
         setCurrentUser(result.user);
@@ -142,6 +111,40 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setIsAuthLoading(false);
     }
   }, []);
+
+  const login = useCallback(async (username: string, password: string) => {
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include', // Include cookies in the request
+      body: JSON.stringify({ username, password }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Login failed');
+    }
+
+    // After login, always fetch user profile from backend to set context from backend, not just login response
+    await checkAuth();
+  }, [checkAuth]);
+
+  const logout = useCallback(async () => {
+    try {
+      const response = await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+      console.log('Logout response status:', response.status);
+      if (!response.ok) {
+        console.error('Logout failed:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Logout fetch error:', error);
+    }
+    setCurrentUser(null);
+    setIsAuthenticated(false);
+    setIsDataLoaded(false);
+  }, []);
+
+  // ...existing code...
 
   // Check authentication on mount
   useEffect(() => {
@@ -190,10 +193,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setRentals(rentalsData);
       setQuotes(quotesData);
 
-      if (usersData.length > 0 && !currentUser) {
-        const initialUser = usersData.find((u: User) => u.role === 'Admin') || usersData[0];
-        setCurrentUser(initialUser);
-      }
+      // Removed logic that sets currentUser from usersData. currentUser should only be set by authentication (login or /api/auth/me).
 
       setIsDataLoaded(true);
     } catch (err) {

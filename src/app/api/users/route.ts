@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
 import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
-import { hasPermission } from '@/lib/permissions'
+import { requireReadAccess, requirePermission, getUserFromRequest } from '@/lib/api-auth'
 import type { UserRole } from '@/types'
 
 const createUserSchema = z.object({
@@ -40,30 +39,16 @@ const updateUserSchema = z.object({
   teamCoverPhoto: z.string().optional(),
 })
 
-// Helper function to get user from token
-function getUserFromRequest(request: NextRequest): { userId: string; username: string; role: string } | null {
-  try {
-    const token = request.cookies.get('auth-token')?.value
-    if (!token) return null
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any
-    return { userId: decoded.userId, username: decoded.username, role: decoded.role }
-  } catch {
-    return null
-  }
-}
 
 // GET /api/users - Get all users
 export async function GET(request: NextRequest) {
+  // Allow any authenticated user to view users (for team page)
+  const authResult = requireReadAccess(request)
+  if (authResult instanceof NextResponse) {
+    return authResult
+  }
+
   try {
-    // Authentication is optional for GET requests to allow team page to work
-    // But we'll log any auth issues for debugging
-    const user = getUserFromRequest(request);
-    if (!user) {
-      console.log('GET /api/users: No authentication token found, proceeding anyway');
-    } else {
-      console.log('GET /api/users: Authenticated as', user.username);
-    }
 
     const users = await prisma.user.findMany({
       select: {
@@ -99,15 +84,13 @@ export async function GET(request: NextRequest) {
 
 // POST /api/users - Create new user
 export async function POST(request: NextRequest) {
-  try {
-    const user = getUserFromRequest(request)
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+  const authResult = requirePermission(request, 'canManageUsers')
+  if (authResult instanceof NextResponse) {
+    return authResult
+  }
+  const user = authResult
 
-    if (!hasPermission(user.role as UserRole, 'canManageUsers')) {
-      return NextResponse.json({ error: 'Forbidden: Only admins can manage users' }, { status: 403 })
-    }
+  try {
 
     const body = await request.json()
     const { name, username, password, role, photoUrl, nif, iban, contactPhone, contactEmail, emergencyPhone } = createUserSchema.parse(body)
@@ -180,11 +163,13 @@ export async function POST(request: NextRequest) {
 
 // PUT /api/users - Update user
 export async function PUT(request: NextRequest) {
+  const authResult = requirePermission(request, 'canManageUsers')
+  if (authResult instanceof NextResponse) {
+    return authResult
+  }
+  const user = authResult
+
   try {
-    const user = getUserFromRequest(request)
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
 
     const body = await request.json()
     const { id, ...updateData } = body
@@ -241,11 +226,12 @@ export async function PUT(request: NextRequest) {
 
 // DELETE /api/users - Delete user
 export async function DELETE(request: NextRequest) {
+  const authResult = requirePermission(request, 'canManageUsers')
+  if (authResult instanceof NextResponse) {
+    return authResult
+  }
+
   try {
-    const user = getUserFromRequest(request)
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
 
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
