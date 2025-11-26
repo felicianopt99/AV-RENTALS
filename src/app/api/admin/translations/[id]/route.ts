@@ -47,7 +47,15 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { translatedText } = body;
+    const {
+      translatedText,
+      status,
+      qualityScore,
+      category,
+      tags,
+      needsReview,
+      changeReason,
+    } = body || {};
     
     if (!id) {
       return NextResponse.json(
@@ -56,23 +64,39 @@ export async function PUT(
       );
     }
     
-    if (!translatedText) {
-      return NextResponse.json(
-        { error: 'translatedText is required' },
-        { status: 400 }
-      );
+    if (!translatedText && !status && qualityScore == null && !category && !tags && needsReview == null) {
+      return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 });
     }
-    
-    const translation = await prisma.translation.update({
-      where: { id },
-      data: { 
-        translatedText,
-        updatedAt: new Date(),
-      },
-    });
+
+    // Fetch previous for history
+    const prev = await prisma.translation.findUnique({ where: { id } });
+    if (!prev) return NextResponse.json({ error: 'Translation not found' }, { status: 404 });
+
+    const data: any = { updatedAt: new Date(), version: { increment: 1 } };
+    if (translatedText != null) data.translatedText = translatedText;
+    if (status) data.status = status;
+    if (qualityScore != null) data.qualityScore = qualityScore;
+    if (category) data.category = category;
+    if (Array.isArray(tags)) data.tags = tags;
+    if (needsReview != null) data.needsReview = needsReview;
+
+    const translation = await prisma.translation.update({ where: { id }, data });
     // Invalidate in-memory cache so updated translation is picked up immediately
     clearTranslationCache();
-    
+
+    // Create history entry (best-effort)
+    try {
+      await prisma.translationHistory.create({
+        data: {
+          translationId: id,
+          oldTranslatedText: prev.translatedText,
+          newTranslatedText: translation.translatedText,
+          changeReason: changeReason || null,
+          version: (translation as any).version || ((prev as any).version || 1),
+        },
+      });
+    } catch {}
+
     return NextResponse.json({ translation });
     
   } catch (error) {

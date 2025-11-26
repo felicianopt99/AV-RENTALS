@@ -3,8 +3,8 @@
 # Backup and Restore Script for AV Rentals
 # Keeps your app safe by creating backups before changes
 
-BACKUP_DIR="/home/home/Acrobaticz/AV-RENTALS/backups"
-APP_DIR="/home/home/Acrobaticz/AV-RENTALS"
+BACKUP_DIR="/mnt/backup_drive/av-rentals/backups"
+APP_DIR="/home/home/Acrobaticz-AV-RENTALS"
 
 # Create backup
 create_backup() {

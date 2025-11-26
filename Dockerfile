@@ -23,7 +23,7 @@ COPY ./prisma ./prisma
 COPY . .
 
 # Generate Prisma client (if used)
-RUN npx prisma generate || true
+RUN npx prisma generate
 
 # Build Next.js (requires next.config.ts output: 'standalone')
 RUN npm run build
@@ -42,20 +42,29 @@ ENV NODE_ENV=production \
 RUN apt-get update -y && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
 
 
+## Install production dependencies needed by custom server.js (socket.io, jsonwebtoken, etc.)
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev --legacy-peer-deps
+
+# Copy prisma directory before generating Prisma Client
+COPY --from=builder /app/prisma ./prisma
+RUN npx prisma generate
+
 # Copy standalone server output
 COPY --from=builder /app/.next/standalone ./
 # Copy public assets
 COPY --from=builder /app/public ./public
 # Copy .next/static for client assets
 COPY --from=builder /app/.next/static ./.next/static
-# Copy prisma directory for migrations and seeding
-COPY --from=builder /app/prisma ./prisma
-# Copy package.json and package-lock.json for npm install
-COPY package.json package-lock.json ./
 # Copy our custom server.js with Socket.IO support (overrides Next.js generated server.js)
 COPY --from=builder /app/server.js ./server.js
-# Install ALL dependencies (not just production) so dev tools like tsx and bcryptjs are available
-RUN npm install --legacy-peer-deps
+
+# Copy entrypoint and ensure it is executable
+COPY docker-entrypoint.sh ./docker-entrypoint.sh
+RUN chmod +x ./docker-entrypoint.sh
+
+# Run as non-root user for better security
+USER node
 
 EXPOSE 3000
 
@@ -63,4 +72,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD node -e "require('http').get('http://localhost:'+process.env.PORT, r=>{if(r.statusCode<500)process.exit(0);process.exit(1)}).on('error',()=>process.exit(1))"
 
+ENTRYPOINT ["./docker-entrypoint.sh"]
 CMD ["node", "server.js"]

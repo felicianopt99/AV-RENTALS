@@ -4,8 +4,44 @@ import { prisma } from '@/lib/db';
 
 export type Language = 'en' | 'pt';
 
-// In-memory cache for fast lookups (avoids DB queries)
-const translationCache = new Map<string, string>();
+// LRU in-memory cache to bound memory usage
+class LRUCache {
+  private max: number;
+  private map: Map<string, string>;
+  constructor(maxEntries: number) {
+    this.max = Math.max(100, maxEntries);
+    this.map = new Map();
+  }
+  get(key: string): string | undefined {
+    if (!this.map.has(key)) return undefined;
+    const value = this.map.get(key)!;
+    // refresh order
+    this.map.delete(key);
+    this.map.set(key, value);
+    return value;
+    }
+  set(key: string, value: string): void {
+    if (this.map.has(key)) {
+      this.map.delete(key);
+    } else if (this.map.size >= this.max) {
+      // delete least-recently used (first item)
+      const firstKey = this.map.keys().next().value as string | undefined;
+      if (firstKey !== undefined) this.map.delete(firstKey);
+    }
+    this.map.set(key, value);
+  }
+  clear(): void {
+    this.map.clear();
+  }
+  size(): number {
+    return this.map.size;
+  }
+  keys(): string[] {
+    return Array.from(this.map.keys());
+  }
+}
+
+const translationCache = new LRUCache(parseInt(process.env.TRANSLATION_CACHE_MAX || '5000', 10));
 
 // Pending translation requests to avoid duplicates
 const pendingTranslations = new Map<string, Promise<string>>();
@@ -23,8 +59,7 @@ let isProcessingQueue = false;
 
 // No Gemini/Google AI logic needed; DeepL handles all translation.
 
-// Preload flag to avoid multiple DB queries on startup
-let isPreloaded = false;
+// Removed full-table preload to avoid heavy memory usage and slow cold starts
 
 // Generate cache key
 function getCacheKey(text: string, targetLang: Language): string {
@@ -52,32 +87,40 @@ function applyGlossary(text: string, targetLang: Language): string {
 
 // No rate limiting logic needed for DeepL here; handled by DeepL API or can be added if needed.
 
-/**
- * Preload all translations from database into memory cache
- * This significantly improves performance by avoiding DB queries
- */
-export async function preloadAllTranslations(): Promise<void> {
-  if (isPreloaded) return;
-  
+// Note: Full-table preload removed in favor of on-demand LRU caching
+
+// Update usage counters for a single translation
+async function touchUsage(text: string, targetLang: Language): Promise<void> {
   try {
-    const allTranslations = await prisma.translation.findMany({
-      select: {
-        sourceText: true,
-        targetLang: true,
-        translatedText: true,
+    await prisma.translation.update({
+      where: {
+        sourceText_targetLang: {
+          sourceText: text,
+          targetLang: targetLang,
+        },
+      },
+      data: {
+        usageCount: { increment: 1 },
+        lastUsed: new Date(),
       },
     });
-    
-    allTranslations.forEach(t => {
-      const cacheKey = getCacheKey(t.sourceText, t.targetLang as Language);
-      translationCache.set(cacheKey, t.translatedText);
-    });
-    
-    isPreloaded = true;
-    console.log(`✓ Preloaded ${allTranslations.length} translations into memory`);
-  } catch (error) {
-    console.error('Failed to preload translations:', error);
+  } catch (e) {
+    // Ignore if not found or race conditions
   }
+}
+
+// Update usage counters for many translations with small concurrency to avoid overload
+async function touchUsageMany(texts: string[], targetLang: Language, concurrency = 10): Promise<void> {
+  const queue = [...new Set(texts)];
+  let idx = 0;
+  async function worker() {
+    while (idx < queue.length) {
+      const current = idx++;
+      const text = queue[current];
+      await touchUsage(text, targetLang);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(concurrency, queue.length) }, worker));
 }
 
 /**
@@ -251,6 +294,8 @@ export async function translateText(
       if (existing) {
         // Found in database, cache it and return
         translationCache.set(cacheKey, existing.translatedText);
+        // fire-and-forget usage update
+        touchUsage(text, targetLang).catch(() => {});
         return existing.translatedText;
       }
 
@@ -292,6 +337,9 @@ export async function translateText(
 
       // 7. Cache in memory for fast access
       translationCache.set(cacheKey, translated);
+
+      // Record usage for the new translation
+      touchUsage(text, targetLang).catch(() => {});
 
       return translated;
     } catch (error: any) {
@@ -374,6 +422,8 @@ export async function translateBatch(
       const cacheKey = getCacheKey(text, targetLang);
       translationCache.set(cacheKey, dbTranslation);
       results[index] = dbTranslation;
+      // Update usage in background
+      touchUsage(text, targetLang).catch(() => {});
     } else {
       stillMissing.push(text);
       missingIndices.push(index);
@@ -406,6 +456,8 @@ export async function translateBatch(
         const cacheKey = getCacheKey(row.sourceText, row.targetLang);
         translationCache.set(cacheKey, row.translatedText);
       });
+      // Update usage for all newly translated items (background)
+      touchUsageMany(stillMissing, targetLang).catch(() => {});
     } catch (err) {
       console.error('Failed to persist batch translations:', err);
     }
@@ -436,6 +488,7 @@ async function translateBatchBackground(
         translationCache.set(cacheKey, dbTranslation);
         // Update result array (client will get this on next render)
         results[indices[i]] = dbTranslation;
+        touchUsage(text, targetLang).catch(() => {});
       } else {
         stillMissing.push(text);
       }
@@ -469,6 +522,8 @@ async function translateBatchBackground(
           const cacheKey = `${row.targetLang}:${row.sourceText}`;
           translationCache.set(cacheKey, row.translatedText);
         });
+        // Update usage for missing items
+        touchUsageMany(stillMissing, targetLang).catch(() => {});
       } catch (e) {
         console.error('Failed to persist background batch translations:', e);
       }
@@ -492,8 +547,8 @@ export function clearTranslationCache(): void {
  */
 export function getCacheStats() {
   return {
-    size: translationCache.size,
-    keys: Array.from(translationCache.keys()),
+    size: translationCache.size(),
+    keys: translationCache.keys(),
   };
 }
 

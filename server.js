@@ -4,36 +4,19 @@ import next from 'next'
 import { Server as SocketIOServer } from 'socket.io'
 import jwt from 'jsonwebtoken'
 
-// Dynamic import for Prisma (handles both dev and production)
+// Stable PrismaClient singleton
+import { PrismaClient } from '@prisma/client'
 let prisma
 async function getPrisma() {
-  if (prisma) return prisma
-  
-  try {
-    // Try production build path first (standalone mode)
+  if (!prisma) {
     try {
-      const dbModule = await import('./.next/standalone/src/lib/db-enhanced.js')
-      if (dbModule && dbModule.prisma) {
-        prisma = dbModule.prisma
-        return prisma
-      }
-    } catch (e) {
-      // Not in production build, try dev path
+      prisma = new PrismaClient()
+    } catch (error) {
+      console.error('Failed to initialize PrismaClient:', error)
+      return null
     }
-    
-    // Try dev path
-    const dbModule = await import('./src/lib/db-enhanced.js')
-    if (dbModule && dbModule.prisma) {
-      prisma = dbModule.prisma
-      return prisma
-    }
-    
-    throw new Error('Prisma not found in module')
-  } catch (error) {
-    console.error('Failed to import Prisma:', error)
-    // Return a mock prisma to prevent crashes, but log the error
-    return null
   }
+  return prisma
 }
 
 const dev = process.env.NODE_ENV !== 'production'

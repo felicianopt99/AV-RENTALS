@@ -5,6 +5,79 @@ export type Language = 'en' | 'pt';
 
 const DEEPL_API_KEY = process.env.DEEPL_API_KEY;
 const DEEPL_API_URL = 'https://api-free.deepl.com/v2/translate';
+const MAX_RETRIES = parseInt(process.env.DEEPL_MAX_RETRIES || '3', 10);
+const BASE_DELAY_MS = parseInt(process.env.DEEPL_RETRY_BASE_DELAY_MS || '500', 10);
+const MAX_CONCURRENCY = parseInt(process.env.DEEPL_MAX_CONCURRENCY || '4', 10);
+
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function calcBackoffDelay(attempt: number): number {
+  const expo = BASE_DELAY_MS * Math.pow(2, attempt);
+  const jitter = Math.floor(Math.random() * 250); // 0-250ms
+  return expo + jitter;
+}
+
+// Simple per-instance concurrency limiter (semaphore)
+let inflight = 0;
+const waitQueue: Array<() => void> = [];
+
+async function withConcurrency<T>(fn: () => Promise<T>): Promise<T> {
+  if (inflight >= MAX_CONCURRENCY) {
+    await new Promise<void>(resolve => waitQueue.push(resolve));
+  }
+  inflight++;
+  try {
+    return await fn();
+  } finally {
+    inflight--;
+    const next = waitQueue.shift();
+    if (next) next();
+  }
+}
+
+async function deepLFetchWithRetry(body: any, signal?: AbortSignal): Promise<Response> {
+  if (!DEEPL_API_KEY) {
+    throw new Error('DEEPL_API_KEY is not set in environment variables.');
+  }
+
+  let lastError: any;
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+    try {
+      const response = await withConcurrency(() => fetch(DEEPL_API_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': `DeepL-Auth-Key ${DEEPL_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+        signal: signal ?? controller.signal,
+      }));
+      clearTimeout(timeoutId);
+      if (response.ok) return response;
+
+      // Retry on 429 and 5xx
+      if (response.status === 429 || (response.status >= 500 && response.status < 600)) {
+        lastError = new Error(`DeepL HTTP ${response.status}`);
+      } else {
+        // Non-retryable
+        return response;
+      }
+    } catch (err) {
+      lastError = err;
+    }
+
+    // Backoff before next attempt if not the last
+    if (attempt < MAX_RETRIES) {
+      const delay = calcBackoffDelay(attempt);
+      await sleep(delay);
+    }
+  }
+  throw lastError || new Error('DeepL request failed after retries');
+}
 
 /**
  * Translates a single text string using the DeepL API.
@@ -19,27 +92,15 @@ export async function translateTextWithDeepL(text: string, targetLang: Language)
   }
 
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-
-    const response = await fetch(DEEPL_API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `DeepL-Auth-Key ${DEEPL_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        text: [text],
-        target_lang: targetLang.toUpperCase(),
-      }),
-      signal: controller.signal,
+    const response = await deepLFetchWithRetry({
+      text: [text],
+      target_lang: targetLang.toUpperCase(),
     });
 
-    clearTimeout(timeoutId);
-
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(`DeepL API error: ${errorData.message || response.statusText}`);
+      let message = response.statusText;
+      try { const errorData = await response.json(); message = errorData.message || message; } catch {}
+      throw new Error(`DeepL API error: ${message}`);
     }
 
     const data = await response.json();
@@ -71,27 +132,15 @@ export async function batchTranslateWithDeepL(
   }
 
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-
-    const response = await fetch(DEEPL_API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `DeepL-Auth-Key ${DEEPL_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        text: texts,
-        target_lang: targetLang.toUpperCase(),
-      }),
-      signal: controller.signal,
+    const response = await deepLFetchWithRetry({
+      text: texts,
+      target_lang: targetLang.toUpperCase(),
     });
 
-    clearTimeout(timeoutId);
-
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(`DeepL API error: ${errorData.message || response.statusText}`);
+      let message = response.statusText;
+      try { const errorData = await response.json(); message = errorData.message || message; } catch {}
+      throw new Error(`DeepL API error: ${message}`);
     }
 
     const data = await response.json();

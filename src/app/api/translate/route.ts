@@ -1,24 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { translateText, Language, translateBatch, preloadAllTranslations } from '@/lib/translation';
+import { translateText, Language, translateBatch } from '@/lib/translation';
+import { prisma } from '@/lib/db';
 
-// Preload translations on first API call
-let isPreloading = false;
-let preloadPromise: Promise<void> | null = null;
-
-async function ensurePreloaded() {
-  if (!preloadPromise && !isPreloading) {
-    isPreloading = true;
-    preloadPromise = preloadAllTranslations();
-    await preloadPromise;
-  } else if (preloadPromise) {
-    await preloadPromise;
-  }
-}
+// Removed full-table preload in favor of on-demand LRU caching
 
 export async function POST(request: NextRequest) {
-  // Ensure translations are preloaded (non-blocking after first call)
-  await ensurePreloaded();
-  
   try {
     const body = await request.json();
     const { text, targetLang } = body;
@@ -57,9 +43,6 @@ export async function POST(request: NextRequest) {
 
 // Batch translations endpoint - optimized with progressive loading
 export async function PUT(request: NextRequest) {
-  // Ensure translations are preloaded
-  await ensurePreloaded();
-  
   try {
     const body = await request.json();
     const { texts, targetLang, progressive } = body;

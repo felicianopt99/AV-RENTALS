@@ -4,64 +4,66 @@ import path from 'path'
 
 export async function GET(request: NextRequest) {
   try {
-    const backupDir = path.join(process.env.HOME || '/tmp', 'backups', 'av-rentals')
+    const backupDir = '/mnt/backup_drive/av-rentals/backups'
+    const projectRoot = process.cwd()
+    const configPath = path.join(projectRoot, 'backup.config.json')
+    let config: any = null
+    try {
+      const raw = fs.readFileSync(configPath, 'utf8')
+      config = JSON.parse(raw)
+    } catch {}
+    
+    // Detect restic repo if present (for future enterprise mode)
+    const resticRepo = '/mnt/backup_drive/av-rentals/restic-repo'
+    const hasResticRepo = fs.existsSync(path.join(resticRepo, 'config'))
     
     // Check if backup directory exists
     if (!fs.existsSync(backupDir)) {
       return NextResponse.json({
         availableBackups: 0,
         rotationBackups: [],
-        message: 'Backup directory not found. No backups created yet.'
+        message: 'Backup directory not found. No backups created yet.',
+        backupDirectory: backupDir,
+        hasResticRepo,
+        resticRepo,
+        config
       })
     }
 
-    const rotationBackups = []
-    let availableBackups = 0
+    // Find timestamped backup directories created by backup-helper.sh
+    const entries = fs.readdirSync(backupDir)
+      .filter(name => name.startsWith('backup_'))
+      .map(name => {
+        const fullPath = path.join(backupDir, name)
+        const stat = fs.statSync(fullPath)
+        return { name, fullPath, stat }
+      })
+      .filter(e => e.stat.isDirectory())
+      .sort((a, b) => b.stat.mtimeMs - a.stat.mtimeMs)
 
-    // Check each day backup (1, 2, 3)
-    for (let day = 1; day <= 3; day++) {
-      const backupFile = path.join(backupDir, `av_rentals_backup_day${day}.db`)
-      const compressedBackup = `${backupFile}.gz`
-
-      let backupInfo = null
-
-      // Check uncompressed backup first
-      if (fs.existsSync(backupFile)) {
-        const stats = fs.statSync(backupFile)
-        backupInfo = {
-          day,
-          file: `av_rentals_backup_day${day}.db`,
-          size: `${(stats.size / (1024 * 1024)).toFixed(2)} MB`,
-          date: stats.mtime.toISOString().split('T')[0],
-          type: 'uncompressed',
-          age: Math.floor((Date.now() - stats.mtime.getTime()) / (1000 * 60 * 60 * 24))
+    // Build rotation (latest 3 backups)
+    const rotationBackups: any[] = []
+    for (let i = 0; i < Math.min(3, entries.length); i++) {
+      const e = entries[i]
+      // Compute directory size (non-recursive)
+      let sizeBytes = 0
+      try {
+        const files = fs.readdirSync(e.fullPath)
+        for (const f of files) {
+          const fstat = fs.statSync(path.join(e.fullPath, f))
+          if (fstat.isFile()) sizeBytes += fstat.size
         }
-        availableBackups++
-      }
-      // Check compressed backup if uncompressed doesn't exist
-      else if (fs.existsSync(compressedBackup)) {
-        const stats = fs.statSync(compressedBackup)
-        backupInfo = {
-          day,
-          file: `av_rentals_backup_day${day}.db.gz`,
-          size: `${(stats.size / (1024 * 1024)).toFixed(2)} MB`,
-          date: stats.mtime.toISOString().split('T')[0],
-          type: 'compressed',
-          age: Math.floor((Date.now() - stats.mtime.getTime()) / (1000 * 60 * 60 * 24))
-        }
-        availableBackups++
-      }
-
-      if (backupInfo) {
-        rotationBackups.push(backupInfo)
-      }
+      } catch {}
+      rotationBackups.push({
+        day: i + 1,
+        file: e.name,
+        size: `${(sizeBytes / (1024 * 1024)).toFixed(2)} MB`,
+        date: e.stat.mtime.toISOString().split('T')[0],
+        type: 'uncompressed',
+        age: Math.floor((Date.now() - e.stat.mtime.getTime()) / (1000 * 60 * 60 * 24)),
+      })
     }
-
-    // Get additional backup information
-    const allFiles = fs.readdirSync(backupDir)
-    const timestampedBackups = allFiles.filter(file => 
-      file.includes('backup_day') && file.includes('_') && !file.endsWith('.previous')
-    ).length
+    const availableBackups = rotationBackups.length
 
     // Calculate current rotation day
     const dayOfWeek = new Date().getDay() // 0-6 (Sunday=0)
@@ -71,9 +73,11 @@ export async function GET(request: NextRequest) {
       availableBackups,
       rotationBackups,
       currentRotationDay,
-      totalFiles: allFiles.length,
-      timestampedBackups,
+      totalFiles: entries.length,
       backupDirectory: backupDir,
+      hasResticRepo,
+      resticRepo,
+      config,
       systemStatus: {
         rotationComplete: availableBackups === 3,
         healthStatus: availableBackups >= 2 ? 'healthy' : availableBackups >= 1 ? 'warning' : 'critical',

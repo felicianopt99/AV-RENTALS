@@ -31,7 +31,7 @@ export default function PDFBrandingPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true); 
   const [isSaving, setIsSaving] = useState(false);
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);

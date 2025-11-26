@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { clearTranslationCache } from '@/lib/translation';
 
 // PATCH /api/admin/translations/bulk - Bulk approve/reject translations
 export async function PATCH(request: NextRequest) {
@@ -48,6 +49,9 @@ export async function PATCH(request: NextRequest) {
       data: updateData,
     });
 
+    // Invalidate cache so bulk status changes are reflected
+    clearTranslationCache();
+
     return NextResponse.json({
       success: true,
       updated: result.count,
@@ -81,6 +85,9 @@ export async function DELETE(request: NextRequest) {
         },
       },
     });
+
+    // Invalidate cache so deletions reflect immediately
+    clearTranslationCache();
 
     return NextResponse.json({
       success: true,

@@ -7,19 +7,28 @@ import { prisma } from '@/lib/db';
  */
 export async function GET(request: NextRequest) {
   try {
-    console.log('📦 Preload API: Fetching all translations from database...');
-    
+    const { searchParams } = new URL(request.url);
+    const targetLang = searchParams.get('targetLang');
+    const limitParam = searchParams.get('limit');
+    const limit = Math.min(Math.max(parseInt(limitParam || '1000', 10) || 1000, 1), 5000);
+
+    const where: any = {};
+    if (targetLang === 'en' || targetLang === 'pt') {
+      where.targetLang = targetLang;
+    }
+
     const translations = await prisma.translation.findMany({
+      where,
       select: {
         sourceText: true,
         targetLang: true,
         translatedText: true,
       },
-      // Limit to prevent huge payloads (get most recent 1000)
-      take: 1000,
-      orderBy: {
-        createdAt: 'desc'
-      }
+      take: limit,
+      orderBy: [
+        { lastUsed: 'desc' },
+        { updatedAt: 'desc' },
+      ],
     });
 
     console.log(`✅ Preload API: Found ${translations.length} translations in database`);
@@ -27,7 +36,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       count: translations.length,
-      translations: translations,
+      translations,
     });
 
   } catch (error) {

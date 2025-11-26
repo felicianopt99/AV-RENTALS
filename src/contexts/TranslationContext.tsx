@@ -122,8 +122,22 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
   const preloadExistingTranslations = useCallback(async () => {
     try {
       console.log('🔄 Preloading existing translations from database...');
-      
-      const response = await fetch('/api/translate/preload', {
+      // Determine a reasonable targetLang to warm up
+      let desiredLang: Language | undefined = undefined;
+      const savedLang = (typeof window !== 'undefined' ? localStorage.getItem('app-language') : null) as Language | null;
+      if (savedLang && (savedLang === 'en' || savedLang === 'pt')) {
+        desiredLang = savedLang;
+      } else {
+        const browserLang = typeof navigator !== 'undefined' ? navigator.language.toLowerCase() : 'en';
+        if (browserLang.startsWith('pt')) desiredLang = 'pt';
+      }
+
+      const params = new URLSearchParams();
+      if (desiredLang) params.set('targetLang', desiredLang);
+      params.set('limit', '1000');
+      const url = `/api/translate/preload${params.toString() ? `?${params.toString()}` : ''}`;
+
+      const response = await fetch(url, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -163,6 +177,17 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
     // Preload existing translations
     preloadExistingTranslations();
   }, [preloadExistingTranslations]);
+
+  // Cross-tab/client cache invalidation when admin updates translations or rules
+  useEffect(() => {
+    function onStorage(e: StorageEvent) {
+      if (e.key === 'translations-updated') {
+        clientCache.clear();
+      }
+    }
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
 
   const setLanguage = useCallback((lang: Language) => {
     setLanguageState(lang);

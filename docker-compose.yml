@@ -6,13 +6,17 @@ services:
     container_name: av-rentals
     restart: unless-stopped
     env_file:
-      - .env
+      - ./env.production
     environment:
       - NODE_ENV=production
       - PORT=3000
       - HOSTNAME=0.0.0.0
+      - PRISMA_MIGRATIONS=deploy
     expose:
       - "3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   postgres:
     image: postgres:16-alpine
@@ -38,8 +42,10 @@ services:
     image: nginx:alpine
     container_name: av-nginx
     depends_on:
-      - app
-      - postgres
+      app:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
     ports:
       - "80:80"
       - "443:443"

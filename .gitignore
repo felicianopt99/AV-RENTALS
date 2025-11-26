@@ -40,7 +40,16 @@ next-env.d.ts
 .genkit/*
 .env*
 !.env.example
+env
+env.production
 
 # firebase
 firebase-debug.log
 firestore-debug.log
+
+# project artifacts
+logs/*.log
+scripts/logs/*.log
+reports/
+prisma/*.db
+prisma/**/dev.db

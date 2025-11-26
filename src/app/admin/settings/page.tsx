@@ -68,10 +68,17 @@ export default function SystemSettingsPage() {
   const [backupStatus, setBackupStatus] = useState<any>(null);
   const [isBackingUp, setIsBackingUp] = useState(false);
 
+  // Advanced Backup Config (enterprise-ready)
+  const [retentionDaily, setRetentionDaily] = useState<string>('7');
+  const [retentionWeekly, setRetentionWeekly] = useState<string>('4');
+  const [retentionMonthly, setRetentionMonthly] = useState<string>('12');
+  const [cronExpr, setCronExpr] = useState<string>('0 2 * * *');
+
   // Load settings from database
   useEffect(() => {
     loadSettings();
     loadBackupStatus();
+    loadBackupConfig();
   }, []);
 
   const loadSettings = async () => {
@@ -125,9 +132,61 @@ export default function SystemSettingsPage() {
       if (response.ok) {
         const status = await response.json();
         setBackupStatus(status);
+        if (status?.config?.retention) {
+          setRetentionDaily(String(status.config.retention.daily ?? '7'));
+          setRetentionWeekly(String(status.config.retention.weekly ?? '4'));
+          setRetentionMonthly(String(status.config.retention.monthly ?? '12'));
+        }
+        if (status?.config?.schedule?.cron) {
+          setCronExpr(String(status.config.schedule.cron));
+        }
       }
     } catch (error) {
       console.error('Error loading backup status:', error);
+    }
+  };
+
+  const loadBackupConfig = async () => {
+    try {
+      const res = await fetch('/api/backup/config');
+      if (res.ok) {
+        const data = await res.json();
+        const cfg = data?.config;
+        if (cfg?.retention) {
+          setRetentionDaily(String(cfg.retention.daily ?? '7'));
+          setRetentionWeekly(String(cfg.retention.weekly ?? '4'));
+          setRetentionMonthly(String(cfg.retention.monthly ?? '12'));
+        }
+        if (cfg?.schedule?.cron) {
+          setCronExpr(String(cfg.schedule.cron));
+        }
+      }
+    } catch (e) {
+      // no-op
+    }
+  };
+
+  const saveBackupConfig = async () => {
+    try {
+      const body = {
+        retention: {
+          daily: Number(retentionDaily || 0),
+          weekly: Number(retentionWeekly || 0),
+          monthly: Number(retentionMonthly || 0),
+        },
+        schedule: { cron: cronExpr || '0 2 * * *' },
+      };
+      const res = await fetch('/api/backup/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error('Failed to save backup config');
+      const out = await res.json();
+      setBackupStatus((prev: any) => ({ ...(prev || {}), config: out?.config }));
+      toast({ title: 'Backup settings saved', description: 'Retention and schedule updated.' });
+    } catch (e) {
+      toast({ title: 'Save failed', description: 'Could not save backup settings.', variant: 'destructive' });
     }
   };
 
@@ -536,6 +595,36 @@ export default function SystemSettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Enterprise Settings */}
+              <div className="border rounded-lg p-4">
+                <h4 className="font-medium mb-3">Backup Settings</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Retention - Daily</Label>
+                    <Input type="number" min={0} value={retentionDaily} onChange={(e) => setRetentionDaily(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Retention - Weekly</Label>
+                    <Input type="number" min={0} value={retentionWeekly} onChange={(e) => setRetentionWeekly(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Retention - Monthly</Label>
+                    <Input type="number" min={0} value={retentionMonthly} onChange={(e) => setRetentionMonthly(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Cron Schedule</Label>
+                    <Input placeholder="0 2 * * *" value={cronExpr} onChange={(e) => setCronExpr(e.target.value)} />
+                  </div>
+                </div>
+                <div className="flex items-center justify-between mt-3 text-xs text-muted-foreground">
+                  <div>
+                    <div>Backup directory: {backupStatus?.backupDirectory || '/mnt/backup_drive/av-rentals/backups'}</div>
+                    <div>Encrypted storage: {backupStatus?.hasResticRepo === true || backupStatus?.hasResticRepo === false ? 'Enabled (LUKS planned/active)' : 'Pending'}</div>
+                  </div>
+                  <Button onClick={saveBackupConfig} variant="outline" size="sm">Save Backup Settings</Button>
+                </div>
+              </div>
+
               <div className="flex items-center space-x-2">
                 <Switch
                   id="auto-backup"
@@ -630,7 +719,7 @@ export default function SystemSettingsPage() {
                       <span className="text-blue-700 dark:text-blue-300">
                         Total backups: {backupStatus.availableBackups || 0}/3 • 
                         Storage saved: ~97% vs traditional systems • 
-                        Location: ~/backups/av-rentals/
+                        Location: {backupStatus?.backupDirectory || '/mnt/backup_drive/av-rentals/backups'}
                       </span>
                     </div>
                   </div>

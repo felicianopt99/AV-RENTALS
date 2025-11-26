@@ -2,6 +2,7 @@ import path from 'path';
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
+  // i18n via next.config is unsupported in App Router; use middleware/route groups instead
   output: 'standalone',
   images: {
     remotePatterns: [
@@ -26,15 +27,6 @@ const nextConfig: NextConfig = {
   compiler: {
     // Remove console logs in production
     removeConsole: process.env.NODE_ENV === 'production',
-  },
-  // Configure static asset handling to avoid conflicts
-  async rewrites() {
-    return [
-      {
-        source: '/favicon.ico',
-        destination: '/public/favicon.ico',
-      },
-    ];
   },
 };
 
