@@ -37,8 +37,9 @@ export default async function DashboardPage() {
     redirect('/login');
   }
 
-  const allowedRoles = ['Admin', 'Manager', 'Technician', 'Employee', 'Viewer'];
-  if (!allowedRoles.includes(user.role as any)) {
+  const allowedRoles = ['admin', 'manager', 'technician', 'employee', 'viewer'];
+  const userRole = String(user.role || '').toLowerCase();
+  if (!allowedRoles.includes(userRole)) {
     redirect('/unauthorized');
   }
 

@@ -158,6 +158,7 @@ export interface QuoteItem {
   unitPrice?: number; // For equipment/services
   days?: number; // For equipment/services
   lineTotal: number;
+  description?: string; // Optional description for the item
   // For fees
   amount?: number; // For fee
   feeType?: 'fixed' | 'percentage';
@@ -186,8 +187,9 @@ export interface Quote {
   totalAmount: number;
   status: QuoteStatus;
   notes?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  terms?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 // Service types for quote management

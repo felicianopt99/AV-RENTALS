@@ -87,6 +87,7 @@ const quoteItemSchema = z.object({
   unitPrice: z.coerce.number().min(0).optional(), // For equipment/services
   days: z.coerce.number().int().min(1).optional(), // For equipment/services
   lineTotal: z.coerce.number().min(0),
+  description: z.string().optional(), // Optional description for the item
   // For fees
   amount: z.coerce.number().min(0).optional(),
   feeType: z.enum(['fixed', 'percentage']).optional(),
@@ -104,6 +105,7 @@ const quoteFormSchema = z.object({
   endDate: z.date({ required_error: "End date is required." }),
   items: z.array(quoteItemSchema).min(1, "At least one item is required in the quote."),
   notes: z.string().max(1000).optional().or(z.literal('')),
+  terms: z.string().max(2000).optional().or(z.literal('')),
   status: z.enum(QUOTE_STATUSES as [QuoteStatus, ...QuoteStatus[]]),
   discountAmount: z.coerce.number().min(0).optional().default(0),
   discountType: z.enum(['percentage', 'fixed']).optional().default('fixed'),
@@ -233,11 +235,12 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
             id: item.id || crypto.randomUUID(),
             type: 'equipment',
             equipmentId: item.equipmentId,
-            equipmentName: eq?.name || 'Unknown Equipment',
+            equipmentName: item.equipmentName ?? eq?.name ?? 'Equipment Item',
             quantity,
             unitPrice,
             days: currentDays,
             lineTotal: isNaN(lineTotal) ? 0 : lineTotal,
+            description: item.description ?? eq?.description ?? undefined,
           };
         } else if (item.type === 'service') {
           const svc = services.find((s: any) => s.id === item.serviceId);
@@ -248,11 +251,12 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
             id: item.id || crypto.randomUUID(),
             type: 'service',
             serviceId: item.serviceId,
-            serviceName: svc?.name || 'Unknown Service',
+            serviceName: item.serviceName ?? svc?.name ?? 'Service Item',
             quantity,
             unitPrice,
             days: currentDays,
             lineTotal: isNaN(lineTotal) ? 0 : lineTotal,
+            description: item.description ?? undefined,
           };
         } else {
           const fee = fees.find((f: any) => f.id === item.feeId);
@@ -260,10 +264,11 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
             id: item.id || crypto.randomUUID(),
             type: 'fee',
             feeId: item.feeId,
-            feeName: fee?.name || 'Unknown Fee',
+            feeName: item.feeName ?? fee?.name ?? 'Fee',
             amount: item.amount ?? fee?.amount ?? 0,
             feeType: item.feeType ?? fee?.type ?? 'fixed',
             lineTotal: item.feeType === 'percentage' ? 0 : (item.amount ?? fee?.amount ?? 0),
+            description: item.description ?? undefined,
           };
         }
       });
@@ -334,6 +339,7 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
           unitPrice: t !== 'fee' ? (item.unitPrice ?? undefined) : undefined,
           days: t !== 'fee' ? (item.days ?? undefined) : undefined,
           lineTotal: item.lineTotal ?? 0,
+          description: item.description ?? undefined,
         };
       }),
       clientName: initialData.clientName || '',
@@ -344,6 +350,7 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
       discountAmount: initialData.discountAmount || 0,
       discountType: initialData.discountType || 'fixed',
       taxRate: (initialData.taxRate || 0) * 100, // Convert decimal to percentage for display/editing
+      terms: initialData.terms || '',
   } : {
     ...loadDraft(),
     name: "",
@@ -357,6 +364,7 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
     endDate: addDays(new Date(), 1),
     items: [],
     notes: "",
+    terms: "",
     status: "Draft",
     discountAmount: 0,
     discountType: 'fixed',
@@ -477,33 +485,72 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
   const [addUnitPrice, setAddUnitPrice] = React.useState<number>(0);
   const [addFeeType, setAddFeeType] = React.useState<'fixed'|'percentage'>('fixed');
   const [addFeeAmount, setAddFeeAmount] = React.useState<number>(0);
+  // Manual item states (allow adding items not in stock/list)
+  const [useManualEquipment, setUseManualEquipment] = React.useState<boolean>(false);
+  const [manualEquipmentName, setManualEquipmentName] = React.useState<string>('');
+  const [manualEquipmentPrice, setManualEquipmentPrice] = React.useState<number>(0);
+  const [useManualService, setUseManualService] = React.useState<boolean>(false);
+  const [manualServiceName, setManualServiceName] = React.useState<string>('');
+  const [manualServicePrice, setManualServicePrice] = React.useState<number>(0);
 
   // Add item handler
   const handleAddItem = () => {
     if (addItemType === 'equipment') {
-      const eq = rentableEquipment.find(e => e.id === selectedEquipmentId);
-      if (!eq) return toast({ variant: 'destructive', title: toastSelectequipmentTitleText });
-      append({
-        type: 'equipment',
-        equipmentId: eq.id,
-        equipmentName: eq.name,
-        quantity: addQuantity,
-        unitPrice: eq.dailyRate,
-        days,
-        lineTotal: addQuantity * eq.dailyRate * days,
-      });
+      if (useManualEquipment) {
+        if (!manualEquipmentName || manualEquipmentPrice < 0) {
+          return toast({ variant: 'destructive', title: toastSelectequipmentTitleText });
+        }
+        append({
+          type: 'equipment',
+          equipmentName: manualEquipmentName,
+          quantity: addQuantity,
+          unitPrice: manualEquipmentPrice,
+          days,
+          lineTotal: addQuantity * manualEquipmentPrice * days,
+          description: '', // manual items start with empty description
+        });
+      } else {
+        const eq = rentableEquipment.find(e => e.id === selectedEquipmentId);
+        if (!eq) return toast({ variant: 'destructive', title: toastSelectequipmentTitleText });
+        append({
+          type: 'equipment',
+          equipmentId: eq.id,
+          equipmentName: eq.name,
+          quantity: addQuantity,
+          unitPrice: eq.dailyRate,
+          days,
+          lineTotal: addQuantity * eq.dailyRate * days,
+          description: eq.description || '',
+        });
+      }
     } else if (addItemType === 'service') {
-      const svc = services.find((s: any) => s.id === selectedServiceId);
-      if (!svc) return toast({ variant: 'destructive', title: toastSelectserviceTitleText });
-      append({
-        type: 'service',
-        serviceId: svc.id,
-        serviceName: svc.name,
-        quantity: addQuantity,
-        unitPrice: svc.unitPrice,
-        days,
-        lineTotal: addQuantity * svc.unitPrice * days,
-      });
+      if (useManualService) {
+        if (!manualServiceName || manualServicePrice < 0) {
+          return toast({ variant: 'destructive', title: toastSelectserviceTitleText });
+        }
+        append({
+          type: 'service',
+          serviceName: manualServiceName,
+          quantity: addQuantity,
+          unitPrice: manualServicePrice,
+          days,
+          lineTotal: addQuantity * manualServicePrice * days,
+          description: '', // manual items start with empty description
+        });
+      } else {
+        const svc = services.find((s: any) => s.id === selectedServiceId);
+        if (!svc) return toast({ variant: 'destructive', title: toastSelectserviceTitleText });
+        append({
+          type: 'service',
+          serviceId: svc.id,
+          serviceName: svc.name,
+          quantity: addQuantity,
+          unitPrice: svc.unitPrice,
+          days,
+          lineTotal: addQuantity * svc.unitPrice * days,
+          description: svc.description || '',
+        });
+      }
     } else if (addItemType === 'fee') {
       const fee = fees.find((f: any) => f.id === selectedFeeId);
       if (!fee) return toast({ variant: 'destructive', title: toastSelectfeeTitleText });
@@ -513,7 +560,8 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
         feeName: fee.name,
         amount: addFeeAmount || fee.amount,
         feeType: addFeeType || fee.type,
-        lineTotal: addFeeType === 'percentage' ? 0 : (addFeeAmount || fee.amount), // recalc on submit
+        lineTotal: (addFeeType || fee.type) === 'percentage' ? 0 : (addFeeAmount || fee.amount),
+        description: fee.description || '',
       });
     }
   };
@@ -569,11 +617,12 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
           id: item.id || crypto.randomUUID(),
           type: 'equipment',
           equipmentId: item.equipmentId,
-          equipmentName: eq?.name || 'Unknown Equipment',
+          equipmentName: item.equipmentName ?? eq?.name ?? 'Equipment Item',
           quantity,
           unitPrice,
           days: currentDays,
           lineTotal: isNaN(lineTotal) ? 0 : lineTotal,
+          description: item.description ?? eq?.description ?? undefined,
         };
       } else if (item.type === 'service') {
         const svc = services.find((s: any) => s.id === item.serviceId);
@@ -584,11 +633,12 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
           id: item.id || crypto.randomUUID(),
           type: 'service',
           serviceId: item.serviceId,
-          serviceName: svc?.name || 'Unknown Service',
+          serviceName: item.serviceName ?? svc?.name ?? 'Service Item',
           quantity,
           unitPrice,
           days: currentDays,
           lineTotal: isNaN(lineTotal) ? 0 : lineTotal,
+          description: item.description ?? undefined,
         };
       } else {
         // fee
@@ -597,10 +647,11 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
           id: item.id || crypto.randomUUID(),
           type: 'fee',
           feeId: item.feeId,
-          feeName: fee?.name || 'Unknown Fee',
+          feeName: item.feeName ?? fee?.name ?? 'Fee',
           amount: item.amount ?? fee?.amount ?? 0,
           feeType: item.feeType ?? fee?.type ?? 'fixed',
           lineTotal: item.feeType === 'percentage' ? 0 : (item.amount ?? fee?.amount ?? 0),
+          description: item.description ?? undefined,
         };
       }
     });
@@ -649,8 +700,8 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
   const createPreviewQuote = useCallback((): Quote => {
     const formValues = form.getValues();
     const currentDays = rentalDays();
-    
-    const processedItems: QuoteItem[] = formValues.items.map((item) => {
+
+    const processedItems: QuoteItem[] = (formValues.items || []).map((item) => {
       if (item.type === 'equipment') {
         const eq = equipment.find(e => e.id === item.equipmentId);
         const quantity = item.quantity ?? 1;
@@ -660,11 +711,12 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
           id: item.id || crypto.randomUUID(),
           type: 'equipment',
           equipmentId: item.equipmentId,
-          equipmentName: eq?.name || 'Unknown Equipment',
+          equipmentName: item.equipmentName ?? eq?.name ?? 'Equipment Item',
           quantity,
           unitPrice,
           days: currentDays,
           lineTotal: isNaN(lineTotal) ? 0 : lineTotal,
+          description: item.description ?? eq?.description ?? undefined,
         };
       } else if (item.type === 'service') {
         const svc = services.find((s: any) => s.id === item.serviceId);
@@ -675,11 +727,12 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
           id: item.id || crypto.randomUUID(),
           type: 'service',
           serviceId: item.serviceId,
-          serviceName: svc?.name || 'Unknown Service',
+          serviceName: item.serviceName ?? svc?.name ?? 'Service Item',
           quantity,
           unitPrice,
           days: currentDays,
           lineTotal: isNaN(lineTotal) ? 0 : lineTotal,
+          description: item.description ?? svc?.description ?? undefined,
         };
       } else {
         const fee = fees.find((f: any) => f.id === item.feeId);
@@ -687,10 +740,11 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
           id: item.id || crypto.randomUUID(),
           type: 'fee',
           feeId: item.feeId,
-          feeName: fee?.name || 'Unknown Fee',
+          feeName: item.feeName ?? fee?.name ?? 'Fee',
           amount: item.amount ?? fee?.amount ?? 0,
           feeType: item.feeType ?? fee?.type ?? 'fixed',
           lineTotal: item.feeType === 'percentage' ? 0 : (item.amount ?? fee?.amount ?? 0),
+          description: item.description ?? fee?.description ?? undefined,
         };
       }
     });
@@ -1138,27 +1192,70 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                           {field.type}
                         </span>
                       </div>
-                      <h4 className="font-semibold text-card-foreground mt-1 truncate">
-                        {field.type === 'equipment' && field.equipmentName}
-                        {field.type === 'service' && field.serviceName}
-                        {field.type === 'fee' && field.feeName}
-                      </h4>
+                      <div className="mt-1">
+                        <input
+                          type="text"
+                          className="w-full px-2 py-1 text-sm border rounded-md bg-background/50 text-card-foreground"
+                          placeholder={field.type === 'equipment' ? 'Equipment name' : field.type === 'service' ? 'Service name' : 'Fee name'}
+                          value={
+                            field.type === 'equipment'
+                              ? (form.getValues(`items.${index}.equipmentName`) || '')
+                              : field.type === 'service'
+                                ? (form.getValues(`items.${index}.serviceName`) || '')
+                                : (form.getValues(`items.${index}.feeName`) || '')
+                          }
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            if (field.type === 'equipment') {
+                              form.setValue(`items.${index}.equipmentName`, v, { shouldDirty: true, shouldValidate: true });
+                            } else if (field.type === 'service') {
+                              form.setValue(`items.${index}.serviceName`, v, { shouldDirty: true, shouldValidate: true });
+                            } else {
+                              form.setValue(`items.${index}.feeName`, v, { shouldDirty: true, shouldValidate: true });
+                            }
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
 
                   {/* Item Details */}
-                  <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                    <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                     {(field.type === 'equipment' || field.type === 'service') && (
                       <>
-                        <div className="flex items-center gap-1">
-                          <span className="font-medium">Qty:</span>
-                          <span className="text-card-foreground font-semibold">{field.quantity}</span>
+                        <div className="flex items-center gap-2">
+                          <label className="font-medium" htmlFor={`items.${index}.quantity`}>Qty:</label>
+                          <input
+                            id={`items.${index}.quantity`}
+                            type="number"
+                            min={1}
+                            className="w-20 h-9 px-2 border rounded-md bg-background/50 text-card-foreground"
+                            value={form.getValues(`items.${index}.quantity`) || 1}
+                            onChange={(e) => {
+                              const q = Math.max(1, Number(e.target.value) || 1);
+                              const price = Number(form.getValues(`items.${index}.unitPrice`)) || 0;
+                              form.setValue(`items.${index}.quantity`, q, { shouldDirty: true, shouldValidate: true });
+                              form.setValue(`items.${index}.lineTotal`, q * price * days, { shouldDirty: true });
+                            }}
+                          />
                         </div>
-                        <div className="flex items-center gap-1">
-                          <span className="font-medium">Rate:</span>
-                          <span className="text-card-foreground font-semibold">
-                            €{field.unitPrice?.toFixed(2)}{field.type === 'equipment' ? '/day' : ''}
-                          </span>
+                        <div className="flex items-center gap-2">
+                          <label className="font-medium" htmlFor={`items.${index}.unitPrice`}>Rate:</label>
+                          <input
+                            id={`items.${index}.unitPrice`}
+                            type="number"
+                            min={0}
+                            step="0.01"
+                            className="w-28 h-9 px-2 border rounded-md bg-background/50 text-card-foreground"
+                            value={form.getValues(`items.${index}.unitPrice`) || 0}
+                            onChange={(e) => {
+                              const price = Math.max(0, Number(e.target.value) || 0);
+                              const q = Number(form.getValues(`items.${index}.quantity`)) || 1;
+                              form.setValue(`items.${index}.unitPrice`, price, { shouldDirty: true, shouldValidate: true });
+                              form.setValue(`items.${index}.lineTotal`, q * price * days, { shouldDirty: true });
+                            }}
+                          />
+                          <span className="text-card-foreground font-semibold">{field.type === 'equipment' ? '/day' : ''}</span>
                         </div>
                         {field.type === 'equipment' && (
                           <div className="flex items-center gap-1">
@@ -1170,15 +1267,38 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                     )}
                     {field.type === 'fee' && (
                       <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-1">
-                          <span className="font-medium">Type:</span>
-                          <span className="text-card-foreground font-semibold capitalize">{field.feeType}</span>
+                        <div className="flex items-center gap-2">
+                          <label className="font-medium" htmlFor={`items.${index}.feeType`}>Type:</label>
+                          <select
+                            id={`items.${index}.feeType`}
+                            className="h-9 px-2 border rounded-md bg-background/50 text-card-foreground"
+                            value={form.getValues(`items.${index}.feeType`) || 'fixed'}
+                            onChange={(e) => {
+                              const v = e.target.value as 'fixed' | 'percentage';
+                              form.setValue(`items.${index}.feeType`, v, { shouldDirty: true, shouldValidate: true });
+                            }}
+                          >
+                            <option value="fixed">Fixed</option>
+                            <option value="percentage">Percentage</option>
+                          </select>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <span className="font-medium">Amount:</span>
-                          <span className="text-card-foreground font-semibold">
-                            {field.feeType === 'percentage' ? `${field.amount}%` : `€${field.amount?.toFixed(2)}`}
-                          </span>
+                        <div className="flex items-center gap-2">
+                          <label className="font-medium" htmlFor={`items.${index}.amount`}>Amount:</label>
+                          <input
+                            id={`items.${index}.amount`}
+                            type="number"
+                            min={0}
+                            step="0.01"
+                            className="w-28 h-9 px-2 border rounded-md bg-background/50 text-card-foreground"
+                            value={form.getValues(`items.${index}.amount`) || 0}
+                            onChange={(e) => {
+                              const amt = Math.max(0, Number(e.target.value) || 0);
+                              form.setValue(`items.${index}.amount`, amt, { shouldDirty: true, shouldValidate: true });
+                              // For fixed fees, lineTotal equals amount; percentage handled in summary
+                              const type = form.getValues(`items.${index}.feeType`);
+                              form.setValue(`items.${index}.lineTotal`, type === 'percentage' ? 0 : amt, { shouldDirty: true });
+                            }}
+                          />
                         </div>
                       </div>
                     )}
@@ -1193,6 +1313,20 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                       </div>
                     </div>
                   </div>
+                </div>
+                {/* Description row */}
+                <div className="mt-3 pt-3 border-t border-border/50">
+                  <label className="text-xs font-medium text-muted-foreground" htmlFor={`items.${index}.description`}>Description (optional)</label>
+                  <textarea
+                    id={`items.${index}.description`}
+                    rows={2}
+                    className="w-full mt-1 px-2 py-1 text-sm border rounded-md bg-background/50 resize-none"
+                    placeholder="Add notes or details..."
+                    value={form.getValues(`items.${index}.description`) || ''}
+                    onChange={(e) => {
+                      form.setValue(`items.${index}.description`, e.target.value, { shouldDirty: true, shouldValidate: true });
+                    }}
+                  />
                 </div>
               </Card>
                   );
@@ -1321,6 +1455,33 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                           />
                         </div>
                       </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="flex items-center gap-2">
+                          <input id="manual-equipment" type="checkbox" className="h-4 w-4" checked={useManualEquipment}
+                            onChange={(e) => { setUseManualEquipment(e.target.checked); }} />
+                          <label htmlFor="manual-equipment" className="text-sm font-semibold">Add custom equipment (not in stock)</label>
+                        </div>
+                        {useManualEquipment && (
+                          <>
+                            <input
+                              type="text"
+                              placeholder="Equipment name"
+                              className="h-12 px-4 border border-border rounded-lg bg-background/50"
+                              value={manualEquipmentName}
+                              onChange={(e) => setManualEquipmentName(e.target.value)}
+                            />
+                            <input
+                              type="number"
+                              min={0}
+                              step="0.01"
+                              placeholder="Unit price per day (€)"
+                              className="h-12 px-4 border border-border rounded-lg bg-background/50"
+                              value={manualEquipmentPrice}
+                              onChange={(e) => setManualEquipmentPrice(Number(e.target.value))}
+                            />
+                          </>
+                        )}
+                      </div>
                       
                       <div className="flex justify-end">
                         <Button 
@@ -1331,14 +1492,19 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                               const match = rentableEquipment.find(eq => eq.name.toLowerCase() === equipmentSearch.toLowerCase());
                               if (match) eqId = match.id;
                             }
-                            if (eqId) {
-                              setSelectedEquipmentId(eqId);
+                            if (useManualEquipment || eqId) {
+                              if (!useManualEquipment) setSelectedEquipmentId(eqId);
                               handleAddItem();
                               setEquipmentSearch('');
                               setAddQuantity(1);
+                              if (useManualEquipment) {
+                                setManualEquipmentName('');
+                                setManualEquipmentPrice(0);
+                                setUseManualEquipment(false);
+                              }
                             }
                           }}
-                          disabled={!selectedEquipmentId}
+                          disabled={!useManualEquipment && !selectedEquipmentId}
                         >
                           <PlusCircle className="mr-2 h-4 w-4" /> 
                           Add Equipment
@@ -1379,6 +1545,33 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                           />
                         </div>
                       </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="flex items-center gap-2">
+                          <input id="manual-service" type="checkbox" className="h-4 w-4" checked={useManualService}
+                            onChange={(e) => { setUseManualService(e.target.checked); }} />
+                          <label htmlFor="manual-service" className="text-sm font-semibold">Add custom service (not in list)</label>
+                        </div>
+                        {useManualService && (
+                          <>
+                            <input
+                              type="text"
+                              placeholder="Service name"
+                              className="h-12 px-4 border border-border rounded-lg bg-background/50"
+                              value={manualServiceName}
+                              onChange={(e) => setManualServiceName(e.target.value)}
+                            />
+                            <input
+                              type="number"
+                              min={0}
+                              step="0.01"
+                              placeholder="Unit price (€)"
+                              className="h-12 px-4 border border-border rounded-lg bg-background/50"
+                              value={manualServicePrice}
+                              onChange={(e) => setManualServicePrice(Number(e.target.value))}
+                            />
+                          </>
+                        )}
+                      </div>
                       
                       <div className="flex justify-end">
                         <Button 
@@ -1387,6 +1580,11 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                           onClick={() => { 
                             handleAddItem(); 
                             setAddQuantity(1);
+                            if (useManualService) {
+                              setManualServiceName('');
+                              setManualServicePrice(0);
+                              setUseManualService(false);
+                            }
                           }}
                         >
                           <PlusCircle className="mr-2 h-4 w-4" /> 
@@ -1631,6 +1829,30 @@ export function QuoteForm({ initialData, onSubmitSuccess }: QuoteFormProps) {
                     {...field} 
                     rows={4}
                     className="min-h-[120px] resize-vertical"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+          </CardContent>
+        </Card>
+
+        {/* Terms & Conditions */}
+        <Card className="shadow-xl border-border/60">
+          <CardHeader>
+            <CardTitle>Terms & Conditions</CardTitle>
+            <CardDescription>Customize terms for this specific quote. Leave blank to use defaults.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FormField control={form.control} name="terms" render={({ field }) => (
+              <FormItem className="space-y-3">
+                <FormLabel className="text-sm font-semibold">Terms & Conditions (optional)</FormLabel>
+                <FormControl>
+                  <Textarea 
+                    placeholder={"• Add terms, one per line"}
+                    {...field} 
+                    rows={6}
+                    className="min-h-[140px] resize-vertical"
                   />
                 </FormControl>
                 <FormMessage />

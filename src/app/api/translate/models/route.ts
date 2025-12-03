@@ -1,11 +1,6 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-
-import { useTranslate } from '@/contexts/TranslationContext';
 export async function GET() {
-  // Translation hooks
-  const { translated: toastFastandefficienDescText } = useTranslate('Fast and efficient model for translation');
-
   try {
     const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
     
@@ -20,7 +15,7 @@ export async function GET() {
       {
         name: 'models/gemini-2.5-flash',
         displayName: 'Gemini 2.5 Flash',
-        description: '{toastFastandefficienDescText}',
+        description: 'Fast and efficient model for translation',
         supportedGenerationMethods: ['generateContent'],
       }
     ];
@@ -37,3 +32,4 @@ export async function GET() {
     }, { status: 500 });
   }
 }
+

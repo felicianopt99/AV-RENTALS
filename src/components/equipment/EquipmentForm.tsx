@@ -171,18 +171,22 @@ export function EquipmentForm({ initialData, onSubmitSuccess }: EquipmentFormPro
   }, [itemType, form]);
 
 
-  function onSubmit(data: EquipmentFormValues) {
+  async function onSubmit(data: EquipmentFormValues) {
     try {
+      const normalizedSubId = data.subcategoryId && data.subcategoryId.trim().length > 0 && data.subcategoryId !== NO_SUBCATEGORY_VALUE
+        ? data.subcategoryId
+        : undefined;
+
       const finalData = {
         ...data,
-        subcategoryId: data.subcategoryId === NO_SUBCATEGORY_VALUE ? undefined : data.subcategoryId,
+        subcategoryId: normalizedSubId,
       };
 
       if (initialData) {
-        updateEquipmentItem({ ...initialData, ...finalData });
+        await updateEquipmentItem({ ...initialData, ...finalData });
         toast({ title: "Equipment Updated", description: `${finalData.name} has been successfully updated.` });
       } else {
-        addEquipmentItem(finalData);
+        await addEquipmentItem(finalData as any);
         toast({ title: "Equipment Added", description: `${finalData.name} has been successfully added.` });
       }
       onSubmitSuccess ? onSubmitSuccess() : router.push("/inventory");

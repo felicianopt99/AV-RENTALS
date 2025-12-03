@@ -139,12 +139,12 @@ export function AppHeader({ title, children, className }: AppHeaderProps) {
                   <DropdownMenuSeparator className="bg-gray-200/50 dark:bg-gray-700/50" />
                   <DropdownMenuItem onClick={() => router.push('/profile')} className="text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
                     <User className="mr-2 h-4 w-4" />
-                    Profile
+                    {profileText}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-gray-200/50 dark:bg-gray-700/50" />
                   <DropdownMenuItem onClick={handleLogout} className="text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
                     <LogOut className="mr-2 h-4 w-4" />
-                    Logout
+                    {logoutText}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -187,12 +187,12 @@ export function AppHeader({ title, children, className }: AppHeaderProps) {
                 <DropdownMenuSeparator className="bg-gray-200/50 dark:bg-gray-700/50" />
                 <DropdownMenuItem onClick={() => router.push('/profile')} className="text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
                   <User className="mr-2 h-4 w-4" />
-                  Profile
+                  {profileText}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-gray-200/50 dark:bg-gray-700/50" />
                 <DropdownMenuItem onClick={handleLogout} className="text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
                   <LogOut className="mr-2 h-4 w-4" />
-                  Logout
+                  {logoutText}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -222,15 +222,15 @@ export function AppHeader({ title, children, className }: AppHeaderProps) {
                       {unreadCount > 9 ? '9+' : unreadCount}
                     </Badge>
                   )}
-                  <span className="sr-only">Notifications</span>
+                  <span className="sr-only">{notificationsText}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-80 max-h-96 overflow-y-auto z-[10000] bg-white/80 dark:bg-gray-900/80 backdrop-blur-2xl border border-gray-200/30 dark:border-gray-700/30 shadow-2xl sticky top-16 rounded-xl" align="end" style={{backdropFilter:'blur(18px)',WebkitBackdropFilter:'blur(18px)'}}>
-                <DropdownMenuLabel className="text-gray-900 dark:text-gray-100">Notifications</DropdownMenuLabel>
+                <DropdownMenuLabel className="text-gray-900 dark:text-gray-100">{notificationsText}</DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-gray-200/50 dark:bg-gray-700/50" />
                 {notifications.length === 0 ? (
                   <div className="p-4 text-center text-gray-500 dark:text-gray-400">
-                    No notifications
+                    {noNotificationsText}
                   </div>
                 ) : (
                   notifications.map((notification) => (

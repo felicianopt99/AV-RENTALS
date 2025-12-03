@@ -31,15 +31,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check password
-    const isValidPassword = await bcrypt.compare(password, user.password);
-    console.log('Password valid:', isValidPassword);
-    
-    if (!isValidPassword) {
-      console.log('Invalid password');
+    // Debug password comparison
+    console.log('Received password:', password);
+    console.log('Stored hash:', user.password);
+    try {
+      const isValidPassword = await bcrypt.compare(password, user.password);
+      console.log('Password valid:', isValidPassword);
+      if (!isValidPassword) {
+        console.log('Invalid password');
+        return NextResponse.json(
+          { error: 'Invalid credentials' },
+          { status: 401 }
+        );
+      }
+    } catch (err) {
+      console.error('Bcrypt compare error:', err);
       return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
+        { error: 'Password comparison failed' },
+        { status: 500 }
       );
     }
 

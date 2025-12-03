@@ -10,8 +10,8 @@ export function AppLogo() {
   if (isLoading) {
     return (
       <div className="flex items-center gap-2 p-2">
-        <Building className="h-6 w-6 text-primary" />
-        <div className="h-4 w-20 bg-muted animate-pulse rounded" />
+        <Building className="h-8 w-8 text-primary" />
+        <div className="h-5 w-24 bg-muted animate-pulse rounded" />
       </div>
     );
   }
@@ -21,9 +21,9 @@ export function AppLogo() {
       {settings?.useTextLogo !== false ? (
         // Prioritize text-based logo
         <>
-          <Building className="h-6 w-6 text-primary" />
+          <Building className="h-8 w-8 text-primary" />
           <h1 
-            className="text-lg font-semibold text-foreground"
+            className="text-xl font-semibold text-foreground"
             style={{ 
               color: settings?.primaryColor ? settings.primaryColor : undefined 
             }}
@@ -36,13 +36,13 @@ export function AppLogo() {
         <img 
           src={settings.logoUrl} 
           alt={displayName}
-          className="h-6 w-auto max-w-[120px] object-contain"
+          className="h-8 w-auto max-w-[160px] object-contain"
         />
       ) : (
         // Final fallback
         <>
-          <Building className="h-6 w-6 text-primary" />
-          <h1 className="text-lg font-semibold text-foreground">
+          <Building className="h-8 w-8 text-primary" />
+          <h1 className="text-xl font-semibold text-foreground">
             {displayName}
           </h1>
         </>

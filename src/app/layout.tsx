@@ -12,6 +12,7 @@ import RouteTranslationPreloader from '@/components/translation/RouteTranslation
 import { ReactQueryProvider } from '@/providers/ReactQueryProvider';
 import { Toaster } from "@/components/ui/toaster";
 import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
+import { cookies } from 'next/headers';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -37,12 +38,6 @@ export const metadata: Metadata = {
   title: 'AV Rentals',
   description: 'Audiovisual Equipment Rental Management',
   manifest: '/manifest.json',
-  alternates: {
-    languages: {
-      en: '/',
-      pt: '/pt',
-    },
-  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
@@ -56,13 +51,16 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const cookieLang = cookieStore.get('app-language')?.value;
+  const lang = cookieLang === 'pt' ? 'pt' : 'en';
   return (
-    <html lang="en" suppressHydrationWarning={true}>
+    <html lang={lang} suppressHydrationWarning={true}>
       <head>
         <link rel="icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/icon-192.png" />

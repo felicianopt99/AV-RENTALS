@@ -42,8 +42,8 @@ export default function EditQuotePage() {
           ...foundQuote,
           startDate: new Date(foundQuote.startDate),
           endDate: new Date(foundQuote.endDate),
-          createdAt: new Date(foundQuote.createdAt),
-          updatedAt: new Date(foundQuote.updatedAt),
+          createdAt: foundQuote.createdAt ? new Date(foundQuote.createdAt) : undefined,
+          updatedAt: foundQuote.updatedAt ? new Date(foundQuote.updatedAt) : undefined,
           items: foundQuote.items.map(item => ({...item})) // Shallow copy items
         });
       } else {
@@ -97,7 +97,9 @@ export default function EditQuotePage() {
             <div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{editQuoteTitle}</h1>
               <p className="text-gray-600 dark:text-gray-400">
-                {(editingQuoteBase || '').replace('{number}', String(quote.quoteNumber)).replace('{date}', new Date(quote.createdAt).toLocaleDateString())}
+                {(editingQuoteBase || '')
+                  .replace('{number}', String(quote.quoteNumber))
+                  .replace('{date}', new Date(quote.createdAt ?? Date.now()).toLocaleDateString())}
               </p>
             </div>
           </div>

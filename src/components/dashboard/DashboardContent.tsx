@@ -41,7 +41,8 @@ const StatCard: React.FC<{ title: string; value: string | number; icon: React.El
 
 export function DashboardContent() {
   const { equipment, clients, events, quotes, rentals, isDataLoaded, currentUser } = useAppContext();
-  const isAdmin = currentUser?.role === 'Admin';
+  const userRole = String(currentUser?.role || '').toLowerCase();
+  const isAdmin = userRole === 'admin';
 
   const getPersonalizedGreeting = () => {
     const hour = new Date().getHours();
@@ -50,17 +51,17 @@ export function DashboardContent() {
     else if (hour < 18) timeGreeting = 'Good afternoon';
     else timeGreeting = 'Good evening';
 
-    const roleMessages = {
-      Admin: 'Ready to manage your team?',
-      Manager: 'How can we optimize operations today?',
-      Technician: 'What equipment needs your expertise?',
-      Employee: 'Let\'s check today\'s schedule!',
-      Viewer: 'Stay updated with the latest info.'
+    const roleMessages: Record<string, string> = {
+      admin: 'Ready to manage your team?',
+      manager: 'How can we optimize operations today?',
+      technician: 'What equipment needs your expertise?',
+      employee: 'Let\'s check today\'s schedule!',
+      viewer: 'Stay updated with the latest info.'
     };
 
     return {
       timeGreeting,
-      roleMessage: roleMessages[currentUser?.role as keyof typeof roleMessages] || 'Welcome back!'
+      roleMessage: roleMessages[userRole] || 'Welcome back!'
     };
   };
 
@@ -101,7 +102,7 @@ export function DashboardContent() {
         const year = getYear(date);
         
         const revenue = acceptedQuotes
-            .filter(q => getMonth(new Date(q.createdAt)) === month && getYear(new Date(q.createdAt)) === year)
+            .filter(q => getMonth(new Date(q.createdAt ?? 0)) === month && getYear(new Date(q.createdAt ?? 0)) === year)
             .reduce((sum, q) => sum + q.totalAmount, 0);
 
         monthlyRevenue.push({ month: format(date, 'MMM'), revenue });

@@ -105,8 +105,8 @@ export function AppSidebarNav() {
 
   // Use useMemo to prevent recalculation on every render
   const visibleNavItems = useMemo(() => {
-    const userRole = currentUser?.role || 'Viewer';
-    const items = baseNavItems.filter(item => item.requiredRole.includes(userRole));
+    const normalizedRole = String(currentUser?.role || 'viewer').toLowerCase();
+    const items = baseNavItems.filter(item => (item.requiredRole || []).map(r => String(r).toLowerCase()).includes(normalizedRole));
     if (typeof window !== 'undefined') {
       // eslint-disable-next-line no-console
       console.log('[Sidebar Debug] visibleNavItems', items);
@@ -300,7 +300,7 @@ export function AppSidebarNav() {
           })}
         </SidebarMenu>
 
-  {currentUser?.role === 'Admin' && (
+  {String(currentUser?.role || '').toLowerCase() === 'admin' && (
           <>
             <div className="px-4 py-4">
               <div className="h-px bg-gradient-to-r from-transparent via-sidebar-border to-transparent"></div>

@@ -52,7 +52,13 @@ export default function ClientDetailsPage() {
       if (foundClient) {
         setClient(foundClient);
         setClientEvents(events.filter(e => e.clientId === clientId).sort((a,b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()));
-        setClientQuotes(quotes.filter(q => q.clientId === clientId).sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+        setClientQuotes(
+          quotes
+            .filter(q => q.clientId === clientId)
+            .sort(
+              (a,b) => (new Date(b.createdAt ?? 0)).getTime() - (new Date(a.createdAt ?? 0)).getTime()
+            )
+        );
       } else {
         router.replace('/clients');
       }

@@ -1,7 +1,7 @@
 #!/usr/bin/env ts-node
 
 import { PrismaClient } from '@prisma/client';
-import { shouldTranslateText } from '../src/lib/translationRules';
+import { ContentAnalyzer } from '../src/lib/translationRules';
 import fs from 'fs';
 
 /**
@@ -44,7 +44,7 @@ class SmartTranslationFilter {
       const existingTranslations = await this.prisma.translation.findMany({
         where: {
           sourceText: { in: translatableTexts },
-          targetLang: 'pt-PT',
+          targetLang: 'pt',
         },
         select: { sourceText: true },
       });
@@ -90,16 +90,20 @@ class SmartTranslationFilter {
     let filtered = 0;
     
     for (const text of texts) {
-      // Create a mock element for rule checking
-      const mockElement = document.createElement('span');
-      
-      if (shouldTranslateText(text, mockElement)) {
-        // Additional filtering for truly UI-relevant content
-        if (this.isUIRelevant(text)) {
-          translatable.push(text);
-        } else {
-          filtered++;
-        }
+      const t = text.trim();
+      if (!t) { filtered++; continue; }
+      // Server-safe heuristics using ContentAnalyzer
+      const isExcluded = 
+        ContentAnalyzer.isPersonalData(t) ||
+        ContentAnalyzer.isBusinessData(t) ||
+        ContentAnalyzer.isSystemIdentifier(t) ||
+        ContentAnalyzer.isDateOrTime(t);
+      if (isExcluded) { filtered++; continue; }
+
+      // Positive UI signal
+      const looksLikeUI = ContentAnalyzer.isUIText(t);
+      if (looksLikeUI && this.isUIRelevant(t)) {
+        translatable.push(t);
       } else {
         filtered++;
       }

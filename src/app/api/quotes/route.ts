@@ -43,6 +43,7 @@ const QuoteSchema = z.object({
   totalAmount: z.number().min(0),
   status: z.enum(['Draft', 'Sent', 'Accepted', 'Declined', 'Archived']).default('Draft'),
   notes: z.string().optional(),
+  terms: z.string().optional().or(z.literal('')),
 })
 
 // GET /api/quotes - Get all quotes

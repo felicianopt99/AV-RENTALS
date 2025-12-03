@@ -185,6 +185,7 @@ model Quote {
   totalAmount    Float
   status         String      @default("Draft")
   notes          String?
+  terms          String?
   version        Int         @default(1)
   createdBy      String?
   updatedBy      String?
@@ -232,6 +233,9 @@ model CustomizationSettings {
   pdfCompanyTagline            String?
   pdfContactEmail              String?
   pdfContactPhone              String?
+  pdfFooterMessage             String?
+  pdfFooterContactText         String?
+  pdfShowFooterContact         Boolean?
   useTextLogo                  Boolean  @default(true)
   primaryColor                 String?
   secondaryColor               String?
@@ -408,7 +412,7 @@ model Translation {
   sourceText       String
   targetLang       String
   translatedText   String
-  model            String               @default("gemini-2.5-flash")
+  model            String               @default("deepl")
   createdAt        DateTime             @default(now())
   updatedAt        DateTime             @updatedAt
   category         String               @default("general")

@@ -27,6 +27,8 @@ class UITextExtractor {
     /useTranslate\(['"`]([^'"`]+)['"`]\)/g,
     // t() function calls
     /\bt\(['"`]([^'"`]+)['"`]\)/g,
+    // <T text="..." /> components
+    /<T[^>]*\btext=['"`]([^'"`]+)['"`][^>]*\/>/g,
     // Direct text in JSX (between > and <)
     />([^<>{}\n]+)</g,
     // Placeholder attributes

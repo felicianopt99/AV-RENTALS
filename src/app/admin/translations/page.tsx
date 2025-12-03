@@ -214,24 +214,20 @@ export default function AdminTranslationsPage() {
     try {
       setCoverageLoading(true);
       const params = new URLSearchParams({
-        page: String(coveragePage),
-        limit: '100',
-        group: groupFilter,
-        search: coverageSearch,
         targetLang: coverageTargetLang,
       });
-      const res = await fetch(`/api/admin/translation-coverage?${params.toString()}`);
+      const res = await fetch(`/api/i18n/coverage?${params.toString()}`);
       if (!res.ok) throw new Error('Failed to fetch coverage');
       const data = await res.json();
       setCoverage({
         missingCount: data.missingCount || 0,
-        extractedCount: data.extractedCount || 0,
-        sampleMissing: data.items || data.sampleMissing || [],
-        total: data.total || 0,
-        pages: data.pages || 1,
-        groups: data.groups || {},
+        extractedCount: data.totalExtracted || 0,
+        sampleMissing: (data.samples && data.samples.missing) || [],
+        total: data.totalExtracted || 0,
+        pages: 1,
+        groups: (data.summaries && (data.summaries.byFile || data.summaries.byCategory)) || {},
       });
-      setCoveragePages(data.pages || 1);
+      setCoveragePages(1);
     } catch (e: any) {
       toast({ title: 'Error', description: e.message || 'Failed to load coverage', variant: 'destructive' });
     } finally {
@@ -243,7 +239,7 @@ export default function AdminTranslationsPage() {
     if (selectedTab === 'coverage') {
       fetchCoverage();
     }
-  }, [selectedTab, groupFilter, coveragePage, coverageSearch, coverageTargetLang]);
+  }, [selectedTab, coverageTargetLang]);
 
   const handleSelectMissing = (text: string, checked: boolean) => {
     const next = new Set(selectedMissing);
@@ -510,7 +506,309 @@ export default function AdminTranslationsPage() {
       const aVal = a[sortBy as keyof Translation];
       const bVal = b[sortBy as keyof Translation];
       const direction = sortOrder === 'asc' ? 1 : -1;
+      const va = aVal as any;
+      const vb = bVal as any;
+      if (va < vb) return -1 * direction;
+      if (va > vb) return 1 * direction;
+      return 0;
+    });
+    return filtered;
+  }, [
+    translations,
+    searchTerm,
+    sourceFilter,
+    translationFilter,
+    statusColFilter,
+    categoryColFilter,
+    selectedStatus,
+    selectedCategory,
+    sortBy,
+    sortOrder,
+  ]);
 
+  // Simple export helper for current filtered translations
+  const handleExport = () => {
+    try {
+      const data = JSON.stringify(filteredTranslations, null, 2);
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `translations-${listTargetLang}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {}
+  };
+
+  // Render expanded UI
+  return (
+    <div className="p-4 space-y-4">
+      <Tabs value={selectedTab} onValueChange={setSelectedTab}>
+        <TabsList className="grid grid-cols-7 w-full">
+          <TabsTrigger value="list">List</TabsTrigger>
+          <TabsTrigger value="rules">Rules</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="coverage">Coverage</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
+          <TabsTrigger value="pdf">PDF</TabsTrigger>
+          <TabsTrigger value="observability">Observability</TabsTrigger>
+        </TabsList>
+
+        {/* List Tab */}
+        <TabsContent value="list" className="space-y-3">
+          <Card>
+            <CardHeader>
+              <CardTitle>Translations</CardTitle>
+              <CardDescription>Browse and filter translations</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex flex-wrap gap-2 items-end">
+                <div className="min-w-[220px]">
+                  <Label className="text-sm">Search</Label>
+                  <Input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search source/translated/tags" />
+                </div>
+                <div>
+                  <Label className="text-sm">Status</Label>
+                  <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                    <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
+                      {TRANSLATION_STATUSES.map(s => (
+                        <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-sm">Category</Label>
+                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
+                      {TRANSLATION_CATEGORIES.map(c => (
+                        <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-sm">Target</Label>
+                  <Select value={listTargetLang} onValueChange={setListTargetLang}>
+                    <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="en">English</SelectItem>
+                      <SelectItem value="pt">Português</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="ml-auto flex gap-2">
+                  <Button variant="outline" onClick={() => fetchTranslations(1)} disabled={loading}><RefreshCw className="h-4 w-4 mr-2" />Refresh</Button>
+                  <Button variant="outline" onClick={handleExport}><Download className="h-4 w-4 mr-2" />Export JSON</Button>
+                </div>
+              </div>
+
+              <div className="border rounded-md overflow-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="min-w-[120px]" style={{ width: sourceColWidth }}>Source</TableHead>
+                      <TableHead className="min-w-[120px]" style={{ width: transColWidth }}>Translated</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Quality</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredTranslations.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-sm text-muted-foreground">No results</TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredTranslations.map(t => (
+                        <TableRow key={t.id}>
+                          <TableCell className="whitespace-pre-wrap">{t.sourceText}</TableCell>
+                          <TableCell className="whitespace-pre-wrap">{t.translatedText}</TableCell>
+                          <TableCell>{getStatusBadge(t.status || 'approved')}</TableCell>
+                          <TableCell className="capitalize">{t.category || 'general'}</TableCell>
+                          <TableCell>{getQualityBadge(t.qualityScore || 100)}</TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="text-xs text-muted-foreground">Page {currentPage} of {totalPages}</div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" disabled={currentPage <= 1 || loading} onClick={() => setCurrentPage(p => Math.max(1, p - 1))}>Prev</Button>
+                  <Button variant="outline" size="sm" disabled={currentPage >= totalPages || loading} onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}>Next</Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Rules Tab */}
+        <TabsContent value="rules">
+          <Card>
+            <CardHeader>
+              <CardTitle>Translation Rules</CardTitle>
+              <CardDescription>Define custom replacements and overrides</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm">Mode</Label>
+                  <Select value={rulesMode} onValueChange={(v) => setRulesMode(v as any)}>
+                    <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="simple">Simple</SelectItem>
+                      <SelectItem value="advanced">Advanced (JSON)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex gap-2">
+                  <Button onClick={saveRules} disabled={rulesLoading}><Save className="h-4 w-4 mr-2" />Save</Button>
+                  <Button variant="outline" onClick={fetchRules} disabled={rulesLoading}><RefreshCw className="h-4 w-4 mr-2" />Reload</Button>
+                </div>
+              </div>
+
+              {rulesMode === 'advanced' ? (
+                <div>
+                  <Textarea rows={18} value={rulesEdit} onChange={(e) => setRulesEdit(e.target.value)} />
+                  {rulesValidationError && (<div className="text-sm text-red-600 mt-2">{rulesValidationError}</div>)}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {ruleRows.map((r, i) => (
+                    <div key={i} className="grid grid-cols-2 gap-2">
+                      <Input placeholder="Source" value={r.source} onChange={(e) => {
+                        const next = [...ruleRows]; next[i] = { ...next[i], source: e.target.value }; setRuleRows(next);
+                      }} />
+                      <Input placeholder="Translation" value={r.translation} onChange={(e) => {
+                        const next = [...ruleRows]; next[i] = { ...next[i], translation: e.target.value }; setRuleRows(next);
+                      }} />
+                    </div>
+                  ))}
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => setRuleRows([...ruleRows, { source: '', translation: '' }])}><Plus className="h-4 w-4 mr-2" />Add Row</Button>
+                    <Button onClick={saveRules}><Save className="h-4 w-4 mr-2" />Save</Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Analytics Tab */}
+        <TabsContent value="analytics">
+          <Card>
+            <CardHeader>
+              <CardTitle>Analytics</CardTitle>
+              <CardDescription>Overview of translation coverage and quality</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TranslationAnalytics stats={stats} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Coverage Tab */}
+        <TabsContent value="coverage">
+          <Card>
+            <CardHeader>
+              <CardTitle>Translation Coverage</CardTitle>
+              <CardDescription>Extracted vs missing UI strings</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Button aria-label="Refresh coverage" variant="outline" onClick={fetchCoverage} disabled={coverageLoading}>
+                  <RefreshCw className="h-4 w-4 mr-2" /> Refresh
+                </Button>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Missing: {coverage.missingCount} — Extracted: {coverage.extractedCount}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* PDF Tab */}
+        <TabsContent value="pdf">
+          <PdfTranslationManager />
+        </TabsContent>
+
+        {/* Settings Tab */}
+        <TabsContent value="settings" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Translation Settings</CardTitle>
+              <CardDescription>Configure translation workflows and quality controls</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Quality Controls</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="auto-approve">Auto-approve high quality translations</Label>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm text-muted-foreground">≥95%</span>
+                        <input type="checkbox" id="auto-approve" />
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="review-threshold">Flag for review below</Label>
+                      <div className="flex items-center space-x-2">
+                        <input aria-label="Review threshold" type="number" id="review-threshold" className="w-16 px-2 py-1 border rounded text-center" defaultValue="70" min="0" max="100" />
+                        <span className="text-sm text-muted-foreground">%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Automation</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="auto-translate">Enable auto-translation</Label>
+                      <input type="checkbox" id="auto-translate" defaultChecked />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="batch-processing">Enable batch processing</Label>
+                      <input type="checkbox" id="batch-processing" defaultChecked />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Observability Tab */}
+        <TabsContent value="observability">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Translation Stats</CardTitle>
+                <CardDescription>Real-time stats from admin API</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                <div>Total: {stats.total}</div>
+                <div>Needs Review: {stats.needsReview}</div>
+                <div>Auto-translated: {stats.autoTranslated}</div>
+                <div>Average Quality: {stats.averageQuality}%</div>
+                <div>Total Usage: {stats.totalUsage}</div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+      </Tabs>
+    </div>
+  );
+
+  /*
     <Tabs value={selectedTab} onValueChange={setSelectedTab}>
       <TabsList className="mb-4">
         <TabsTrigger value="analytics">Analytics</TabsTrigger>
@@ -572,17 +870,16 @@ export default function AdminTranslationsPage() {
                 <Plus className="h-4 w-4 mr-2" /> Seed Selected
               </Button>
             </div>
-                Missing strings detected from reports. Select and seed to make them appear in the list.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex flex-wrap items-end gap-3">
-                <div className="flex flex-col">
-                  <Label className="text-xs">Target language</Label>
-                  <Select value={coverageTargetLang} onValueChange={setCoverageTargetLang}>
-                    <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="en">English</SelectItem>
+            <div className="flex flex-wrap items-end gap-3">
+              <div className="flex flex-col">
+                <Label className="text-xs">Target language</Label>
+                <Select value={coverageTargetLang} onValueChange={setCoverageTargetLang}>
+                  <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="pt">Português</SelectItem>
+                  </SelectContent>
+                </Select>
                       <SelectItem value="pt">Português</SelectItem>
                     </SelectContent>
                   </Select>

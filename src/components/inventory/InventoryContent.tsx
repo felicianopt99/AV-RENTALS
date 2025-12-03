@@ -30,6 +30,7 @@ export function InventoryContent() {
   const { translated: uiAddEquipmentText } = useTranslate('Add Equipment');
   const { translated: uiInventoryText } = useTranslate('Inventory');
   const { translated: uiDashboardText } = useTranslate('Dashboard');
+  const { translated: uiInventoryHeading } = useTranslate('Equipment & Inventory');
 
   const [activeTab, setActiveTab] = useState("grid");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -54,7 +55,7 @@ export function InventoryContent() {
       </div>
       <div className="flex-1 overflow-y-auto p-2 md:p-6">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 md:mb-6 gap-4">
-          <h1 className="text-xl md:text-2xl font-bold">Equipment & Inventory</h1>
+          <h1 className="text-xl md:text-2xl font-bold">{uiInventoryHeading}</h1>
           <Button onClick={() => setIsAddDialogOpen(true)} variant="outline" className="gap-2 w-full sm:w-auto">
             <Plus className="h-4 w-4" />
             {uiAddEquipmentText}</Button>

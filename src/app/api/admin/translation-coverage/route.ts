@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+export const runtime = 'nodejs';
 import fs from 'fs';
 import path from 'path';
 import { PrismaClient } from '@prisma/client';
@@ -27,8 +28,14 @@ export async function POST(req: NextRequest) {
     const prisma = new PrismaClient();
     const root = process.cwd();
     const srcPath = path.join(root, 'src');
-    const extractedOut = ROOT_EXTRACTED_PATH;
-    const missingOut = ROOT_MISSING_PATH;
+    // Ensure reports directory exists and write inside it to avoid any FS permission issues
+    try {
+      if (!fs.existsSync(REPORTS_DIR)) {
+        fs.mkdirSync(REPORTS_DIR, { recursive: true });
+      }
+    } catch {}
+    const extractedOut = EXTRACTED_PATH;
+    const missingOut = MISSING_PATH;
 
     // Gather files
     const files = await glob('**/*.{ts,tsx,js,jsx}', {
@@ -40,6 +47,7 @@ export async function POST(req: NextRequest) {
     const patterns: RegExp[] = [
       /useTranslate\(['"`]([^'"`]+)['"`]\)/g,
       /\bt\(['"`]([^'"`]+)['"`]\)/g,
+      /<T[^>]*\btext=['"`]([^'"`]+)['"`][^>]*\/>/g,
       />([^<>{}\n]+)</g,
       /placeholder=['"`]([^'"`]+)['"`]/g,
       /title=['"`]([^'"`]+)['"`]/g,
@@ -55,7 +63,7 @@ export async function POST(req: NextRequest) {
       /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
       /^\+?[\d\s\-()]+$/,
       /^[A-Z]{2,10}-\d+$/,
-      /^https?:\/:\//,
+      /^https?:\/\//,
       /^\/[a-zA-Z0-9\/_\-]*$/,
       /^\d+(\.\d+)?\s*(px|em|rem|%|vh|vw)$/,
       /^[0-9]{4}-[0-9]{2}-[0-9]{2}/,

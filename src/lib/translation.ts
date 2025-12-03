@@ -1,4 +1,5 @@
 import { batchTranslateWithDeepL, translateTextWithDeepL } from './deepl';
+import pRetry from 'p-retry';
 import { loadTranslationRules } from './translation-rules';
 import { prisma } from '@/lib/db';
 
@@ -161,8 +162,33 @@ async function batchTranslateWithAI(
   targetLang: Language,
   _maxChunkSize: number = 10
 ): Promise<Map<string, string>> {
-  // Use DeepL batch translation directly
-  return batchTranslateWithDeepL(texts, targetLang);
+  // Retry DeepL batch with exponential backoff
+  try {
+    const result = await pRetry(() => batchTranslateWithDeepL(texts, targetLang), {
+      retries: 3,
+      minTimeout: 500,
+      maxTimeout: 3000,
+      factor: 2,
+    });
+    return result;
+  } catch (e) {
+    // Failover: translate individually (best-effort) to salvage partial results
+    const out = new Map<string, string>();
+    for (const t of texts) {
+      try {
+        const translated = await pRetry(() => translateTextWithDeepL(t, targetLang), {
+          retries: 2,
+          minTimeout: 400,
+          maxTimeout: 2000,
+        });
+        out.set(t, translated);
+      } catch {
+        // Final fallback: use original text
+        out.set(t, t);
+      }
+    }
+    return out;
+  }
 }
 
 /**
@@ -299,9 +325,14 @@ export async function translateText(
         return existing.translatedText;
       }
 
-      // 5. Not in database, translate with DeepL
+      // 5. Not in database, translate with DeepL (with retry/backoff)
       console.log(`🔄 Translating "${text}" with DeepL...`);
-      let translated = await translateTextWithDeepL(text, targetLang);
+      let translated = await pRetry(() => translateTextWithDeepL(text, targetLang), {
+        retries: 3,
+        minTimeout: 500,
+        maxTimeout: 3000,
+        factor: 2,
+      });
       // Apply glossary overrides
       translated = applyGlossary(translated, targetLang);
       // Apply translation rules post-glossary (in case rules are for output)

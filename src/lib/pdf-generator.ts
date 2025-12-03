@@ -28,6 +28,9 @@ interface CustomizationSettings {
   useTextLogo?: boolean;
   pdfLogoUrl?: string;
   pdfUseTextLogo?: boolean;
+  // New optional PDF footer branding fields (editable in Admin when available)
+  pdfFooterMessage?: string; // e.g., custom thank-you tagline
+  pdfFooterContactText?: string; // full custom contact sentence
 }
 
 export class QuotePDFGenerator {
@@ -48,6 +51,15 @@ export class QuotePDFGenerator {
     });
     this.pageWidth = this.doc.internal.pageSize.getWidth();
     this.pageHeight = this.doc.internal.pageSize.getHeight();
+  }
+
+  private addPageNumbers() {
+    const totalPages = (this.doc as any).getNumberOfPages ? (this.doc as any).getNumberOfPages() : (this.doc as any).internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      (this.doc as any).setPage(i);
+      const text = `Page ${i} of ${totalPages}`;
+      this.addText(text, this.pageWidth / 2, this.pageHeight - 10, { fontSize: 8, align: 'center' });
+    }
   }
 
   private checkPageSpace(requiredSpace: number): boolean {
@@ -404,89 +416,96 @@ export class QuotePDFGenerator {
       fontSize: 12,
       fontWeight: 'bold'
     });
-    
-    this.currentY += 8;
-    // Remove section underline to reduce visual clutter
-    // this.addLine(this.margin, this.currentY, this.pageWidth - this.margin, this.currentY, 0.5);
-    // this.currentY += 6;
 
-    // Clean table with better spacing
     const colWidths = [80, 20, 25, 20, 25]; // mm
-    let colX = this.margin;
-    
-    // Light gray header background
-    this.doc.setFillColor(245, 245, 245);
-    this.doc.rect(this.margin, this.currentY - 3, this.pageWidth - 2 * this.margin, 8, 'F');
 
-    this.addText(this.getTranslatedText('item', 'Item'), colX + 2, this.currentY, { fontSize: 9, fontWeight: 'bold' });
-    colX += colWidths[0];
-    
-    this.addText(this.getTranslatedText('quantity', 'Qty'), colX, this.currentY, { fontSize: 9, fontWeight: 'bold', align: 'center' });
-    colX += colWidths[1];
-    
-    this.addText(this.getTranslatedText('rate', 'Rate/Day'), colX, this.currentY, { fontSize: 9, fontWeight: 'bold', align: 'right' });
-    colX += colWidths[2];
-    
-    this.addText(this.getTranslatedText('days', 'Days'), colX, this.currentY, { fontSize: 9, fontWeight: 'bold', align: 'center' });
-    colX += colWidths[3];
-    
-    this.addText(this.getTranslatedText('total', 'Total'), colX + colWidths[4] - 2, this.currentY, { fontSize: 9, fontWeight: 'bold', align: 'right' });
+    // Helper to render table header and update currentY
+    const renderHeader = () => {
+      this.currentY += 8;
+      let colX = this.margin;
+      this.doc.setFillColor(245, 245, 245);
+      this.doc.rect(this.margin, this.currentY - 3, this.pageWidth - 2 * this.margin, 8, 'F');
+      this.addText(this.getTranslatedText('item', 'Item'), colX + 2, this.currentY, { fontSize: 9, fontWeight: 'bold' });
+      colX += colWidths[0];
+      this.addText(this.getTranslatedText('quantity', 'Qty'), colX, this.currentY, { fontSize: 9, fontWeight: 'bold', align: 'center' });
+      colX += colWidths[1];
+      this.addText(this.getTranslatedText('rate', 'Rate/Day'), colX, this.currentY, { fontSize: 9, fontWeight: 'bold', align: 'right' });
+      colX += colWidths[2];
+      this.addText(this.getTranslatedText('days', 'Days'), colX, this.currentY, { fontSize: 9, fontWeight: 'bold', align: 'center' });
+      colX += colWidths[3];
+      this.addText(this.getTranslatedText('total', 'Total'), colX + colWidths[4] - 2, this.currentY, { fontSize: 9, fontWeight: 'bold', align: 'right' });
+      this.currentY += 6;
+      this.addLine(this.margin, this.currentY, this.pageWidth - this.margin, this.currentY, 0.3);
+      this.currentY += 4;
+    };
 
-    this.currentY += 6;
-    // Keep only the header separator line as it's essential for table structure
-    this.addLine(this.margin, this.currentY, this.pageWidth - this.margin, this.currentY, 0.3);
-    this.currentY += 4;
+    renderHeader();
 
-    // Clean table rows with subtle alternating colors
+    // Clean table rows with subtle alternating colors and robust pagination
     quote.items.forEach((item, index) => {
-      colX = this.margin;
-      
-      // Light alternating row background
-      if (index % 2 === 0) {
-        this.doc.setFillColor(250, 250, 250);
-        this.doc.rect(this.margin, this.currentY - 2, this.pageWidth - 2 * this.margin, 6, 'F');
-      }
-
-      // Get item name based on type - only translate services and fees, NOT equipment
+      // Resolve display name
       let itemName = 'Item';
       if (item.type === 'equipment') {
-        // Equipment names are NEVER translated - keep original product names
         itemName = item.equipmentName || 'Equipment Item';
       } else if (item.type === 'service') {
-        // Services ARE translated
         const translatedNames = this.translatedTexts?.dynamicContent?.serviceNames;
         const serviceIndex = quote.items.filter((i, idx) => idx <= index && i.type === 'service').length - 1;
-        itemName = translatedNames?.[serviceIndex] || item.serviceName || 'Service Item';
+        itemName = item.serviceName || translatedNames?.[serviceIndex] || 'Service Item';
       } else if (item.type === 'fee') {
-        // Fees ARE translated  
         const translatedNames = this.translatedTexts?.dynamicContent?.feeNames;
         const feeIndex = quote.items.filter((i, idx) => idx <= index && i.type === 'fee').length - 1;
-        itemName = translatedNames?.[feeIndex] || item.feeName || 'Fee Item';
+        itemName = item.feeName || translatedNames?.[feeIndex] || 'Fee Item';
       }
 
-      this.addText(itemName, colX + 2, this.currentY, { 
-        fontSize: 9,
-        maxWidth: colWidths[0] - 4
-      });
+      // Estimate row height based on wrapped name and description
+      const nameLines = this.doc.splitTextToSize(itemName, colWidths[0] - 4);
+      const nameHeight = nameLines.length * (9 * 0.35);
+      let descHeight = 0;
+      const hasDesc = !!(item.description && item.description.trim());
+      if (hasDesc) {
+        const descLines = this.doc.splitTextToSize(item.description!, colWidths[0] - 8);
+        descHeight = 3 + descLines.length * (8 * 0.35) + 3; // safe padding
+      } else {
+        descHeight = 5; // default spacing when no description
+      }
+      const rowHeight = Math.max(6, nameHeight) + descHeight;
+
+      // Page break if not enough space for this row
+      if (!this.checkPageSpace(rowHeight + 4)) {
+        this.addPageBreak();
+        renderHeader();
+      }
+
+      // Background for alternating rows using calculated height
+      if (index % 2 === 0) {
+        this.doc.setFillColor(250, 250, 250);
+        this.doc.rect(this.margin, this.currentY - 2, this.pageWidth - 2 * this.margin, rowHeight, 'F');
+      }
+
+      // Draw row
+      let colX = this.margin;
+      this.addText(itemName, colX + 2, this.currentY, { fontSize: 9, maxWidth: colWidths[0] - 4 });
       colX += colWidths[0];
-      
       this.addText((item.quantity || 1).toString(), colX, this.currentY, { fontSize: 9, align: 'center' });
       colX += colWidths[1];
-      
-      this.addText(`€${(item.unitPrice || 0).toFixed(2)}`, colX, this.currentY, { fontSize: 9, align: 'right' });
+      this.addText(`€ ${(item.unitPrice || 0).toFixed(2)}`, colX, this.currentY, { fontSize: 9, align: 'right' });
       colX += colWidths[2];
-      
       this.addText((item.days || 1).toString(), colX, this.currentY, { fontSize: 9, align: 'center' });
       colX += colWidths[3];
-      
-      this.addText(`€${item.lineTotal.toFixed(2)}`, colX + colWidths[4] - 2, this.currentY, { fontSize: 9, align: 'right' });
+      this.addText(`€ ${item.lineTotal.toFixed(2)}`, colX + colWidths[4] - 2, this.currentY, { fontSize: 9, align: 'right' });
 
-      this.currentY += 6;
+      // Description block
+      if (hasDesc) {
+        this.currentY += 3;
+        this.addText(item.description!, this.margin + 6, this.currentY, { fontSize: 8, maxWidth: colWidths[0] - 8 });
+      }
+
+      // Advance Y by full row height
+      this.currentY += rowHeight - (hasDesc ? 3 : 0);
     });
 
-    // Remove bottom table line to reduce noise - just add extra space
-    // this.addLine(this.margin, this.currentY, this.pageWidth - this.margin, this.currentY, 0.5);
-    this.currentY += 12;
+    // Bottom spacing after table (tighter)
+    this.currentY += 8;
   }
 
   private addFinancialSummary(quote: Quote) {
@@ -514,7 +533,7 @@ export class QuotePDFGenerator {
     // Subtotal
     const subtotalLabel = this.getTranslatedText('subtotal', 'Subtotal');
     this.addText(`${subtotalLabel}:`, summaryX + 3, summaryY, { fontSize: 10 });
-    this.addText(`€${subtotal.toFixed(2)}`, summaryX + summaryWidth - 3, summaryY, { fontSize: 10, align: 'right' });
+    this.addText(`€ ${subtotal.toFixed(2)}`, summaryX + summaryWidth - 3, summaryY, { fontSize: 10, align: 'right' });
     summaryY += 5;
 
     // Discount
@@ -524,20 +543,20 @@ export class QuotePDFGenerator {
         ? `${discountLabel} (${quote.discountAmount}%):`
         : `${discountLabel}:`;
       this.addText(discountText, summaryX + 3, summaryY, { fontSize: 10 });
-      this.addText(`-€${discountAmount.toFixed(2)}`, summaryX + summaryWidth - 3, summaryY, { fontSize: 10, align: 'right' });
+      this.addText(`-€ ${discountAmount.toFixed(2)}`, summaryX + summaryWidth - 3, summaryY, { fontSize: 10, align: 'right' });
       summaryY += 5;
     }
 
     // Net amount
     const netAmountLabel = this.getTranslatedText('netAmount', 'Net Amount');
     this.addText(`${netAmountLabel}:`, summaryX + 3, summaryY, { fontSize: 10 });
-    this.addText(`€${discountedSubtotal.toFixed(2)}`, summaryX + summaryWidth - 3, summaryY, { fontSize: 10, align: 'right' });
+    this.addText(`€ ${discountedSubtotal.toFixed(2)}`, summaryX + summaryWidth - 3, summaryY, { fontSize: 10, align: 'right' });
     summaryY += 5;
 
     // Tax
     const taxLabel = this.getTranslatedText('tax', 'Tax');
     this.addText(`${taxLabel} (${((quote.taxRate || 0) * 100).toFixed(1)}%):`, summaryX + 3, summaryY, { fontSize: 10 });
-    this.addText(`€${taxAmount.toFixed(2)}`, summaryX + summaryWidth - 3, summaryY, { fontSize: 10, align: 'right' });
+    this.addText(`€ ${taxAmount.toFixed(2)}`, summaryX + summaryWidth - 3, summaryY, { fontSize: 10, align: 'right' });
     summaryY += 5;
 
     // Simple separator line
@@ -550,7 +569,7 @@ export class QuotePDFGenerator {
     
     const totalAmountLabel = this.getTranslatedText('totalAmount', 'Total Amount');
     this.addText(`${totalAmountLabel}:`, summaryX + 3, summaryY + 2, { fontSize: 11, fontWeight: 'bold' });
-    this.addText(`€${totalAmount.toFixed(2)}`, summaryX + summaryWidth - 3, summaryY + 2, { fontSize: 12, fontWeight: 'bold', align: 'right' });
+    this.addText(`€ ${totalAmount.toFixed(2)}`, summaryX + summaryWidth - 3, summaryY + 2, { fontSize: 12, fontWeight: 'bold', align: 'right' });
 
     this.currentY = summaryY + 15;
   }
@@ -583,7 +602,7 @@ export class QuotePDFGenerator {
     }
   }
 
-  private addTerms(compact: boolean = false) {
+  private addTerms(quote: Quote, compact: boolean = false) {
     const termsLabel = this.getTranslatedText('termsAndConditions', 'Terms & Conditions');
     this.addText(termsLabel, this.margin, this.currentY, {
       fontSize: 12,
@@ -594,9 +613,14 @@ export class QuotePDFGenerator {
     // this.addLine(this.margin, this.currentY, this.pageWidth - this.margin, this.currentY, 0.5);
     // this.currentY += 5;
 
-    // Use translated terms if available
-    const termsToDisplay = this.translatedTexts?.terms || [];
-    
+    // Prefer per-quote terms if provided; else use translated; else fallback defaults
+    let termsToDisplay: string[] = [];
+    if (quote.terms && quote.terms.trim()) {
+      termsToDisplay = quote.terms.split('\n').map(t => t.trim()).filter(Boolean);
+    } else if (Array.isArray(this.translatedTexts?.terms) && this.translatedTexts.terms.length > 0) {
+      termsToDisplay = this.translatedTexts.terms as string[];
+    }
+
     if (termsToDisplay.length > 0) {
       // Use translated terms from the translation service
       termsToDisplay.forEach((term: string) => {
@@ -646,8 +670,8 @@ export class QuotePDFGenerator {
       contactPhone: '+1 (555) 123-4567'
     };
 
-    // Use translated thank you message template but preserve company name
-    const thankYouTemplate = this.getTranslatedText('thankYouMessage', 'Thank you for considering {companyName} for your event needs!');
+    // Footer line 1: allow admin override via pdfFooterMessage; otherwise translated template with company name
+    const thankYouTemplate = settings.pdfFooterMessage || this.getTranslatedText('thankYouMessage', 'Thank you for considering {companyName} for your event needs!');
     const thankYouMessage = thankYouTemplate.replace('{companyName}', settings.companyName || 'AV Rentals');
     
     this.addText(thankYouMessage, this.pageWidth / 2, footerY + 5, {
@@ -656,16 +680,24 @@ export class QuotePDFGenerator {
       fontWeight: 'bold'
     });
     
-    const contactInfo = [];
+    // Footer line 2: optional full custom contact line; else build from email/phone with translation
+    const showContact = (settings as any).pdfShowFooterContact !== false;
+    const customContact = settings.pdfFooterContactText;
+    const contactInfo: string[] = [];
     if (settings.contactEmail) contactInfo.push(settings.contactEmail);
     if (settings.contactPhone) contactInfo.push(settings.contactPhone);
-    
-    if (contactInfo.length > 0) {
-      // Use translated contact message template but preserve contact info
-      const contactTemplate = this.getTranslatedText('contactMessage', 'For questions about this quote, please contact us at {contactInfo}');
-      const contactMessage = contactTemplate.replace('{contactInfo}', contactInfo.join(' or '));
-      
-      this.addText(contactMessage, this.pageWidth / 2, footerY + 10, {
+
+    const contactLine = !showContact
+      ? ''
+      : (customContact && customContact.trim().length > 0
+          ? customContact
+          : (contactInfo.length > 0
+              ? this.getTranslatedText('contactMessage', 'For questions about this quote, please contact us at {contactInfo}')
+                  .replace('{contactInfo}', contactInfo.join(' or '))
+              : ''));
+
+    if (contactLine) {
+      this.addText(contactLine, this.pageWidth / 2, footerY + 10, {
         fontSize: 8,
         align: 'center'
       });
@@ -745,34 +777,40 @@ export class QuotePDFGenerator {
     
     this.addQuoteInfo(quote);
     
-    // Add items table with space check
-    if (!fitsOnOnePage && !this.checkPageSpace(40)) {
+    // Add items table with space check (always check space, not only when multi-page)
+    if (!this.checkPageSpace(40)) {
       this.addPageBreak();
     }
     this.addItemsTable(quote);
     
     // Add financial summary
-    if (!fitsOnOnePage && !this.checkPageSpace(40)) {
+    if (!this.checkPageSpace(40)) {
       this.addPageBreak();
     }
     this.addFinancialSummary(quote);
     
     // Add notes if present
     if (quote.notes && quote.notes.trim()) {
-      if (!fitsOnOnePage && !this.checkPageSpace(25)) {
+      // Estimate dynamic notes height based on wrapped text
+      const notesText = this.translatedTexts?.dynamicContent?.notes || quote.notes;
+      const noteLines = this.doc.splitTextToSize(notesText, this.pageWidth - 2 * this.margin - 6);
+      const estimatedNotesHeight = 8 + 20; // header + background block baseline
+      const dynamicHeight = Math.max(20, noteLines.length * (9 * 0.35) + 6);
+      const requiredNotesSpace = 8 + dynamicHeight + 5; // label + block + padding
+      if (!this.checkPageSpace(requiredNotesSpace)) {
         this.addPageBreak();
       }
       this.addNotes(quote);
     }
     
     // Add terms & conditions
-    const termsSpace = fitsOnOnePage ? 15 : 30; // Less space needed for compact terms
-    if (!fitsOnOnePage && !this.checkPageSpace(termsSpace)) {
-      this.addPageBreak();
-    }
-    this.addTerms(fitsOnOnePage);
+    // Render terms with internal pagination line-by-line
+    this.addTerms(quote, fitsOnOnePage);
     
     this.addFooter();
+
+    // Add page numbers last so they appear on every page
+    this.addPageNumbers();
 
     const filename = options.filename || `quote-${quote.quoteNumber}.pdf`;
 

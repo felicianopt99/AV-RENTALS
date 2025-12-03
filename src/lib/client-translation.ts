@@ -102,7 +102,7 @@ class ClientTranslationService {
         body: JSON.stringify({
           texts: textsToTranslate,
           targetLang,
-          progressive: true,
+          progressive: false,
         }),
       });
 

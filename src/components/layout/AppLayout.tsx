@@ -108,9 +108,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </SidebarFooter>
       </Sidebar>
       <SidebarRail />
-      <SidebarInset>
+      <SidebarInset className="overflow-y-auto overflow-x-hidden">
         <AppHeader />
-        <main className="flex-1 overflow-y-auto overflow-x-hidden pb-16 md:pb-0 min-h-0 min-w-0 max-w-full px-3 sm:px-4 md:px-6">
+        <main className="flex-1 pb-16 md:pb-0 min-h-0 min-w-0 max-w-full px-3 sm:px-4 md:px-6">
           <div className="page-container">
             <BackgroundTranslationProvider>
               <AutoTranslate

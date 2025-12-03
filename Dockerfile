@@ -17,6 +17,10 @@ FROM node:20-bookworm-slim AS builder
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 
+RUN apt-get update -y && apt-get install -y --no-install-recommends \
+  openssl ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+
 COPY --from=deps /app/node_modules ./node_modules
 # Copy prisma directory for migrations and client generation (before COPY . .)
 COPY ./prisma ./prisma
@@ -26,7 +30,8 @@ COPY . .
 RUN npx prisma generate
 
 # Build Next.js (requires next.config.ts output: 'standalone')
-RUN npm run build
+# Force webpack builder for stability with middleware
+RUN npm run build -- --webpack
 
 # 3) Runner: minimal image serving the app
 
@@ -38,8 +43,8 @@ ENV NODE_ENV=production \
   PORT=3000 \
   HOSTNAME=0.0.0.0
 
-# Install OpenSSL for Prisma and runtime needs
-RUN apt-get update -y && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
+# Install OpenSSL for Prisma and PostgreSQL client for init scripts
+RUN apt-get update -y && apt-get install -y --no-install-recommends openssl postgresql-client && rm -rf /var/lib/apt/lists/*
 
 
 ## Install production dependencies needed by custom server.js (socket.io, jsonwebtoken, etc.)
@@ -50,18 +55,19 @@ RUN npm ci --omit=dev --legacy-peer-deps
 COPY --from=builder /app/prisma ./prisma
 RUN npx prisma generate
 
-# Copy standalone server output
+# Copy standalone server output and required files
 COPY --from=builder /app/.next/standalone ./
-# Copy public assets
-COPY --from=builder /app/public ./public
-# Copy .next/static for client assets
 COPY --from=builder /app/.next/static ./.next/static
-# Copy our custom server.js with Socket.IO support (overrides Next.js generated server.js)
+COPY --from=builder /app/.next/server ./.next/server
+COPY --from=builder /app/public ./public
 COPY --from=builder /app/server.js ./server.js
 
 # Copy entrypoint and ensure it is executable
-COPY docker-entrypoint.sh ./docker-entrypoint.sh
-RUN chmod +x ./docker-entrypoint.sh
+COPY scripts/docker-entrypoint.sh ./scripts/docker-entrypoint.sh
+RUN sed -i 's/\r$//' ./scripts/docker-entrypoint.sh && chmod 0755 ./scripts/docker-entrypoint.sh
+
+# Ensure node user owns the working directory and dependencies
+RUN chown -R node:node /app
 
 # Run as non-root user for better security
 USER node
@@ -72,5 +78,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD node -e "require('http').get('http://localhost:'+process.env.PORT, r=>{if(r.statusCode<500)process.exit(0);process.exit(1)}).on('error',()=>process.exit(1))"
 
-ENTRYPOINT ["./docker-entrypoint.sh"]
+ENTRYPOINT ["sh", "./scripts/docker-entrypoint.sh"]
 CMD ["node", "server.js"]

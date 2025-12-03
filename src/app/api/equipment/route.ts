@@ -58,6 +58,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const { searchParams } = new URL(request.url)
+    const hasPagination = searchParams.has('page') || searchParams.has('pageSize')
     const page = parseInt(searchParams.get('page') || '1')
     const pageSize = parseInt(searchParams.get('pageSize') || '50')
     const status = searchParams.get('status')
@@ -75,12 +76,11 @@ export async function GET(request: NextRequest) {
       ]
     }
 
-    const [data, total] = await Promise.all([
-      prisma.equipmentItem.findMany({
+    let result
+    if (!hasPagination) {
+      const data = await prisma.equipmentItem.findMany({
         where,
         orderBy: { name: 'asc' },
-        skip: (page - 1) * pageSize,
-        take: pageSize,
         include: {
           category: true,
           subcategory: true,
@@ -89,16 +89,40 @@ export async function GET(request: NextRequest) {
             take: 5,
           },
         },
-      }),
-      prisma.equipmentItem.count({ where }),
-    ])
+      })
+      result = {
+        data,
+        total: data.length,
+        page: 1,
+        pageSize: data.length,
+        totalPages: 1,
+      }
+    } else {
+      const [data, total] = await Promise.all([
+        prisma.equipmentItem.findMany({
+          where,
+          orderBy: { name: 'asc' },
+          skip: (page - 1) * pageSize,
+          take: pageSize,
+          include: {
+            category: true,
+            subcategory: true,
+            maintenanceLogs: {
+              orderBy: { date: 'desc' },
+              take: 5,
+            },
+          },
+        }),
+        prisma.equipmentItem.count({ where }),
+      ])
 
-    const result = {
-      data,
-      total,
-      page,
-      pageSize,
-      totalPages: Math.ceil(total / pageSize),
+      result = {
+        data,
+        total,
+        page,
+        pageSize,
+        totalPages: Math.ceil(total / pageSize),
+      }
     }
     
     return NextResponse.json(result)
@@ -119,6 +143,10 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     let validatedData = EquipmentSchema.parse(body)
+    // Normalize empty subcategoryId to undefined to avoid FK errors
+    if (typeof validatedData.subcategoryId === 'string' && validatedData.subcategoryId.trim() === '') {
+      validatedData.subcategoryId = undefined
+    }
 
     // Download image if external URL provided
     if (validatedData.imageUrl && validatedData.imageUrl.startsWith('http')) {
@@ -175,6 +203,10 @@ export async function PUT(request: NextRequest) {
     }
 
     let validatedData = EquipmentSchema.partial().parse(updateData)
+    // Normalize empty subcategoryId to undefined to avoid FK errors
+    if (typeof validatedData.subcategoryId === 'string' && validatedData.subcategoryId.trim() === '') {
+      validatedData.subcategoryId = undefined
+    }
 
     // Download image if external URL provided
     if (validatedData.imageUrl && validatedData.imageUrl.startsWith('http')) {

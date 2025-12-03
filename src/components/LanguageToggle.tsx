@@ -18,7 +18,8 @@ export function LanguageToggle() {
   function applyLang(lang: 'en' | 'pt') {
     setLanguage(lang);
     try {
-      document.cookie = `app-language=${lang}; Path=/; Max-Age=31536000`;
+      const secure = typeof window !== 'undefined' && window.location.protocol === 'https:' ? '; Secure' : '';
+      document.cookie = `app-language=${lang}; Path=/; Max-Age=31536000; SameSite=Lax${secure}`;
     } catch {}
     // If on login, force reload to get SSR-rendered strings immediately
     if (pathname.startsWith('/login')) {

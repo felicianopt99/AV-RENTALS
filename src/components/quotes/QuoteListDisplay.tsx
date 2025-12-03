@@ -135,7 +135,7 @@ export function QuoteListDisplay() {
         quote.quoteNumber.toLowerCase().includes(lowerSearchTerm) ||
         (quote.clientName && quote.clientName.toLowerCase().includes(lowerSearchTerm)) ||
         (quote.status && quote.status.toLowerCase().includes(lowerSearchTerm))
-    ).sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    ).sort((a,b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime());
   }, [quotes, searchTerm]);
 
   const getStatusColor = (status: Quote['status']) => {

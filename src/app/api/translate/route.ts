@@ -4,8 +4,39 @@ import { prisma } from '@/lib/db';
 
 // Removed full-table preload in favor of on-demand LRU caching
 
+// Simple in-memory rate limiter (best-effort; use Redis for multi-instance)
+type Key = string;
+const WINDOW_MS = 60_000; // 1 minute
+const MAX_REQUESTS = 60; // per key per window
+const bucket = new Map<Key, { start: number; count: number }>();
+
+function getClientKey(req: NextRequest): Key {
+  const ipHeader = req.headers.get('x-forwarded-for') || '';
+  const ip = ipHeader.split(',')[0].trim() || (req as any).ip || 'unknown';
+  const ua = req.headers.get('user-agent') || '';
+  return `${ip}:${ua.slice(0, 40)}`;
+}
+
+function rateLimit(req: NextRequest): boolean {
+  const key = getClientKey(req);
+  const now = Date.now();
+  const entry = bucket.get(key);
+  if (!entry || now - entry.start > WINDOW_MS) {
+    bucket.set(key, { start: now, count: 1 });
+    return true;
+    }
+  if (entry.count >= MAX_REQUESTS) {
+    return false;
+  }
+  entry.count++;
+  return true;
+}
+
 export async function POST(request: NextRequest) {
   try {
+    if (!rateLimit(request)) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
     const body = await request.json();
     const { text, targetLang } = body;
 
@@ -44,6 +75,9 @@ export async function POST(request: NextRequest) {
 // Batch translations endpoint - optimized with progressive loading
 export async function PUT(request: NextRequest) {
   try {
+    if (!rateLimit(request)) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
     const body = await request.json();
     const { texts, targetLang, progressive } = body;
 
@@ -51,6 +85,14 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json(
         { error: 'Texts must be a non-empty array' },
         { status: 400 }
+      );
+    }
+
+    // Cap batch size
+    if (texts.length > 100) {
+      return NextResponse.json(
+        { error: 'Too many texts in one request. Max 100.' },
+        { status: 413 }
       );
     }
 

@@ -18,6 +18,9 @@ const customizationSchema = z.object({
   pdfCompanyTagline: z.string().optional(),
   pdfContactEmail: z.string().email().optional().or(z.literal('')),
   pdfContactPhone: z.string().optional(),
+  pdfFooterMessage: z.string().optional(),
+  pdfFooterContactText: z.string().optional(),
+  pdfShowFooterContact: z.boolean().optional(),
   
   // Logo Options
   useTextLogo: z.boolean().optional(),

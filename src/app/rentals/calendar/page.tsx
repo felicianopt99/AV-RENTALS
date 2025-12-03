@@ -12,7 +12,7 @@ export default async function RentalCalendarPage() {
     redirect('/login');
   }
 
-  const allowedRoles = ['Admin', 'Manager', 'Technician', 'Employee'];
+  const allowedRoles = ['admin', 'manager', 'technician', 'employee'];
 
   try {
     const decoded = jwt.verify(token!, process.env.JWT_SECRET!) as any;
@@ -23,7 +23,8 @@ export default async function RentalCalendarPage() {
     if (!user || !user.isActive) {
       redirect('/login');
     }
-    if (!allowedRoles.includes(user.role as any)) {
+    const userRole = String(user.role || '').toLowerCase();
+    if (!allowedRoles.includes(userRole)) {
       redirect('/unauthorized');
     }
   } catch {

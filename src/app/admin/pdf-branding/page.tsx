@@ -18,6 +18,8 @@ interface PDFBrandingSettings {
   pdfContactPhone?: string;
   pdfLogoUrl?: string;
   pdfUseTextLogo?: boolean;
+  pdfFooterMessage?: string;
+  pdfFooterContactText?: string;
   // legacy fields for fallback
   logoUrl?: string;
   useTextLogo?: boolean;
@@ -43,6 +45,9 @@ export default function PDFBrandingPage() {
   const [pdfContactPhone, setPdfContactPhone] = useState('');
   const [pdfLogoUrl, setPdfLogoUrl] = useState('');
   const [pdfUseTextLogo, setPdfUseTextLogo] = useState(true);
+  const [pdfFooterMessage, setPdfFooterMessage] = useState('');
+  const [pdfFooterContactText, setPdfFooterContactText] = useState('');
+  const [pdfShowFooterContact, setPdfShowFooterContact] = useState(true);
 
   // Load current settings
   useEffect(() => {
@@ -67,6 +72,14 @@ export default function PDFBrandingPage() {
       // Prefer PDF-specific fields; fall back to legacy ones without writing back implicitly
       setPdfLogoUrl(data.pdfLogoUrl ?? data.logoUrl ?? '');
       setPdfUseTextLogo(data.pdfUseTextLogo ?? data.useTextLogo ?? true);
+      // Footer fields
+      setPdfFooterMessage(data.pdfFooterMessage ?? '');
+      setPdfFooterContactText(data.pdfFooterContactText ?? '');
+      setPdfShowFooterContact(
+        typeof (data as any).pdfShowFooterContact === 'boolean'
+          ? (data as any).pdfShowFooterContact
+          : true
+      );
 
     } catch (error) {
       console.error('Failed to load PDF branding settings:', error);
@@ -91,6 +104,12 @@ export default function PDFBrandingPage() {
         pdfContactPhone,
         pdfLogoUrl,
         pdfUseTextLogo,
+        // include new footer fields
+        pdfFooterMessage,
+        pdfFooterContactText,
+        // include show/hide toggle
+        // @ts-ignore add extended field
+        pdfShowFooterContact,
       };
 
       const response = await fetch('/api/customization', {
@@ -306,6 +325,57 @@ export default function PDFBrandingPage() {
                 onChange={(e) => setPdfContactPhone(e.target.value)}
                 placeholder="+1 (555) 123-4567"
               />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Footer Text Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Footer Text</CardTitle>
+            <CardDescription>
+              Customize the footer lines that appear at the bottom of PDF documents
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="pdfShowFooterContact">Show Footer Contact</Label>
+                <p className="text-xs text-muted-foreground">
+                  Toggle to hide all contact info on the PDF footer
+                </p>
+              </div>
+              <Switch
+                id="pdfShowFooterContact"
+                checked={pdfShowFooterContact}
+                onCheckedChange={setPdfShowFooterContact}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="pdfFooterMessage">PDF Footer Message</Label>
+              <Input
+                id="pdfFooterMessage"
+                value={pdfFooterMessage}
+                onChange={(e) => setPdfFooterMessage(e.target.value)}
+                placeholder="Thank you for considering {companyName} for your event needs!"
+              />
+              <p className="text-xs text-muted-foreground">
+                You can include {`{companyName}`} to insert your company name automatically
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="pdfFooterContactText">PDF Footer Contact Text</Label>
+              <Textarea
+                id="pdfFooterContactText"
+                value={pdfFooterContactText}
+                onChange={(e) => setPdfFooterContactText(e.target.value)}
+                placeholder="For questions about this quote, please contact us at info@example.com or +1 234 567 890"
+                rows={3}
+              />
+              <p className="text-xs text-muted-foreground">
+                Full custom contact sentence. Leave blank to use email/phone above
+              </p>
             </div>
           </CardContent>
         </Card>

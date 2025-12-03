@@ -40,17 +40,21 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // If accessing auth route with valid token, redirect to dashboard
-  if (isAuthRoute && token) {
-    try {
-      jwt.verify(token, process.env.JWT_SECRET!);
-      return NextResponse.redirect(new URL('/dashboard', request.url));
-    } catch (error) {
-      // Token is invalid, allow access to auth route
-      const response = NextResponse.next();
-      response.cookies.delete('auth-token');
-      return response;
+  // Auth routes: allow access even if token exists to avoid redirect loops
+  // If token is invalid, clear it.
+  if (isAuthRoute) {
+    if (token) {
+      try {
+        jwt.verify(token, process.env.JWT_SECRET!);
+        // Valid token: allow /login to render so user can switch accounts or re-auth
+        return NextResponse.next();
+      } catch (error) {
+        const response = NextResponse.next();
+        response.cookies.delete('auth-token');
+        return response;
+      }
     }
+    return NextResponse.next();
   }
 
   // Admin-only routes: require Admin role
@@ -62,7 +66,9 @@ export function proxy(request: NextRequest) {
     }
     try {
       const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
-      if (decoded.role !== 'Admin') {
+      // Normalize role to lowercase for comparison to avoid case mismatches
+      const role = String(decoded.role || '').toLowerCase();
+      if (role !== 'admin') {
         return NextResponse.redirect(new URL('/unauthorized', request.url));
       }
     } catch (error) {

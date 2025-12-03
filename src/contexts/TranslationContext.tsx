@@ -268,7 +268,7 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
         body: JSON.stringify({ 
           texts: toTranslate, 
           targetLang: language,
-          progressive: progressive
+          progressive: false
         }),
       });
 

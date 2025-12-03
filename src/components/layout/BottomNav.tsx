@@ -24,8 +24,8 @@ export function BottomNav() {
   const navRef = useRef<HTMLDivElement | null>(null);
 
   const visibleNavItems = useMemo(() => {
-    const role = (currentUser?.role as string) || 'Viewer';
-    const filtered = (baseNavItems || []).filter(i => (i.requiredRole || []).includes(role as any));
+    const role = String(currentUser?.role || 'viewer').toLowerCase();
+    const filtered = (baseNavItems || []).filter(i => (i.requiredRole || []).map(r => String(r).toLowerCase()).includes(role));
     // If filtering produced no items (e.g., unknown role or loading), show all base items as a safe fallback
     return filtered.length > 0 ? filtered : (baseNavItems || []);
   }, [currentUser?.role]);
