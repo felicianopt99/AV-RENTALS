@@ -1,0 +1,216 @@
+"use client";
+
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { useMemo, useState } from 'react';
+import { cn } from '@/lib/utils';
+import { useAppContext } from '@/contexts/AppContext';
+import { navItems as baseNavItems, adminItems } from '@/components/layout/navConfig';
+import { useTranslate } from '@/contexts/TranslationContext';
+import { Button } from '@/components/ui/button';
+import { MoreHorizontal, Home, CalendarDays, Package, Wrench, Users, FileText } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+// Define the most important items that should always be visible
+const MAIN_NAV_ITEMS = ['Dashboard', 'Inventory', 'Rentals'];
+
+// Map of icon names to actual icons
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  Dashboard: Home,
+  Inventory: Package,
+  Rentals: CalendarDays,
+  Maintenance: Wrench,
+  Clients: Users,
+  Quotes: FileText,
+};
+
+export function BottomNav() {
+  const { currentUser } = useAppContext();
+  const pathname = usePathname();
+  const router = useRouter();
+  const { translated } = useTranslate();
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
+
+  // Get visible nav items based on user role
+  const visibleNavItems = useMemo(() => {
+    if (!currentUser) return [];
+    const role = String(currentUser.role || 'viewer').toLowerCase();
+    return baseNavItems.filter(item => 
+      item.requiredRole.map(r => String(r).toLowerCase()).includes(role)
+    );
+  }, [currentUser]);
+
+  // Get visible admin items based on user role
+  const visibleAdminItems = useMemo(() => {
+    if (!currentUser) return [];
+    const role = String(currentUser.role || 'viewer').toLowerCase();
+    return adminItems.filter(item => 
+      item.requiredRole.map(r => String(r).toLowerCase()).includes(role)
+    );
+  }, [currentUser]);
+
+  // Separate main nav items and more items
+  const { mainNavItems, moreNavItems } = useMemo(() => {
+    const main: typeof visibleNavItems = [];
+    const more: typeof visibleNavItems = [];
+
+    visibleNavItems.forEach(item => {
+      if (MAIN_NAV_ITEMS.includes(item.label)) {
+        main.push(item);
+      } else {
+        more.push(item);
+      }
+    });
+
+    return { mainNavItems: main, moreNavItems: more };
+  }, [visibleNavItems]);
+
+  const isActive = (href: string) => {
+    if (!href) return false;
+    if (href === '/dashboard') {
+      return pathname === '/' || pathname?.startsWith('/dashboard');
+    }
+    return pathname?.startsWith(href);
+  };
+
+  const getEffectiveHref = (item: any): string | undefined => 
+    item.href || (item.subItems?.[0]?.href);
+
+  const handleNavClick = (item: any) => {
+    const href = getEffectiveHref(item);
+    if (href) {
+      router.push(href);
+    }
+  };
+      };
+
+      const handleSwipeRight = () => {
+        if (activeParent?.subItems && childIndex > 0) {
+          goToChildIndex(activeParentIndex, childIndex - 1);
+        } else {
+          goToParentIndex(activeParentIndex - 1);
+        }
+      };
+
+      manager.on('swipeleft', handleSwipeLeft);
+      manager.on('swiperight', handleSwipeRight);
+      globalManager.on('swipeleft', handleSwipeLeft);
+      globalManager.on('swiperight', handleSwipeRight);
+    };
+
+    setup();
+
+    return () => {
+      mounted = false;
+      try {
+        manager?.destroy();
+        globalManager?.destroy();
+      } catch {}
+    };
+  }, [activeParentIndex, activeParent, childIndex]);
+
+  return (
+    <nav
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-[9999] overflow-x-hidden"
+      style={{ 
+        paddingBottom: 'max(env(safe-area-inset-bottom), 8px)',
+        paddingLeft: 'max(env(safe-area-inset-left), 8px)',
+        paddingRight: 'max(env(safe-area-inset-right), 8px)'
+      }}
+      aria-label={attrPrimaryText}
+    >
+      <div
+        ref={navRef}
+        className={cn(
+          // Make the bar properly responsive and fit to screen
+          "pointer-events-auto w-full max-w-[calc(100vw-16px)] mx-auto overflow-x-hidden",
+          "rounded-2xl border border-sidebar-border/20",
+          "bg-sidebar-background/95 backdrop-blur-xl",
+          "shadow-[0_8px_32px_rgba(0,0,0,0.12)] shadow-primary/5",
+          "touch-pan-y transition-all duration-300"
+        )}
+        style={{ marginBottom: '8px' }}
+      >
+        <div className="flex justify-around items-end gap-0.5 px-3 py-2.5">
+          {visibleNavItems.map((item, index) => {
+            const href = getEffectiveHref(item);
+            const active = href ? isActive(href) || item.subItems?.some((s: any) => pathname?.startsWith(s.href)) : item.subItems?.some((s: any) => pathname?.startsWith(s.href));
+            return (
+              <div key={(item.href || item.label)} className="relative flex-1">
+                {/* active pill */}
+                <div
+                  className={cn(
+                    "absolute inset-x-1 -top-0.5 h-10 rounded-lg transition-all duration-200 ease-out",
+                    active ? "bg-blue-100/80 dark:bg-blue-900/40 border border-blue-200/60 dark:border-blue-800/60" : "bg-transparent"
+                  )}
+                  aria-hidden
+                />
+                <Link
+                  href={href || '#'}
+                  prefetch={false}
+                  aria-current={active ? 'page' : undefined}
+                  onClick={(e) => {
+                    if (!href) return;
+                    if (active && !item.subItems) return;
+                    setActiveIndex(index);
+                    triggerHaptic('selection');
+                    e.preventDefault();
+                    router.push(href);
+                  }}
+                  className={cn(
+                    "relative z-10 mx-auto flex h-11 flex-col items-center justify-center",
+                    "min-w-[52px] rounded-lg px-2 text-[10px] font-medium transition-all duration-200 ease-out",
+                    active ? "text-blue-700 dark:text-blue-300" : "text-sidebar-foreground/60 hover:text-blue-600 dark:hover:text-blue-400",
+                    "group"
+                  )}
+                >
+                  {item.icon && <item.icon className={cn("h-5 w-5 transition-all duration-200 ease-out", active && "text-blue-700 dark:text-blue-300")} />}
+                  <span className="mt-1.5 leading-none">{item.label}</span>
+                </Link>
+              </div>
+            );
+          })}
+        </div>
+        {/* Slide-up submenu when active tab has children */}
+        {activeParent?.subItems && activeParent.subItems.length > 0 && (
+          <div className="px-3 pb-2">
+            <div className="overflow-x-auto no-scrollbar">
+              <div className="flex justify-center gap-1.5 px-1 py-1 animate-[submenu_250ms_ease-out] min-w-full">
+                {activeParent.subItems.map((sub) => {
+                  const subActive = pathname?.startsWith(sub.href);
+                  return (
+                    <Link
+                      key={sub.href}
+                      href={sub.href}
+                      onClick={(e) => {
+                        if (subActive) return;
+                        triggerHaptic('selection');
+                        e.preventDefault();
+                        router.push(sub.href);
+                      }}
+                      className={cn(
+                        'flex items-center gap-3 px-4 py-3 rounded-lg',
+                        'text-sm font-medium',
+                        isItemActive 
+                          ? 'bg-primary/10 text-primary' 
+                          : 'text-foreground hover:bg-accent'
+                      )}
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span>{translated(item.label) || item.label}</span>
+                    </DropdownMenuItem>
+                  );
+                })}
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </nav>
+  );
+}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
+import { generateConflictAlerts, generateLowStockAlerts, generateOverdueAlerts } from '@/lib/notifications'
 import { requireReadAccess, requirePermission } from '@/lib/api-auth'
 
 const RentalSchema = z.object({
@@ -106,6 +107,14 @@ export async function POST(request: NextRequest) {
       rentals.push(rental)
     }
 
+    // After creating rentals, check for conflicts and low stock
+    try {
+      await generateConflictAlerts()
+      await generateLowStockAlerts()
+    } catch (e) {
+      // non-critical
+    }
+
     return NextResponse.json(rentals, { status: 201 })
   } catch (error) {
     console.error('Error creating rentals:', error)
@@ -146,6 +155,15 @@ export async function PUT(request: NextRequest) {
       },
     })
     
+    // After updates, re-check overdue and conflicts (e.g., prep status or quantities change)
+    try {
+      await generateOverdueAlerts()
+      await generateConflictAlerts()
+      await generateLowStockAlerts()
+    } catch (e) {
+      // non-critical
+    }
+
     return NextResponse.json(rental)
   } catch (error) {
     console.error('Error updating rental:', error)

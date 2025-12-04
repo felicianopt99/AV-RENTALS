@@ -1,7 +1,6 @@
-import { PrismaClient } from '@prisma/client';
 import { addDays, isBefore, differenceInDays } from 'date-fns';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/db';
+import { sendUserNotification } from '@/lib/realtime-broadcast';
 
 // Types for notification data
 interface NotificationData {
@@ -17,7 +16,7 @@ interface NotificationData {
 
 // Create a notification
 export async function createNotification(data: NotificationData) {
-  return await prisma.notification.create({
+  const notification = await prisma.notification.create({
     data: {
       userId: data.userId,
       type: data.type,
@@ -29,6 +28,22 @@ export async function createNotification(data: NotificationData) {
       actionUrl: data.actionUrl,
     },
   });
+
+  try {
+    sendUserNotification(data.userId, {
+      title: data.title,
+      message: data.message,
+      type: 'info',
+      priority: data.priority || 'medium',
+      entityType: data.entityType,
+      entityId: data.entityId,
+      actionUrl: data.actionUrl,
+    });
+  } catch (e) {
+    // swallow real-time errors to avoid blocking DB persistence
+  }
+
+  return notification;
 }
 
 // Generate notifications for upcoming events

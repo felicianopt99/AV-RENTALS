@@ -28,9 +28,31 @@ if [ "${PRISMA_MIGRATIONS:-}" = "deploy" ]; then
   done
 fi
 
-# Start the app
+# If running in cron mode, execute the provided command instead of starting the app
+if [ "${APP_MODE:-}" = "cron" ] || [ "${1:-}" = "cron" ]; then
+  if [ "${1:-}" = "cron" ]; then
+    shift
+  fi
+  # Execute remaining arguments as command
+  exec "$@"
+fi
+
+# Final guard: ensure DATABASE_URL is present before starting the app (build from secrets if still empty)
+if [ -z "${DATABASE_URL:-}" ] && [ -n "${DB_USER:-}" ] && [ -n "${DB_PASSWORD:-}" ] && [ -n "${DB_NAME:-}" ]; then
+  export DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}?schema=public"
+fi
+
+# Log redacted DATABASE_URL presence for diagnostics
+if [ -n "${DATABASE_URL:-}" ]; then
+  REDACTED_DBURL=$(printf "%s" "$DATABASE_URL" | sed 's/:([^@]*)@/:***@/;s/\?.*$//') || true
+  echo "DATABASE_URL is set (redacted): ${REDACTED_DBURL}?..."
+else
+  echo "WARNING: DATABASE_URL is not set. Backup and Prisma will fail."
+fi
+
+# Start the app using custom server.js (Socket.IO enabled)
 if [ -f ./start-prod.sh ]; then
   exec ./start-prod.sh
 else
-  exec npm run start
+  exec node server.js
 fi

@@ -21,6 +21,7 @@ services:
       - deepl_api_key
     volumes:
       - ./scripts:/app/scripts
+      - /mnt/backup_drive:/mnt/backup_drive:rw
     expose:
       - "3000"
     depends_on:
@@ -31,6 +32,25 @@ services:
       interval: 15s
       timeout: 5s
       retries: 10
+
+  notifications_cron:
+    build: .
+    container_name: av-notifications-cron
+    restart: unless-stopped
+    env_file:
+      - ./env.production
+    environment:
+      - NODE_ENV=production
+    secrets:
+      - db_user
+      - db_password
+      - db_name
+      - jwt_secret
+      - deepl_api_key
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: /bin/sh -c "trap exit TERM; while :; do echo '[cron] Running notifications:generate' && npm run notifications:generate; echo '[cron] Done. Sleeping 24h'; sleep 24h & wait $${!}; done;"
 
   postgres:
     image: postgres:16-alpine

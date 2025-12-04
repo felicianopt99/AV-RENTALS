@@ -377,8 +377,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // Rental operations
   const addRental = useCallback(async (rental: Omit<Rental, 'id'>) => {
     try {
-      const newRental = await rentalsAPI.create(rental);
-      setRentals(prev => [...prev, newRental]);
+      // Backend expects { eventId, equipment: [{ equipmentId, quantity }] } and returns an array
+      const created = await rentalsAPI.create({
+        eventId: rental.eventId,
+        equipment: [
+          {
+            equipmentId: rental.equipmentId,
+            quantity: rental.quantityRented,
+          },
+        ],
+      });
+      // created is an array of rentals (our call creates one)
+      const createdArray = Array.isArray(created) ? created : [created];
+      setRentals(prev => [...prev, ...createdArray]);
     } catch (err) {
       console.error('Error adding rental:', err);
       throw err;
@@ -474,11 +485,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           });
         }
       }
+      // Update quote status to Accepted
+      await updateQuote({ ...quote, status: 'Accepted' });
 
       return { success: true, message: 'Quote approved successfully.' };
     } catch (err) {
       console.error('Error approving quote:', err);
-      throw err;
+      return { success: false, message: 'Failed to approve quote. Ensure the quote is linked to a valid client and try again.' };
     }
   }, [addEvent, addRental, updateQuote]);
 

@@ -232,18 +232,21 @@ export function RentalCalendarView({ searchQuery, filters }: RentalCalendarViewP
   }, [rentals, events]);
 
   const eventsWithRentals = useMemo(() => {
-    const eventMap = new Map();
-    rentalsWithEventData.forEach(rental => {
-      if (!eventMap.has(rental.eventId)) {
-        eventMap.set(rental.eventId, {
-          ...rental.event,
-          rentals: [],
-        });
+    // Index rentals by eventId
+    const rentalsByEvent = rentalsWithEventData.reduce((map, rental) => {
+      if (!map.has(rental.eventId)) {
+        map.set(rental.eventId, [] as typeof rentalsWithEventData);
       }
-      eventMap.get(rental.eventId).rentals.push(rental);
-    });
-    return Array.from(eventMap.values());
-  }, [rentalsWithEventData]);
+      map.get(rental.eventId)!.push(rental);
+      return map;
+    }, new Map<string, typeof rentalsWithEventData>());
+
+    // Start from all events to ensure events without rentals are included
+    return events.map(e => ({
+      ...e,
+      rentals: rentalsByEvent.get(e.id) || [],
+    }));
+  }, [events, rentalsWithEventData]);
 
   const eventsForSelectedDate = useMemo(() => {
     if (!selectedDate) return [];

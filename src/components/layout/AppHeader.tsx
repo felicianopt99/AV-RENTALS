@@ -108,8 +108,8 @@ export function AppHeader({ title, children, className }: AppHeaderProps) {
     <header
       className={`sticky top-0 z-[9999] flex h-16 items-center justify-between px-6 pt-[env(safe-area-inset-top)] w-full glass-header ${className}`}
     >
-      {/* Left side - Profile (only on mobile) - Always render container for consistent layout */}
-  <div className="flex items-center gap-1 flex-1 justify-start">
+      {/* Left side - Profile (only on mobile) */}
+      <div className="flex items-center gap-1 flex-1 justify-start">
         <ClientOnly>
           {isAuthenticated && (
             <div className="md:hidden">
@@ -157,59 +157,12 @@ export function AppHeader({ title, children, className }: AppHeaderProps) {
       <div className="flex-1 flex justify-center">
         <h1 className="text-base font-medium truncate text-gray-900 dark:text-gray-100">{title}</h1>
       </div>
-      {/* Left side - Profile (only on mobile) - Always render container for consistent layout */}
-      <div className="flex items-center gap-1 flex-1 justify-start">
-        {isClient && isAuthenticated && (
-          <div className="md:hidden">
-            {/* Profile Dropdown - Mobile Only */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-lg">
-                  <UserCircle className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-                  <span className="sr-only">Profile menu</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56 z-[99999] bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-gray-200/20 dark:border-gray-700/20" align="start">
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none text-gray-900 dark:text-gray-100">{currentUser?.name}</p>
-                    <p className="text-xs leading-none text-gray-500 dark:text-gray-400">
-                      {currentUser?.username}
-                    </p>
-                    <Badge 
-                      variant="outline" 
-                      className="w-fit mt-1 text-xs bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700"
-                    >
-                      {currentUser?.role}
-                    </Badge>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator className="bg-gray-200/50 dark:bg-gray-700/50" />
-                <DropdownMenuItem onClick={() => router.push('/profile')} className="text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
-                  <User className="mr-2 h-4 w-4" />
-                  {profileText}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-gray-200/50 dark:bg-gray-700/50" />
-                <DropdownMenuItem onClick={handleLogout} className="text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  {logoutText}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        )}
-      </div>
-
-      {/* Center - Title */}
-      <div className="flex-1 flex justify-center">
-        <h1 className="text-base font-medium truncate text-gray-900 dark:text-gray-100">{title}</h1>
-      </div>
       
       {/* Custom children content */}
-      {children && <div className="flex items-center gap-3 absolute left-1/2 transform -translate-x-1/2">{children}</div>}
+      {children && <div className="hidden md:flex items-center gap-3">{children}</div>}
       
-  {/* Right side - Notifications (always visible when authenticated) - Always render container for consistent layout */}
-  <div className="flex items-center gap-1 flex-1 justify-end sticky top-0 z-[10000]">
+      {/* Right side - Notifications (always visible when authenticated) */}
+      <div className="flex items-center gap-1 flex-1 justify-end">
         <ClientOnly>
           <LanguageToggle />
           {isAuthenticated && (

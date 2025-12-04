@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
+import { generateEventReminders, generateOverdueAlerts } from '@/lib/notifications'
 import { requireReadAccess, requirePermission } from '@/lib/api-auth'
 
 const EventSchema = z.object({
@@ -60,6 +61,13 @@ export async function POST(request: NextRequest) {
         rentals: true,
       },
     })
+    // Kick off generators relevant to events
+    try {
+      await generateEventReminders()
+      await generateOverdueAlerts()
+    } catch (e) {
+      // non-critical
+    }
     
     return NextResponse.json(event, { status: 201 })
   } catch (error) {
@@ -96,6 +104,13 @@ export async function PUT(request: NextRequest) {
         rentals: true,
       },
     })
+    // Kick off generators relevant to date changes
+    try {
+      await generateEventReminders()
+      await generateOverdueAlerts()
+    } catch (e) {
+      // non-critical
+    }
     
     return NextResponse.json(event)
   } catch (error) {

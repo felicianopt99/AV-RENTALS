@@ -70,21 +70,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true });
     }
 
-    if (action === 'delete' && notificationIds) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+    if (action === 'mark-all-read') {
+      await prisma.notification.updateMany({
+        where: { userId, isRead: false },
+        data: { isRead: true },
+      })
+      return NextResponse.json({ success: true })
+    }
 
+    if (action === 'delete' && notificationIds) {
       await prisma.notification.deleteMany({
         where: {
           id: { in: notificationIds },
           userId,
-          createdAt: {
-            gte: today,
-          },
         },
       });
 
       return NextResponse.json({ success: true, deleted: true });
+    }
+
+    if (action === 'delete-all') {
+      await prisma.notification.deleteMany({ where: { userId } })
+      return NextResponse.json({ success: true, deletedAll: true })
     }
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });

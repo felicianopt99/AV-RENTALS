@@ -43,8 +43,16 @@ ENV NODE_ENV=production \
   PORT=3000 \
   HOSTNAME=0.0.0.0
 
-# Install OpenSSL for Prisma and PostgreSQL client for init scripts
-RUN apt-get update -y && apt-get install -y --no-install-recommends openssl postgresql-client && rm -rf /var/lib/apt/lists/*
+# Install OpenSSL and PostgreSQL 16 client (match server major version)
+RUN apt-get update -y && apt-get install -y --no-install-recommends \
+    wget gnupg ca-certificates lsb-release && \
+    echo "deb http://apt.postgresql.org/pub/repos/apt $(. /etc/os-release; echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list && \
+    wget -qO - https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg && \
+    apt-get update -y && apt-get install -y --no-install-recommends \
+    openssl postgresql-client-16 && \
+    rm -rf /var/lib/apt/lists/*
+## Install tsx globally for running TypeScript scripts in production container (notifications generator)
+RUN npm i -g tsx
 
 
 ## Install production dependencies needed by custom server.js (socket.io, jsonwebtoken, etc.)
@@ -61,10 +69,12 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/.next/server ./.next/server
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/server.js ./server.js
+COPY --from=builder /app/backup-helper.sh ./backup-helper.sh
 
 # Copy entrypoint and ensure it is executable
 COPY scripts/docker-entrypoint.sh ./scripts/docker-entrypoint.sh
 RUN sed -i 's/\r$//' ./scripts/docker-entrypoint.sh && chmod 0755 ./scripts/docker-entrypoint.sh
+RUN chmod 0755 ./backup-helper.sh
 
 # Ensure node user owns the working directory and dependencies
 RUN chown -R node:node /app

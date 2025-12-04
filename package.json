@@ -6,7 +6,8 @@
   "scripts": {
     "build": "next build",
     "start": "next start",
-    "db:generate": "prisma generate"
+    "db:generate": "prisma generate",
+    "notifications:generate": "tsx scripts/notifications/run-generators.ts"
   },
   "prisma": {
     "seed": "node -e \"console.log('Prisma automatic seed disabled in production. Use npm run db:seed:dev locally.')\""
@@ -64,6 +65,7 @@
     "ioredis": "^5.8.1",
     "jsonwebtoken": "^9.0.2",
     "jspdf": "^3.0.3",
+    "jsqr": "^1.4.0",
     "next": "^16.0.1",
     "ogl": "^1.0.11",
     "p-limit": "^7.1.1",

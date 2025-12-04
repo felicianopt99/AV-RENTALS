@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db-enhanced'
 import { broadcastDataChange } from '@/lib/realtime-broadcast'
+import { generateNewEquipmentAlerts, generateEquipmentStatusAlerts } from '@/lib/notifications'
 import { z } from 'zod'
 import fs from 'fs/promises'
 import path from 'path'
@@ -173,6 +174,12 @@ export async function POST(request: NextRequest) {
 
     // Broadcast real-time update
     broadcastDataChange('EquipmentItem', 'CREATE', equipment, user.userId)
+    // Generate notifications for new equipment
+    try {
+      await generateNewEquipmentAlerts(equipment.id)
+    } catch (e) {
+      // non-critical
+    }
     
     return NextResponse.json(equipment, { status: 201 })
   } catch (error) {
@@ -214,10 +221,10 @@ export async function PUT(request: NextRequest) {
     }
     
     try {
-      // Get current version first
+      // Get current version and status first
       const currentItem = await prisma.equipmentItem.findUnique({
         where: { id },
-        select: { version: true }
+        select: { version: true, status: true }
       })
 
       if (!currentItem) {
@@ -251,6 +258,14 @@ export async function PUT(request: NextRequest) {
 
       // Broadcast real-time update
       broadcastDataChange('EquipmentItem', 'UPDATE', equipment, user.userId)
+      // Generate notification if status changed
+      if (validatedData.status && currentItem.status && validatedData.status !== currentItem.status) {
+        try {
+          await generateEquipmentStatusAlerts(id, currentItem.status, validatedData.status)
+        } catch (e) {
+          // non-critical
+        }
+      }
       
       return NextResponse.json(equipment)
     } catch (error: any) {
